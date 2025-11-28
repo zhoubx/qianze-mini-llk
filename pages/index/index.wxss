@@ -32,57 +32,66 @@ page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
   align-items: center;
 }
 
-/* [需求3] 难度按钮样式优化：居中展示 */
+/* 难度按钮卡片优化 */
 .difficulty-card {
-  width: 92%;
-  padding: 30rpx 40rpx; /* 增加内边距 */
+  width: 90%;
+  padding: 24rpx 40rpx;
   margin-bottom: 24rpx;
-  background: white;
-  border-radius: 20rpx;
+  border-radius: 24rpx; /* 更圆润 */
   display: flex;
-  /* 修改：不再两端对齐，而是居中排列，图标和文字靠近一点 */
-  justify-content: center; 
+  justify-content: space-between; /* 左右分布 */
   align-items: center;
-  box-shadow: 0 6rpx 15rpx rgba(0,0,0,0.08); 
-  border-left: 0; /* 去掉之前的左边框设计，改用整体风格，或者保留看您喜好 */
-  position: relative;
-  overflow: hidden;
+  
+  /* 基础背景色 */
+  background: white;
+  
+  /* 按钮立体感：阴影 */
+  box-shadow: 0 8rpx 20rpx rgba(0,0,0,0.1);
+  border: 1px solid rgba(0,0,0,0.02);
+  
+  /* 点击反馈 */
+  transition: transform 0.1s, box-shadow 0.1s;
 }
-/* 用伪元素做左侧颜色条，比 border 更精致 */
-.difficulty-card::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 12rpx;
+
+.difficulty-card:active {
+  transform: scale(0.98);
+  box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.05);
 }
-.diff-easy::before { background: #81c784; }
-.diff-med::before { background: #ffb74d; }
-.diff-hard::before { background: #e57373; }
+
+/* 针对不同难度增加微弱的背景色区分，或者边框高亮 */
+.diff-easy { background: linear-gradient(to right, #fff, #f1f8e9); border-bottom: 6rpx solid #81c784; }
+.diff-med  { background: linear-gradient(to right, #fff, #fff8e1); border-bottom: 6rpx solid #ffb74d; }
+.diff-hard { background: linear-gradient(to right, #fff, #ffebee); border-bottom: 6rpx solid #e57373; }
+
 .diff-info {
   display: flex;
   flex-direction: column;
-  align-items: center; /* 文字居中 */
-  margin-right: 30rpx; /* 图标和文字的间距 */
 }
 
-.diff-header {
+.diff-title {
+  font-size: 34rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 6rpx;
+}
+
+.diff-desc {
+  font-size: 24rpx;
+  color: #888;
+}
+
+/* 右侧增加一个“开始”的视觉引导 */
+.diff-icon {
+  font-size: 48rpx;
+  background: rgba(255,255,255,0.8);
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
   display: flex;
   align-items: center;
-  margin-bottom: 8rpx;
+  justify-content: center;
+  box-shadow: 0 4rpx 8rpx rgba(0,0,0,0.05);
 }
-/* 图标样式微调 */
-.diff-icon {
-    font-size: 56rpx;
-}
-
-.diff-title { font-weight: bold; font-size: 30rpx; color: #333; margin-right: 10rpx; }
-.diff-badge { font-size: 20rpx; padding: 2rpx 8rpx; border-radius: 6rpx; margin-right: 10rpx; }
-.badge-easy { color: #81c784; background: #f1f8e9; border: 1rpx solid #81c784; }
-.badge-med { color: #ffb74d; background: #fff8e1; border: 1rpx solid #ffb74d; }
-.badge-hard { color: #e57373; background: #ffebee; border: 1rpx solid #e57373; }
-.diff-desc { font-size: 22rpx; color: #999; margin-top: 6rpx; }
 
 /* [需求4] 排行榜高度调高 */
 .leaderboard-box {

@@ -2,6 +2,12 @@
 var Bmob = require('../../utils/Bmob-2.6.3.min.js');
 const app = getApp();
 
+const DIFF_MAP = {
+  'easy': '小白',
+  'medium': '达人',
+  'hard': '宗师'
+};
+
 Page({
   data: {
     prizes: [],
@@ -24,12 +30,10 @@ Page({
     wx.showLoading({title: '加载中'});
     
     const query = Bmob.Query("GameScore");
-    query.set("openid", openid);
-    // 这里先按时间倒序查出来，然后在前端做复杂的“状态排序”
+    query.equalTo("openid", "==", openid);
     query.order("-createdAt"); 
     query.find().then(res => {
       
-      // [需求1] 数据处理：格式化时间 + 排序
       let list = res.map(item => {
         // 时间格式化 mm-dd HH:mm
         let d = new Date(item.createdAt);
@@ -43,20 +47,27 @@ Page({
         if(item.status === 'pending') item.statusText = '待使用';
         else if(item.status === 'used') item.statusText = '已使用';
         else item.statusText = '已失效';
+
+        // [需求] 难度文案映射
+        item.diffText = DIFF_MAP[item.difficulty] || '未知';
+        
+        // [需求] 处理排名 (旧数据可能没有 rankSnapshot)
+        item.rankText = item.rankSnapshot ? `第${item.rankSnapshot}名` : '未记录';
         
         return item;
       });
 
-      // [需求1] 排序：可用的排在最前面，剩下的按时间倒序
+      // [需求] 排序优化: 待使用(0) > 已使用(1) > 已失效(2)
+      const statusWeight = { 'pending': 0, 'used': 1, 'expired': 2 };
+      
       list.sort((a, b) => {
-        // 定义权重：pending(0) < 其他(1)
-        let weightA = a.status === 'pending' ? 0 : 1;
-        let weightB = b.status === 'pending' ? 0 : 1;
+        let wa = statusWeight[a.status] !== undefined ? statusWeight[a.status] : 3;
+        let wb = statusWeight[b.status] !== undefined ? statusWeight[b.status] : 3;
         
-        if (weightA !== weightB) {
-          return weightA - weightB; // 权重小的在前
+        if (wa !== wb) {
+          return wa - wb; // 权重小的在前
         } else {
-          // 权重相同（都是待使用，或者都是已失效），按时间倒序
+          // 权重相同，按时间倒序
           return new Date(b.createdAt) - new Date(a.createdAt);
         }
       });
@@ -68,7 +79,7 @@ Page({
       wx.hideLoading();
     });
   },
-  
+
   usePrize(e) {
     let id = e.currentTarget.dataset.id;
     wx.showModal({

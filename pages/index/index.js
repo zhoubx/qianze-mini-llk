@@ -45,7 +45,7 @@ Page({
       { id: 'hard', class: 'diff-hard', title: '养生宗师', badge: '困难', badgeClass: 'badge-hard', multiplier: 1.6, desc: '极限手速·冲高夺冠（抢代金券）', icon: '🏆' }
     ],
     config: {
-      easy: { rows: 2, cols: 2 },
+      easy: { rows: 6, cols: 4 },
       medium: { rows: 6, cols: 6 },
       hard: { rows: 8, cols: 6 }
     },
@@ -422,7 +422,7 @@ Page({
     });
   },
 
-  // [需求2 & 4] 提交成绩修改
+  // 主要修改 submitScore 函数
   async submitScore() {
     let name = this.data.inputName;
     if (!name) { wx.showToast({ title: '请输入名字', icon: 'none' }); return; }
@@ -431,33 +431,36 @@ Page({
 
     try {
       const app = getApp();
-      const openid = app.globalData.openid; // 获取全局 OpenID
+      const openid = app.globalData.openid;
 
-      // 1. 查找该用户(OpenID)是否已有“待使用”的奖品
+      // --- [Bug修复核心点] ---
+      // 1. 查找该用户是否已有“待使用 (pending)”的奖品
+      // 注意：一定要加上 status = pending，忽略 used 和 expired
       const queryOld = Bmob.Query("GameScore");
-      
-      // 修改：以前是查 name，现在查 openid 更准确，如果没有openid则回退查name
       if (openid) {
-        queryOld.set("openid", openid);
+        queryOld.equalTo("openid", "==", openid);
       } else {
-        queryOld.set("playerName", name);
+        queryOld.equalTo("playerName", "==", name);
       }
-      queryOld.set("status", "pending");
+      queryOld.equalTo("status", "==", "pending"); // <--- 关键修复：只对比待使用的奖品
       const oldRecords = await queryOld.find();
 
-      // 2. 比较奖品等级
+      // 2. 比较奖品等级 (逻辑不变：等级数值越小越好)
       let currentLevel = this.data.finalPrizeLevel;
+      
       if (oldRecords.length > 0) {
         for (let record of oldRecords) {
-           const queryUpdate = Bmob.Query('GameScore');
-           if (currentLevel < record.prizeLevel) {
-             queryUpdate.get(record.objectId).then(res => {
-               res.set('status', 'expired');
-               res.save();
-             });
-           } else {
-             currentLevel = 999; 
-           }
+          const queryUpdate = Bmob.Query('GameScore');
+          // 如果新奖品更高级 (newLevel < oldLevel)
+          if (currentLevel < record.prizeLevel) {
+            queryUpdate.get(record.objectId).then(res => {
+              res.set('status', 'expired'); // 旧的失效
+              res.save();
+            });
+          } else {
+            // 如果新奖品不如旧的待使用奖品，则新成绩有效但奖品失效
+            currentLevel = 999; 
+          }
         }
       }
 
@@ -469,9 +472,12 @@ Page({
       query.set("difficulty", this.gameState.diff);
       query.set("prizeName", this.data.finalPrizeName);
       query.set("prizeLevel", this.data.finalPrizeLevel);
+      
+      // [需求] 保存当时的排名快照
+      query.set("rankSnapshot", this.data.myRank);
+
       query.set("status", currentLevel === 999 ? "expired" : "pending");
 
-      // [新增] 记录 OpenID 和 微信原始昵称
       if (openid) query.set("openid", openid);
       if (this.data.wechatNickName) query.set("wechatNickName", this.data.wechatNickName);
       
