@@ -113,7 +113,8 @@ Page({
         // 如果该用户还没记录，或者当前这条分数更高，则保存/更新
         if (!userMap[key] || item.score > userMap[key].score) {
           // 格式化时间
-          let d = new Date(item.createdAt);
+          let d = new Date(item.createdAt.replace(/-/g, '/'));
+
           // [样式微调] 简化时间显示，比如: 11-05 13:00
           let m = (d.getMonth() + 1).toString().padStart(2, '0');
           let day = d.getDate().toString().padStart(2, '0');
