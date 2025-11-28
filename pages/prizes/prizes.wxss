@@ -1,20 +1,87 @@
-.container { padding: 30rpx; background: #f4f7f6; min-height: 100vh; }
-.search-box { display: flex; gap: 20rpx; margin-bottom: 40rpx; }
+.container { 
+  padding: 30rpx; 
+  background: #f4f7f6; 
+  min-height: 100vh;
+  box-sizing: border-box; /* 确保 padding 包含在宽度内 */
+}
+
+.list {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* 列表居中 */
+}
+
+.empty {
+  text-align: center;
+  color: #999;
+  margin-top: 100rpx;
+  font-size: 28rpx;
+}
+
+.card {
+  background: white;
+  padding: 30rpx;
+  border-radius: 16rpx;
+  margin-bottom: 20rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-left: 10rpx solid #ccc;
+  
+  /* [需求2] 宽度固定优化 */
+  width: 100%; /* 占满容器 */
+  box-sizing: border-box; /* 关键：确保 padding 不会撑破 100% */
+  box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.05);
+}
+/* 状态颜色 */
+.card.pending { border-left-color: #d4a017; } 
+.card.used { border-left-color: #4a7c59; opacity: 0.8; background-color: #f9f9f9; } 
+.card.expired { border-left-color: #e0e0e0; opacity: 0.6; background-color: #fafafa; }
+
 .input { flex: 1; background: white; padding: 20rpx; border-radius: 10rpx; }
 .btn { background: #4a7c59; color: white; font-size: 28rpx; }
-.card { background: white; padding: 30rpx; border-radius: 16rpx; margin-bottom: 20rpx; display: flex; justify-content: space-between; align-items: center; border-left: 10rpx solid #ccc; }
-.card.pending { border-left-color: #d4a017; } /* 待使用：金色 */
-.card.used { border-left-color: #4a7c59; opacity: 0.7; } /* 已使用：绿色 */
-.card.expired { border-left-color: #ccc; opacity: 0.5; } /* 已失效：灰色 */
-.info { display: flex; flex-direction: column; }
-.name { font-weight: bold; font-size: 32rpx; color: #333; }
-.time { font-size: 24rpx; color: #999; margin-top: 8rpx; }
-.status-text { font-size: 24rpx; margin-top: 8rpx; font-weight: bold; }
-.pending .status-text { color: #d4a017; }
-.use-btn { background: #4a7c59; color: white; font-size: 24rpx; margin: 0; }
+
+.info { 
+  display: flex; 
+  flex-direction: column; 
+  flex: 1; /* 占据左侧剩余空间 */
+  overflow: hidden; /* 防止文字过长溢出 */
+}
+
+.name { 
+  font-weight: bold; 
+  font-size: 32rpx; 
+  color: #333; 
+}
 
 .detail {
   font-size: 24rpx;
   color: #666;
-  margin-top: 4rpx;
+  margin-top: 6rpx;
+}
+
+.time { 
+  font-size: 22rpx; 
+  color: #999; 
+  margin-top: 6rpx; 
+}
+
+.status-text { 
+  font-size: 24rpx; 
+  margin-top: 8rpx; 
+  font-weight: bold; 
+}
+.pending .status-text { color: #d4a017; }
+.used .status-text { color: #4a7c59; }
+.expired .status-text { color: #999; }
+
+.use-btn { 
+  background: #4a7c59; 
+  color: white; 
+  font-size: 24rpx; 
+  padding: 10rpx 20rpx; 
+  margin: 0; 
+  margin-left: 20rpx; /* 按钮和文字保持间距 */
+  flex-shrink: 0; /* 防止按钮被压缩 */
 }

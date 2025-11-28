@@ -1,5 +1,9 @@
 // index.js
 var Bmob = require('../../utils/Bmob-2.6.3.min.js'); // 引入SDK
+const app = getApp();
+
+// [需求7] 配置项：排名统计的时间范围（小时）
+const RANK_DURATION_HOURS = 72;
 
 // 初始化 (填入您的密钥)
 Bmob.initialize("4fa0f30d648a4b33", "123zbx");
@@ -84,20 +88,51 @@ Page({
     }
   },
 
+  // [需求5, 6, 7] 修改排行榜获取逻辑：去重、取最高分、配置化时间
   fetchLeaderboard() {
     const query = Bmob.Query("GameScore");
-    // 💡 需求：72小时制度
+    
+    // 1. 时间过滤：使用配置变量
     let date = new Date();
-    date.setHours(date.getHours() - 72);
+    date.setHours(date.getHours() - RANK_DURATION_HOURS);
     query.equalTo("createdAt", ">", date.toISOString());
+    
     query.order("-score");
-    query.limit(50);
+    
+    // 2. 获取更多数据以便在前端去重 (因为Bmob基础版聚合查询有限制，前端去重更灵活)
+    query.limit(500); 
+    
     query.find().then(res => {
+      // 3. 数据处理：同一用户取最高分
+      let userMap = {};
+      
       res.forEach(item => {
-        let d = new Date(item.createdAt);
-        item.createTimeStr = `${d.getMonth()+1}-${d.getDate()} ${d.getHours()}:${d.getMinutes()<10?'0'+d.getMinutes():d.getMinutes()}`;
+        // 优先使用 openid 识别用户，如果没有则回退到 playerName
+        let key = item.openid || item.playerName;
+        
+        // 如果该用户还没记录，或者当前这条分数更高，则保存/更新
+        if (!userMap[key] || item.score > userMap[key].score) {
+          // 格式化时间
+          let d = new Date(item.createdAt);
+          // [样式微调] 简化时间显示，比如: 11-05 13:00
+          let m = (d.getMonth() + 1).toString().padStart(2, '0');
+          let day = d.getDate().toString().padStart(2, '0');
+          let h = d.getHours().toString().padStart(2, '0');
+          let min = d.getMinutes().toString().padStart(2, '0');
+          item.createTimeStr = `${m}-${day} ${h}:${min}`;
+          
+          userMap[key] = item;
+        }
       });
-      this.setData({ rankList: res });
+
+      // 转回数组并重新排序
+      let uniqueList = Object.values(userMap);
+      uniqueList.sort((a, b) => b.score - a.score);
+
+      // 只取前 50 名
+      let finalRankList = uniqueList.slice(0, 50);
+
+      this.setData({ rankList: finalRankList });
     });
   },
 
@@ -410,7 +445,7 @@ Page({
       queryOld.set("status", "pending");
       const oldRecords = await queryOld.find();
 
-      // 2. 比较奖品等级 (逻辑保持不变，略)
+      // 2. 比较奖品等级
       let currentLevel = this.data.finalPrizeLevel;
       if (oldRecords.length > 0) {
         for (let record of oldRecords) {

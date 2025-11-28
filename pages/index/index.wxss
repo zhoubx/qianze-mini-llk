@@ -1,6 +1,14 @@
 /* pages/index/index.wxss */
 page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
-.container { display: inline; flex-direction: column; align-items: center; padding: 10rpx 20rpx; min-height: 100vh; }
+
+.container { 
+  display: inline; /* 改为 flex 布局方便撑开高度 */
+  flex-direction: column; 
+  align-items: center; 
+  padding: 10rpx 20rpx;
+  min-height: 100vh; 
+  box-sizing: border-box; /* 确保 padding 不会撑大宽度 */
+}
 
 /* --- Bug修复：头部压缩 --- */
 .header { width: 100%; text-align: center; margin-bottom: 10rpx; position: relative; padding-top: 0; }
@@ -14,15 +22,61 @@ page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
 .action-link { font-size: 24rpx; color: #4a7c59; text-decoration: underline; padding: 10rpx; }
 
 /* 菜单与游戏区 */
-.menu-screen, .game-screen { width: 100%; display: flex; flex-direction: column; align-items: center; }
+.game-screen { width: 100%; display: flex; flex-direction: column; align-items: center; }
 
-/* 难度卡片 */
-.difficulty-card { width: 92%; padding: 24rpx; margin-bottom: 20rpx; background: white; border-radius: 16rpx; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.05); border-left: 8rpx solid transparent; }
-.diff-easy { border-left-color: #81c784; } 
-.diff-med { border-left-color: #ffb74d; } 
-.diff-hard { border-left-color: #e57373; background: linear-gradient(to right, #fff, #fff5f5); }
-.diff-info { display: flex; flex-direction: column; }
-.diff-header { display: flex; align-items: center; }
+.menu-screen {
+  flex: 1; /* 占据剩余高度 */
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* [需求3] 难度按钮样式优化：居中展示 */
+.difficulty-card {
+  width: 92%;
+  padding: 30rpx 40rpx; /* 增加内边距 */
+  margin-bottom: 24rpx;
+  background: white;
+  border-radius: 20rpx;
+  display: flex;
+  /* 修改：不再两端对齐，而是居中排列，图标和文字靠近一点 */
+  justify-content: center; 
+  align-items: center;
+  box-shadow: 0 6rpx 15rpx rgba(0,0,0,0.08); 
+  border-left: 0; /* 去掉之前的左边框设计，改用整体风格，或者保留看您喜好 */
+  position: relative;
+  overflow: hidden;
+}
+/* 用伪元素做左侧颜色条，比 border 更精致 */
+.difficulty-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 12rpx;
+}
+.diff-easy::before { background: #81c784; }
+.diff-med::before { background: #ffb74d; }
+.diff-hard::before { background: #e57373; }
+.diff-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* 文字居中 */
+  margin-right: 30rpx; /* 图标和文字的间距 */
+}
+
+.diff-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8rpx;
+}
+/* 图标样式微调 */
+.diff-icon {
+    font-size: 56rpx;
+}
+
 .diff-title { font-weight: bold; font-size: 30rpx; color: #333; margin-right: 10rpx; }
 .diff-badge { font-size: 20rpx; padding: 2rpx 8rpx; border-radius: 6rpx; margin-right: 10rpx; }
 .badge-easy { color: #81c784; background: #f1f8e9; border: 1rpx solid #81c784; }
@@ -30,11 +84,36 @@ page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
 .badge-hard { color: #e57373; background: #ffebee; border: 1rpx solid #e57373; }
 .diff-desc { font-size: 22rpx; color: #999; margin-top: 6rpx; }
 
-/* 排行榜 */
-.leaderboard-box { width: 94%; background: white; border-radius: 20rpx; padding: 20rpx; margin-top: 10rpx; height: 500rpx; display: flex; flex-direction: column; }
+/* [需求4] 排行榜高度调高 */
+.leaderboard-box {
+  width: 94%;
+  background: white;
+  border-radius: 20rpx;
+  padding: 20rpx;
+  margin-top: 10rpx;
+  /* 关键修改：利用 flex: 1 自动撑满剩余空间，或者设定一个较大的高度 */
+  flex: 1; 
+  min-height: 600rpx; /* 保证最小高度 */
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 -4rpx 20rpx rgba(0,0,0,0.03); /* 顶部阴影 */
+  margin-bottom: 20rpx; /* 底部留白 */
+}
+
 .lb-header { display: flex; justify-content: space-between; margin-bottom: 10rpx; border-bottom: 2rpx solid #f0f0f0; padding-bottom: 10rpx; font-size: 28rpx; }
-.lb-list { flex: 1; height: 0; }
-.lb-item { display: flex; align-items: center; padding: 16rpx 0; border-bottom: 1rpx dashed #eee; font-size: 24rpx; }
+.lb-list {
+  flex: 1;
+  height: 0;
+}
+.lb-item {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 0; /* 增加行高 */
+  border-bottom: 1rpx dashed #eee;
+  font-size: 26rpx;
+  padding-right: 10rpx; /* 整体右边距 */
+}
+
 .lb-rank { width: 40rpx; font-weight: bold; color: #999; text-align: center; }
 .rank-1 { color: #FFD700; font-size: 28rpx; } .rank-2 { color: #C0C0C0; font-size: 28rpx; } .rank-3 { color: #B87333; font-size: 28rpx; }
 .lb-info { flex: 1; margin-left: 10rpx; }
@@ -42,7 +121,15 @@ page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
 .lb-name { font-weight: bold; color: #333; margin-right: 10rpx; max-width: 180rpx; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .lb-prize-tag { background: linear-gradient(135deg, #ff6b6b, #ff8e53); color: white; font-size: 18rpx; padding: 2rpx 10rpx; border-radius: 20rpx; }
 .lb-time-row { font-size: 20rpx; color: #999; margin-top: 4rpx; }
-.lb-score { font-weight: bold; color: #4a7c59; font-size: 28rpx; }
+
+.lb-score {
+  font-weight: bold;
+  color: #4a7c59;
+  font-size: 30rpx;
+  margin-right: 24rpx; /* 增加右边距 */
+  min-width: 80rpx;
+  text-align: right;
+}
 
 /* 游戏区 */
 .status-bar { width: 100%; display: flex; justify-content: space-between; padding: 0 40rpx; font-weight: bold; color: #4a7c59; font-size: 32rpx; margin-bottom: 10rpx; box-sizing: border-box; }
