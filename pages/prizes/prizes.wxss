@@ -1,0 +1,14 @@
+.container { padding: 30rpx; background: #f4f7f6; min-height: 100vh; }
+.search-box { display: flex; gap: 20rpx; margin-bottom: 40rpx; }
+.input { flex: 1; background: white; padding: 20rpx; border-radius: 10rpx; }
+.btn { background: #4a7c59; color: white; font-size: 28rpx; }
+.card { background: white; padding: 30rpx; border-radius: 16rpx; margin-bottom: 20rpx; display: flex; justify-content: space-between; align-items: center; border-left: 10rpx solid #ccc; }
+.card.pending { border-left-color: #d4a017; } /* 待使用：金色 */
+.card.used { border-left-color: #4a7c59; opacity: 0.7; } /* 已使用：绿色 */
+.card.expired { border-left-color: #ccc; opacity: 0.5; } /* 已失效：灰色 */
+.info { display: flex; flex-direction: column; }
+.name { font-weight: bold; font-size: 32rpx; color: #333; }
+.time { font-size: 24rpx; color: #999; margin-top: 8rpx; }
+.status-text { font-size: 24rpx; margin-top: 8rpx; font-weight: bold; }
+.pending .status-text { color: #d4a017; }
+.use-btn { background: #4a7c59; color: white; font-size: 24rpx; margin: 0; }

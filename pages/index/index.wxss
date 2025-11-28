@@ -1,0 +1,66 @@
+/* pages/index/index.wxss */
+page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
+.container { display: inline; flex-direction: column; align-items: center; padding: 10rpx 20rpx; min-height: 100vh; }
+
+/* --- Bug修复：头部压缩 --- */
+.header { width: 100%; text-align: center; margin-bottom: 10rpx; position: relative; padding-top: 0; }
+.title { color: #4a7c59; font-size: 36rpx; font-weight: bold; display: block; margin-bottom: 4rpx; }
+.slogan { font-size: 22rpx; color: #666; display: block; }
+.music-btn { position: absolute; top: 0; right: 10rpx; width: 50rpx; height: 50rpx; background: #eee; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 26rpx; z-index: 99; }
+.music-btn.playing { background: #4a7c59; color: white; animation: rotate 4s linear infinite; }
+
+/* 顶部功能按钮栏 */
+.top-actions { width: 100%; display: flex; justify-content: space-between; margin-bottom: 20rpx; padding: 0 10rpx; }
+.action-link { font-size: 24rpx; color: #4a7c59; text-decoration: underline; padding: 10rpx; }
+
+/* 菜单与游戏区 */
+.menu-screen, .game-screen { width: 100%; display: flex; flex-direction: column; align-items: center; }
+
+/* 难度卡片 */
+.difficulty-card { width: 92%; padding: 24rpx; margin-bottom: 20rpx; background: white; border-radius: 16rpx; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.05); border-left: 8rpx solid transparent; }
+.diff-easy { border-left-color: #81c784; } .diff-med { border-left-color: #ffb74d; } .diff-hard { border-left-color: #e57373; background: linear-gradient(to right, #fff, #fff5f5); }
+.diff-info { display: flex; flex-direction: column; }
+.diff-header { display: flex; align-items: center; }
+.diff-title { font-weight: bold; font-size: 30rpx; color: #333; margin-right: 10rpx; }
+.diff-badge { font-size: 20rpx; padding: 2rpx 8rpx; border-radius: 6rpx; margin-right: 10rpx; }
+.badge-easy { color: #81c784; background: #f1f8e9; border: 1rpx solid #81c784; }
+.badge-med { color: #ffb74d; background: #fff8e1; border: 1rpx solid #ffb74d; }
+.badge-hard { color: #e57373; background: #ffebee; border: 1rpx solid #e57373; }
+.diff-desc { font-size: 22rpx; color: #999; margin-top: 6rpx; }
+
+/* 排行榜 */
+.leaderboard-box { width: 94%; background: white; border-radius: 20rpx; padding: 20rpx; margin-top: 10rpx; height: 500rpx; display: flex; flex-direction: column; }
+.lb-header { display: flex; justify-content: space-between; margin-bottom: 10rpx; border-bottom: 2rpx solid #f0f0f0; padding-bottom: 10rpx; font-size: 28rpx; }
+.lb-list { flex: 1; height: 0; }
+.lb-item { display: flex; align-items: center; padding: 16rpx 0; border-bottom: 1rpx dashed #eee; font-size: 24rpx; }
+.lb-rank { width: 40rpx; font-weight: bold; color: #999; text-align: center; }
+.rank-1 { color: #FFD700; font-size: 28rpx; } .rank-2 { color: #C0C0C0; font-size: 28rpx; } .rank-3 { color: #B87333; font-size: 28rpx; }
+.lb-info { flex: 1; margin-left: 10rpx; }
+.lb-name-row { display: flex; align-items: center; flex-wrap: wrap; }
+.lb-name { font-weight: bold; color: #333; margin-right: 10rpx; max-width: 180rpx; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.lb-prize-tag { background: linear-gradient(135deg, #ff6b6b, #ff8e53); color: white; font-size: 18rpx; padding: 2rpx 10rpx; border-radius: 20rpx; }
+.lb-time-row { font-size: 20rpx; color: #999; margin-top: 4rpx; }
+.lb-score { font-weight: bold; color: #4a7c59; font-size: 28rpx; }
+
+/* 游戏区 */
+.status-bar { width: 100%; display: flex; justify-content: space-between; padding: 0 40rpx; font-weight: bold; color: #4a7c59; font-size: 32rpx; margin-bottom: 10rpx; box-sizing: border-box; }
+.game-board { background: #e8efec; padding: 10rpx; border-radius: 20rpx; display: grid; gap: 6rpx; margin-bottom: 20rpx; position: relative; }
+.tile { background-color: white; border: 4rpx solid #cce0d6; border-radius: 10rpx; background-size: cover; background-position: center; transition: all 0.1s; position: relative; }
+.tile.selected { border-color: #d4a017; transform: scale(1.1); box-shadow: 0 0 10rpx #d4a017; z-index: 10; }
+.tile.matched { opacity: 0; pointer-events: none; transition: opacity 0.3s, transform 0.3s; transform: scale(0); }
+
+/* --- 连线动画样式 --- */
+.tile::after {
+  content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 0; height: 0; background: #ff5252; opacity: 0; transition: all 0.2s; border-radius: 50%; z-index: 5;
+}
+.tile.path-highlight::after { width: 60%; height: 60%; opacity: 0.8; box-shadow: 0 0 15rpx #ff5252; }
+
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 999; }
+.modal { background: white; width: 600rpx; padding: 40rpx; border-radius: 30rpx; text-align: center; }
+.win-header { color: #4a7c59; font-size: 40rpx; font-weight: bold; margin-bottom: 20rpx; }
+.prize-alert { background: #fff5f5; border: 2rpx dashed #e57373; padding: 20rpx; border-radius: 20rpx; margin: 20rpx 0; }
+.prize-name { color: #d32f2f; font-weight: bold; font-size: 32rpx; margin-top: 10rpx; }
+.input-label { font-size: 24rpx; color: #666; display: block; text-align: left; margin-bottom: 10rpx; }
+.name-input { border: 2rpx solid #ddd; padding: 15rpx; border-radius: 10rpx; margin-bottom: 30rpx; text-align: left; font-size: 28rpx; }
+.btn-primary { background: linear-gradient(135deg, #4a7c59, #3a6346); color: white; border-radius: 50rpx; font-weight: bold; margin-bottom: 20rpx; }

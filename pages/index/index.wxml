@@ -1,0 +1,81 @@
+<view class="container">
+  <view class="header">
+    <text class="title">芊泽养生 SPA</text>
+    <text class="slogan">凭实力赢优惠券，身心愉悦两不误！</text>
+    <view class="music-btn {{isMusicPlaying ? 'playing' : ''}}" bindtap="toggleMusic">🎵</view>
+  </view>
+
+  <view class="top-actions" wx:if="{{!isGameActive}}">
+    <navigator url="/pages/rules/rules" class="action-link">📖 游戏规则</navigator>
+    <navigator url="/pages/prizes/prizes" class="action-link">🎁 我的奖品</navigator>
+  </view>
+
+  <view class="menu-screen" wx:if="{{!isGameActive}}">
+    <view class="difficulty-card {{item.class}}" wx:for="{{diffConfig}}" wx:key="id" bindtap="startGame" data-diff="{{item.id}}">
+      <view class="diff-info">
+        <view class="diff-header">
+          <text class="diff-title">{{item.title}}</text>
+          <text class="diff-badge {{item.badgeClass}}">{{item.badge}}</text>
+        </view>
+        <text class="diff-desc">{{item.desc}}</text>
+      </view>
+      <view style="font-size:48rpx">{{item.icon}}</view>
+    </view>
+
+    <view class="leaderboard-box">
+      <view class="lb-header">
+        <text class="lb-title">👑 全服风云榜 (72h)</text>
+        <text class="lb-timer" bindtap="fetchLeaderboard">🔄 刷新</text>
+      </view>
+      <scroll-view scroll-y class="lb-list">
+        <view wx:if="{{rankList.length === 0}}" style="text-align:center;color:#999;margin-top:50rpx;font-size:24rpx">暂无数据，快来抢占榜首！</view>
+        <view class="lb-item" wx:for="{{rankList}}" wx:key="objectId">
+          <text class="lb-rank rank-{{index+1}}">{{index + 1}}</text>
+          <view class="lb-info">
+            <view class="lb-name-row">
+              <text class="lb-name">{{item.playerName}}</text>
+              <view class="lb-prize-tag">🎁 {{item.prizeName}}</view>
+            </view>
+            <text class="lb-time-row">{{item.createTimeStr}} · 耗时{{item.timeCost}}s</text>
+          </view>
+          <text class="lb-score">{{item.score}}</text>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+
+  <view class="game-screen" wx:if="{{isGameActive}}">
+    <view class="status-bar">
+      <text>⏱️ {{timeDisplay}}s</text>
+      <text>⭐ {{liveScore}}</text>
+    </view>
+    
+    <view class="game-board" style="grid-template-columns: repeat({{cols}}, 1fr);">
+      <view wx:for="{{domTiles}}" wx:key="id" 
+            class="tile {{item.selected ? 'selected' : ''}} {{item.matched ? 'matched' : ''}} {{item.isPath ? 'path-highlight' : ''}}"
+            style="background-image: url('{{item.img}}'); width:{{tileSize}}; height:{{tileSize}};"
+            bindtap="handleTileClick" data-r="{{item.r}}" data-c="{{item.c}}">
+      </view>
+    </view>
+    
+    <button style="background:transparent; color:#888; font-size:28rpx; margin-top:20rpx;" bindtap="backToMenu">放弃挑战</button>
+  </view>
+
+  <view class="modal-overlay" wx:if="{{showModal}}">
+    <view class="modal">
+      <view class="win-header">挑战成功!</view>
+      <view class="prize-alert">
+        <view class="prize-rank">预计排名: 第 <text style="font-weight:bold;">{{myRank}}</text> 名</view>
+        <view class="prize-name">{{finalPrizeName}}</view>
+      </view>
+      
+      <view class="input-group">
+        <text class="input-label">为了更好地记录您的成绩和奖品，建议您使用微信昵称或手机尾号作为玩家名：</text>
+        <input class="name-input" placeholder="请输入您的昵称/手机号" value="{{inputName}}" bindinput="onNameInput" maxlength="12"/>
+      </view>
+      
+      <button class="btn-primary" loading="{{submitting}}" bindtap="submitScore">确认领取并上榜</button>
+      <button style="font-size:24rpx; color:#666; background:transparent;" open-type="share">🎉 炫耀战绩</button>
+    </view>
+  </view>
+</view>

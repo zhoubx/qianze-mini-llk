@@ -1,0 +1,19 @@
+<view class="container">
+  <text class="title">游戏与奖品规则</text>
+  <view class="section">
+    <text class="h2">1. 积分与排名</text>
+    <text class="p">• 榜单采取 <text class="highlight">72小时滚动制</text>，只会保留最近3天的挑战成绩，让每位顾客都有机会霸榜。</text>
+    <text class="p">• 积分计算公式：(消除对数 ÷ 耗时) × 难度系数。</text>
+  </view>
+  <view class="section">
+    <text class="h2">2. 奖品兑换</text>
+    <text class="p">• 所有获得的优惠券/精油时长仅限 <text class="highlight">下次到店消费时使用</text>。</text>
+    <text class="p">• 凭“我的奖品”页面中的记录向店员核销。</text>
+  </view>
+  <view class="section">
+    <text class="h2">3. 最好成绩原则</text>
+    <text class="p">• 每位玩家同时只能拥有 <text class="highlight">一张</text> “待使用”的最高级奖品。</text>
+    <text class="p">• 如果您刷新了自己的记录并赢得了更好的奖品，旧奖品将自动失效。</text>
+    <text class="p">• 核销使用后，您可以再次挑战赢取新奖品。</text>
+  </view>
+</view>
