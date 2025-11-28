@@ -5,12 +5,16 @@ var Bmob = require('utils/Bmob-2.6.3.min.js');
 Bmob.initialize("4fa0f30d648a4b33", "123zbx");
 
 App({
+  globalData: {
+    openid: null,
+    userInfo: null
+  },
   onLaunch: function () {
     // 一键登录获取 OpenID
     Bmob.User.auth().then(res => {
       console.log('登录成功', res);
-      // res.openid 就是用户的唯一标识
-      // 用户信息已缓存在本地，后续页面可以直接调用 Bmob.User.current()
+      // [需求2] 保存 OpenID 到全局
+      this.globalData.openid = res.authData.weapp.openid;
     }).catch(err => {
       console.log('登录失败', err);
     });

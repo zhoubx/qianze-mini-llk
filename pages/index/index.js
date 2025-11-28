@@ -36,9 +36,9 @@ Page({
     isGameActive: false,
     showModal: false,
     diffConfig: [
-      { id: 'easy', class: 'diff-easy', title: '养生小白', badge: '简单', badgeClass: 'badge-easy', multiplier: 1.0, desc: '重在参与', icon: '🍵' },
-      { id: 'medium', class: 'diff-med', title: '养生达人', badge: '普通', badgeClass: 'badge-med', multiplier: 1.3, desc: '冲代金券', icon: '🌿' },
-      { id: 'hard', class: 'diff-hard', title: '养生宗师', badge: '困难', badgeClass: 'badge-hard', multiplier: 1.6, desc: '抢大时长', icon: '🏆' }
+      { id: 'easy', class: 'diff-easy', title: '养生小白', badge: '简单', badgeClass: 'badge-easy', multiplier: 1.0, desc: '轻松休闲·重在参与（低保奖励）', icon: '🍵' },
+      { id: 'medium', class: 'diff-med', title: '养生达人', badge: '普通', badgeClass: 'badge-med', multiplier: 1.3, desc: '进阶挑战·稳中求进（小富即安）', icon: '🌿' },
+      { id: 'hard', class: 'diff-hard', title: '养生宗师', badge: '困难', badgeClass: 'badge-hard', multiplier: 1.6, desc: '极限手速·冲高夺冠（抢代金券）', icon: '🏆' }
     ],
     config: {
       easy: { rows: 2, cols: 2 },
@@ -65,7 +65,9 @@ Page({
     finalPrizeName: '',
     finalPrizeLevel: 6,
     inputName: '',
-    submitting: false
+    submitting: false,
+    wechatNickName: '', // 新增：用于存储获取到的微信昵称
+    isUsingWechatNick: false // 新增：标记是否使用了微信昵称
   },
 
   onLoad: function() {
@@ -238,7 +240,7 @@ Page({
 
   // 💡 Bug修复：死局检测与自动洗牌
   checkDeadlock() {
-    if (!this.hasMoves()) {
+    while (!this.hasMoves()) {
       wx.showToast({ title: '无解！自动洗牌', icon: 'none' });
       this.shuffleBoard();
     }
@@ -356,7 +358,36 @@ Page({
 
   onNameInput(e) { this.setData({ inputName: e.detail.value }); },
 
-  // 💡 需求：复杂的奖品更新逻辑
+  // [需求4] 获取微信用户昵称
+  getUserProfile(e) {
+    wx.getUserProfile({
+      desc: '用于记录排行榜和奖品归属', 
+      success: (res) => {
+        const nickName = res.userInfo.nickName;
+        this.setData({
+          wechatNickName: nickName,
+          // 询问用户是否直接填入输入框
+          isUsingWechatNick: true
+        });
+        
+        wx.showModal({
+          title: '获取成功',
+          content: `您的微信昵称是“${nickName}”，是否直接使用它作为游戏上榜昵称？`,
+          success: (modalRes) => {
+            if (modalRes.confirm) {
+              this.setData({ inputName: nickName });
+            }
+          }
+        });
+      },
+      fail: (err) => {
+        console.log("获取用户信息失败", err);
+        wx.showToast({ title: '获取失败，请手动输入', icon: 'none' });
+      }
+    });
+  },
+
+  // [需求2 & 4] 提交成绩修改
   async submitScore() {
     let name = this.data.inputName;
     if (!name) { wx.showToast({ title: '请输入名字', icon: 'none' }); return; }
@@ -364,34 +395,33 @@ Page({
     this.setData({ submitting: true });
 
     try {
-      // 1. 查找该用户是否已有“待使用”的奖品
+      const app = getApp();
+      const openid = app.globalData.openid; // 获取全局 OpenID
+
+      // 1. 查找该用户(OpenID)是否已有“待使用”的奖品
       const queryOld = Bmob.Query("GameScore");
-      queryOld.set("playerName", name);
-      queryOld.set("status", "pending"); // 状态：pending, used, expired
+      
+      // 修改：以前是查 name，现在查 openid 更准确，如果没有openid则回退查name
+      if (openid) {
+        queryOld.set("openid", openid);
+      } else {
+        queryOld.set("playerName", name);
+      }
+      queryOld.set("status", "pending");
       const oldRecords = await queryOld.find();
 
-      // 2. 比较奖品等级
+      // 2. 比较奖品等级 (逻辑保持不变，略)
       let currentLevel = this.data.finalPrizeLevel;
-      // 奖品等级越小越好 (1级最好)
-      
-      // 批量处理旧记录
       if (oldRecords.length > 0) {
         for (let record of oldRecords) {
            const queryUpdate = Bmob.Query('GameScore');
-           // 如果新奖品更好(level更小)，旧奖品失效
            if (currentLevel < record.prizeLevel) {
              queryUpdate.get(record.objectId).then(res => {
                res.set('status', 'expired');
                res.save();
              });
            } else {
-             // 如果旧奖品更好，新奖品直接标记为失效(但仍然记录分数)
-             // 或者：保留两者？需求说“最优的奖品为待使用”。
-             // 策略：如果新奖品不如旧奖品，新奖品直接存为 'expired'
-             // 但为了鼓励，我们可以不存为expired，而是这次挑战不算“有效赢取”。
-             // 按照需求：多次过关，只有最好成绩奖品有效。
-             // 所以这里我们把新记录存为 'expired' 状态即可。
-             currentLevel = 999; // 标记一下，下面的保存逻辑会用到
+             currentLevel = 999; 
            }
         }
       }
@@ -404,8 +434,11 @@ Page({
       query.set("difficulty", this.gameState.diff);
       query.set("prizeName", this.data.finalPrizeName);
       query.set("prizeLevel", this.data.finalPrizeLevel);
-      // 如果currentLevel被标记为999，说明不如旧奖品，直接过期；否则为待使用
       query.set("status", currentLevel === 999 ? "expired" : "pending");
+
+      // [新增] 记录 OpenID 和 微信原始昵称
+      if (openid) query.set("openid", openid);
+      if (this.data.wechatNickName) query.set("wechatNickName", this.data.wechatNickName);
       
       await query.save();
 

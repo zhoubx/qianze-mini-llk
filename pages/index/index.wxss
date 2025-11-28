@@ -18,7 +18,9 @@ page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
 
 /* 难度卡片 */
 .difficulty-card { width: 92%; padding: 24rpx; margin-bottom: 20rpx; background: white; border-radius: 16rpx; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.05); border-left: 8rpx solid transparent; }
-.diff-easy { border-left-color: #81c784; } .diff-med { border-left-color: #ffb74d; } .diff-hard { border-left-color: #e57373; background: linear-gradient(to right, #fff, #fff5f5); }
+.diff-easy { border-left-color: #81c784; } 
+.diff-med { border-left-color: #ffb74d; } 
+.diff-hard { border-left-color: #e57373; background: linear-gradient(to right, #fff, #fff5f5); }
 .diff-info { display: flex; flex-direction: column; }
 .diff-header { display: flex; align-items: center; }
 .diff-title { font-weight: bold; font-size: 30rpx; color: #333; margin-right: 10rpx; }

@@ -12,3 +12,9 @@
 .status-text { font-size: 24rpx; margin-top: 8rpx; font-weight: bold; }
 .pending .status-text { color: #d4a017; }
 .use-btn { background: #4a7c59; color: white; font-size: 24rpx; margin: 0; }
+
+.detail {
+  font-size: 24rpx;
+  color: #666;
+  margin-top: 4rpx;
+}

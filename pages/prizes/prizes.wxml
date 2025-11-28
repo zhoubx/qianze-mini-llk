@@ -1,17 +1,15 @@
 <view class="container">
-  <view class="search-box">
-    <input class="input" placeholder="输入您的玩家名查询" bindinput="onInput" />
-    <button class="btn" bindtap="fetchPrizes">查询</button>
-  </view>
-
   <view class="list">
-    <view wx:if="{{prizes.length===0}}" class="empty">暂无奖品记录</view>
+    <view wx:if="{{prizes.length===0 && !loading}}" class="empty">暂无奖品记录，快去玩游戏赢取吧！</view>
+    
     <view class="card {{item.status}}" wx:for="{{prizes}}" wx:key="objectId">
       <view class="info">
         <text class="name">{{item.prizeName}}</text>
+        <text class="detail">玩家: {{item.playerName}} | 分数: {{item.score}}</text>
         <text class="time">{{item.createTimeStr}} 获得</text>
         <text class="status-text">{{item.statusText}}</text>
       </view>
+      
       <button wx:if="{{item.status === 'pending'}}" class="use-btn" bindtap="usePrize" data-id="{{item.objectId}}">核销使用</button>
     </view>
   </view>

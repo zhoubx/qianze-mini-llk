@@ -24,7 +24,7 @@
 
     <view class="leaderboard-box">
       <view class="lb-header">
-        <text class="lb-title">👑 全服风云榜 (72h)</text>
+        <text class="lb-title">👑 全服风云榜（72小时）</text>
         <text class="lb-timer" bindtap="fetchLeaderboard">🔄 刷新</text>
       </view>
       <scroll-view scroll-y class="lb-list">
@@ -70,12 +70,22 @@
       </view>
       
       <view class="input-group">
-        <text class="input-label">为了更好地记录您的成绩和奖品，建议您使用微信昵称或手机尾号作为玩家名：</text>
+        <text class="input-label">请录入您的玩家名(用于领奖核销)：</text>
+        
+        <button 
+          bindtap="getUserProfile" 
+          size="mini" 
+          type="default" 
+          style="font-size: 24rpx; margin-bottom: 10rpx; width: 100%;">
+          👇 点我一键获取微信昵称
+        </button>
+
         <input class="name-input" placeholder="请输入您的昵称/手机号" value="{{inputName}}" bindinput="onNameInput" maxlength="12"/>
       </view>
-      
+   
       <button class="btn-primary" loading="{{submitting}}" bindtap="submitScore">确认领取并上榜</button>
       <button style="font-size:24rpx; color:#666; background:transparent;" open-type="share">🎉 炫耀战绩</button>
     </view>
   </view>
+  
 </view>
