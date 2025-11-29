@@ -17,6 +17,12 @@ Page({
   
   onShow() {
     this.fetchMyPrizes();
+
+    // 同步音乐状态，确保页面显示时音乐组件状态正确
+    const musicControl = this.selectComponent('#musicControl');
+    if (musicControl) {
+      musicControl.syncMusicStatus();
+    }
   },
   
   fetchMyPrizes() {

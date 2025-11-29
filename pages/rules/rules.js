@@ -26,7 +26,11 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow() {
-
+    // 同步音乐状态，确保页面显示时音乐组件状态正确
+    const musicControl = this.selectComponent('#musicControl');
+    if (musicControl) {
+      musicControl.syncMusicStatus();
+    }
   },
 
   /**

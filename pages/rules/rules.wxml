@@ -1,4 +1,7 @@
 <view class="container">
+  <!-- 音乐控制组件 -->
+  <music-control id="musicControl"></music-control>
+
   <text class="title">游戏与奖品规则</text>
   <view class="section">
     <text class="h2">1. 积分与排名</text>

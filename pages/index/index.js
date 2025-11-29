@@ -27,17 +27,12 @@ const imgConfig = [
   `${imgBaseUrl}/011.jpg`
 ];
 
-// 音效上下文
-const bgmCtx = wx.createInnerAudioContext();
-bgmCtx.src = 'http://qianze.xyz/music/backMusic1.mp4'; // 背景乐
-bgmCtx.loop = true;
-
+// 消除音效上下文
 const matchCtx = wx.createInnerAudioContext();
 matchCtx.src = 'http://qianze.xyz/music/llk-音效.MP3'; // 💡 需求：消除音效 (请上传一个短促的pop声到OSS)
 
 Page({
   data: {
-    isMusicPlaying: false,
     isGameActive: false,
     showModal: false,
     diffConfig: [{
@@ -138,19 +133,14 @@ Page({
     this.fetchLeaderboard();
   },
 
-  toggleMusic() {
-    if (this.data.isMusicPlaying) {
-      bgmCtx.pause();
-      this.setData({
-        isMusicPlaying: false
-      });
-    } else {
-      bgmCtx.play();
-      this.setData({
-        isMusicPlaying: true
-      });
+  onShow: function () {
+    // 同步音乐状态，确保页面显示时音乐组件状态正确
+    const musicControl = this.selectComponent('#musicControl');
+    if (musicControl) {
+      musicControl.syncMusicStatus();
     }
   },
+
 
   // [需求5, 6, 7] 修改排行榜获取逻辑：去重、取最高分、配置化时间
   // [Bug修复] 修复 iOS 日期解析问题
@@ -220,7 +210,6 @@ Page({
       selected: null
     };
 
-    if (!this.data.isMusicPlaying) this.toggleMusic();
 
     clearInterval(this.timer);
     this.timer = setInterval(() => {
@@ -695,6 +684,13 @@ Page({
         title: '上榜成功',
         icon: 'success'
       });
+
+      // 播放过关音乐
+      const musicControl = this.selectComponent('#musicControl');
+      if (musicControl) {
+        musicControl.playVictoryMusic();
+      }
+
       this.setData({
         showModal: false,
         submitting: false

@@ -2,8 +2,10 @@
   <view class="header">
     <text class="title">芊泽养生 SPA</text>
     <text class="slogan">凭实力赢优惠券，身心愉悦两不误！</text>
-    <view class="music-btn {{isMusicPlaying ? 'playing' : ''}}" bindtap="toggleMusic">🎵</view>
   </view>
+
+  <!-- 音乐控制组件 -->
+  <music-control id="musicControl"></music-control>
 
   <view class="top-actions" wx:if="{{!isGameActive}}">
     <navigator url="/pages/rules/rules" class="action-link">📖 游戏规则</navigator>

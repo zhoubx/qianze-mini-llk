@@ -1,4 +1,7 @@
 <view class="container">
+  <!-- 音乐控制组件 -->
+  <music-control id="musicControl"></music-control>
+
   <view class="list">
     <view wx:if="{{prizes.length===0 && !loading}}" class="empty">暂无奖品记录，快去玩游戏赢取吧！</view>
     
