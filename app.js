@@ -11,6 +11,7 @@ Bmob.initialize("4fa0f30d648a4b33", "123zbx");
 let bgmCtx = null;
 let victoryCtx = null;
 let musicCallbacks = []; // 存储所有音乐状态变化的回调函数
+let isMusicPlaying = false; // 内部播放状态跟踪
 
 App({
   globalData: {
@@ -50,62 +51,63 @@ App({
 
     // 检查用户设置并自动播放
     const settings = wx.getStorageSync('musicSettings') || {};
-    const isMusicPlaying = settings.isMusicPlaying !== undefined ? settings.isMusicPlaying : true;
+    const shouldPlay = settings.isMusicPlaying !== undefined ? settings.isMusicPlaying : true;
+    isMusicPlaying = shouldPlay; // 设置内部状态
 
-    if (isMusicPlaying) {
+    if (shouldPlay) {
       // 延迟播放，确保页面加载完成
       setTimeout(() => {
-        this.startBackgroundMusic();
+        bgmCtx.play();
+        isMusicPlaying = true;
       }, 1000);
     }
   },
 
   // 获取当前音乐播放状态
   getMusicStatus() {
-    const settings = wx.getStorageSync('musicSettings') || {};
     return {
-      isPlaying: settings.isMusicPlaying !== undefined ? settings.isMusicPlaying : true
+      isPlaying: isMusicPlaying
     };
   },
 
   // 开始播放背景音乐
   startBackgroundMusic() {
-    if (bgmCtx && !bgmCtx.paused) {
-      return;
-    }
-    if (bgmCtx) {
+    if (bgmCtx && !isMusicPlaying) {
       bgmCtx.play();
+      isMusicPlaying = true;
       this.notifyMusicStatusChange(true);
+      // 保存设置
+      const settings = wx.getStorageSync('musicSettings') || {};
+      settings.isMusicPlaying = true;
+      wx.setStorageSync('musicSettings', settings);
     }
   },
 
-  // 停止背景音乐
+  // 暂停背景音乐（而不是停止）
   stopBackgroundMusic() {
-    if (bgmCtx) {
-      bgmCtx.stop();
+    if (bgmCtx && isMusicPlaying) {
+      bgmCtx.pause();
+      isMusicPlaying = false;
       this.notifyMusicStatusChange(false);
+      // 保存设置
+      const settings = wx.getStorageSync('musicSettings') || {};
+      settings.isMusicPlaying = false;
+      wx.setStorageSync('musicSettings', settings);
     }
   },
 
   // 切换背景音乐播放状态
   toggleBackgroundMusic() {
-    const currentStatus = this.getMusicStatus();
-    if (currentStatus.isPlaying) {
+    if (isMusicPlaying) {
       this.stopBackgroundMusic();
     } else {
       this.startBackgroundMusic();
     }
-
-    // 保存设置
-    const settings = wx.getStorageSync('musicSettings') || {};
-    settings.isMusicPlaying = !currentStatus.isPlaying;
-    wx.setStorageSync('musicSettings', settings);
   },
 
   // 播放胜利音乐
   playVictoryMusic() {
-    const currentStatus = this.getMusicStatus();
-    if (victoryCtx && currentStatus.isPlaying) {
+    if (victoryCtx) {
       victoryCtx.play();
     }
   },
