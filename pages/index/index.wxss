@@ -1,12 +1,12 @@
 /* pages/index/index.wxss */
 page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
 
-.container { 
+.container {
   display: inline; /* 改为 flex 布局方便撑开高度 */
-  flex-direction: column; 
-  align-items: center; 
-  padding: 10rpx 20rpx;
-  min-height: 100vh; 
+  flex-direction: column;
+  align-items: center;
+  padding: 10rpx 15rpx;
+  min-height: 100vh;
   box-sizing: border-box; /* 确保 padding 不会撑大宽度 */
 }
 
@@ -35,9 +35,9 @@ page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
 /* 难度按钮卡片优化 */
 .difficulty-card {
   /* 保持上一轮的样式 */
-  width: 90%;
-  padding: 24rpx 40rpx;
-  margin-bottom: 24rpx;
+  width: 95%;
+  padding: 20rpx 30rpx;
+  margin-bottom: 20rpx;
   border-radius: 24rpx;
   display: flex;
   justify-content: space-between;
@@ -122,10 +122,10 @@ page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
 
 /* [需求4] 排行榜高度调高 */
 .leaderboard-box {
-  width: 94%;
+  width: 98%;
   background: white;
   border-radius: 20rpx;
-  padding: 20rpx;
+  padding: 18rpx;
   margin-top: 10rpx;
   /* 关键修改：利用 flex: 1 自动撑满剩余空间，或者设定一个较大的高度 */
   flex: 1; 
