@@ -1,5 +1,6 @@
 // pages/prizes/prizes.js
 var Bmob = require('../../utils/Bmob-2.6.3.min.js');
+const dateFormat = require('../../utils/dateFormat.js'); // 引入日期格式化工具
 const app = getApp();
 
 const DIFF_MAP = {
@@ -35,16 +36,8 @@ Page({
     query.find().then(res => {
       
       let list = res.map(item => {
-        // 时间格式化 mm-dd HH:mm
-        // [核心修复] iOS 日期格式兼容
-        let timeStr = item.createdAt.replace(/-/g, '/');
-        let d = new Date(timeStr);
-        
-        let m = (d.getMonth()+1).toString().padStart(2, '0');
-        let day = d.getDate().toString().padStart(2, '0');
-        let h = d.getHours().toString().padStart(2, '0');
-        let min = d.getMinutes().toString().padStart(2, '0');
-        item.createTimeStr = `${m}-${day} ${h}:${min}`;
+        // 使用统一的日期格式化工具函数
+        item.createTimeStr = dateFormat.formatDate(item.createdAt);
 
         // 状态文案
         if(item.status === 'pending') item.statusText = '待使用';
@@ -78,8 +71,13 @@ Page({
       this.setData({ prizes: list, loading: false });
       wx.hideLoading();
     }).catch(err => {
-      console.log(err);
+      console.error('获取奖品列表失败:', err);
       wx.hideLoading();
+      wx.showToast({
+        title: '获取奖品列表失败',
+        icon: 'none'
+      });
+      this.setData({ loading: false });
     });
   },
 
@@ -96,6 +94,18 @@ Page({
             item.save().then(() => {
               wx.showToast({ title: '核销成功' });
               this.fetchMyPrizes(); // 刷新列表
+            }).catch(err => {
+              console.error('核销失败:', err);
+              wx.showToast({
+                title: '核销失败，请重试',
+                icon: 'none'
+              });
+            });
+          }).catch(err => {
+            console.error('获取奖品信息失败:', err);
+            wx.showToast({
+              title: '操作失败，请重试',
+              icon: 'none'
             });
           });
         }

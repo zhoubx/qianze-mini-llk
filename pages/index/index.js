@@ -1,12 +1,13 @@
 // index.js
 var Bmob = require('../../utils/Bmob-2.6.3.min.js'); // 引入SDK
+const dateFormat = require('../../utils/dateFormat.js'); // 引入日期格式化工具
 const app = getApp();
 
 // [需求7] 配置项：排名统计的时间范围（小时）
 const RANK_DURATION_HOURS = 72;
 
-// 初始化 (填入您的密钥)
-Bmob.initialize("4fa0f30d648a4b33", "123zbx");
+// 注意：Bmob已在app.js中初始化，此处不需要重复初始化
+// Bmob.initialize("4fa0f30d648a4b33", "123zbx");
 
 const imgBaseUrl = "http://qianze.xyz/images"; // 同样记得换成您OSS的图
 const imgConfig = [
@@ -160,10 +161,10 @@ Page({
     query.equalTo("createdAt", ">", date.toISOString());
     // console.log("date:" + date);
     // console.log("date.toISOString():" + date.toISOString());
-    query.order("-score");1
+    query.order("-score");
     query.limit(500);
 
-    query.find().then(res => {er
+    query.find().then(res => {
       let userMap = {}; // 数据处理：同一用户取最高分
 
       res.forEach(item => {
@@ -171,16 +172,8 @@ Page({
 
         // 如果该用户还没记录，或者当前这条分数更高，则保存/更新
         if (!userMap[key] || item.score > userMap[key].score) {
-          // [核心修复] iOS 必须将 '-' 替换为 '/'
-          // Bmob 返回的时间格式通常是 "YYYY-MM-DD HH:mm:ss"
-          let timeStr = item.createdAt.replace(/-/g, '/');
-          let d = new Date(timeStr);
-
-          let m = (d.getMonth() + 1).toString().padStart(2, '0');
-          let day = d.getDate().toString().padStart(2, '0');
-          let h = d.getHours().toString().padStart(2, '0');
-          let min = d.getMinutes().toString().padStart(2, '0');
-          item.createTimeStr = `${m}-${day} ${h}:${min}`;
+          // 使用统一的日期格式化工具函数
+          item.createTimeStr = dateFormat.formatDate(item.createdAt);
 
           userMap[key] = item;
         }
@@ -188,10 +181,16 @@ Page({
 
       let uniqueList = Object.values(userMap);
       uniqueList.sort((a, b) => b.score - a.score);
-      let finalRankList = res;
+      let finalRankList = uniqueList;
 
       this.setData({
         rankList: finalRankList
+      });
+    }).catch(err => {
+      console.error('获取排行榜失败:', err);
+      wx.showToast({
+        title: '获取排行榜失败',
+        icon: 'none'
       });
     });
   },
@@ -616,24 +615,39 @@ Page({
       let currentScore = this.data.tempScore; // 获取当前分数
 
       if (oldRecords.length > 0) {
+        // 使用 Promise.all 确保所有异步操作完成，并添加错误处理
+        const updatePromises = [];
+        
         for (let record of oldRecords) {
-          const queryUpdate = Bmob.Query('GameScore');
-
           // 情况A: 新奖品等级更高 (数值更小) -> 旧奖品失效
           if (currentLevel < record.prizeLevel) {
-            queryUpdate.get(record.objectId).then(res => {
-              res.set('status', 'expired');
-              res.save();
-            });
+            const updatePromise = Bmob.Query('GameScore')
+              .get(record.objectId)
+              .then(res => {
+                res.set('status', 'expired');
+                return res.save();
+              })
+              .catch(err => {
+                console.error('更新旧奖品状态失败:', err);
+                // 继续执行，不中断流程
+              });
+            updatePromises.push(updatePromise);
           }
           // 情况B: [新需求] 奖品等级相同 -> 比较分数
           else if (currentLevel === record.prizeLevel) {
             if (currentScore > record.score) {
               // 新分数更高 -> 旧奖品失效，保留新奖品
-              queryUpdate.get(record.objectId).then(res => {
-                res.set('status', 'expired');
-                res.save();
-              });
+              const updatePromise = Bmob.Query('GameScore')
+                .get(record.objectId)
+                .then(res => {
+                  res.set('status', 'expired');
+                  return res.save();
+                })
+                .catch(err => {
+                  console.error('更新旧奖品状态失败:', err);
+                  // 继续执行，不中断流程
+                });
+              updatePromises.push(updatePromise);
             } else {
               // 旧分数更高(或相等) -> 新奖品直接失效
               currentLevel = 999;
@@ -644,6 +658,9 @@ Page({
             currentLevel = 999;
           }
         }
+        
+        // 等待所有更新操作完成（即使有错误也继续）
+        await Promise.allSettled(updatePromises);
       }
 
       // 3. 保存新记录
@@ -693,5 +710,23 @@ Page({
       showModal: false
     });
     this.fetchLeaderboard();
+  },
+
+  // 页面卸载时清理资源，防止内存泄漏
+  onUnload() {
+    // 清除定时器
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
+    
+    // 停止音频（不销毁，因为音频上下文是模块级常量，销毁后无法自动恢复）
+    // 如果确实需要销毁，可以在 onLoad 中重新创建
+    if (bgmCtx) {
+      bgmCtx.stop();
+    }
+    if (matchCtx) {
+      matchCtx.stop();
+    }
   }
 });
