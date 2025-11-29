@@ -63,16 +63,48 @@ page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
   flex-direction: column;
 }
 
+.diff-header {
+  display: flex;
+  align-items: baseline;
+  margin-bottom: 6rpx;
+}
+
 .diff-title {
   font-size: 34rpx;
   font-weight: bold;
   color: #333;
-  margin-bottom: 6rpx;
+  margin-right: 8rpx;
 }
 
 .diff-desc {
   font-size: 24rpx;
   color: #888;
+}
+
+/* 难度标签样式 */
+.diff-badge {
+  font-size: 20rpx;
+  padding: 2rpx 10rpx;
+  border-radius: 10rpx;
+  font-weight: bold;
+  color: white;
+  display: inline-block;
+  margin-bottom: 4rpx;
+}
+
+.badge-easy {
+  background: linear-gradient(135deg, #4caf50, #81c784);
+  box-shadow: 0 2rpx 4rpx rgba(76, 175, 80, 0.3);
+}
+
+.badge-med {
+  background: linear-gradient(135deg, #ff9800, #ffb74d);
+  box-shadow: 0 2rpx 4rpx rgba(255, 152, 0, 0.3);
+}
+
+.badge-hard {
+  background: linear-gradient(135deg, #f44336, #e57373);
+  box-shadow: 0 2rpx 4rpx rgba(244, 67, 54, 0.3);
 }
 
 /* 右侧增加一个“开始”的视觉引导 */
