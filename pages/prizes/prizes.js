@@ -36,7 +36,10 @@ Page({
       
       let list = res.map(item => {
         // 时间格式化 mm-dd HH:mm
-        let d = new Date(item.createdAt);
+        // [核心修复] iOS 日期格式兼容
+        let timeStr = item.createdAt.replace(/-/g, '/');
+        let d = new Date(timeStr);
+        
         let m = (d.getMonth()+1).toString().padStart(2, '0');
         let day = d.getDate().toString().padStart(2, '0');
         let h = d.getHours().toString().padStart(2, '0');

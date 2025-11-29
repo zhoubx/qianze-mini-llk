@@ -34,22 +34,17 @@ page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
 
 /* 难度按钮卡片优化 */
 .difficulty-card {
+  /* 保持上一轮的样式 */
   width: 90%;
   padding: 24rpx 40rpx;
   margin-bottom: 24rpx;
-  border-radius: 24rpx; /* 更圆润 */
+  border-radius: 24rpx;
   display: flex;
-  justify-content: space-between; /* 左右分布 */
+  justify-content: space-between;
   align-items: center;
-  
-  /* 基础背景色 */
   background: white;
-  
-  /* 按钮立体感：阴影 */
   box-shadow: 0 8rpx 20rpx rgba(0,0,0,0.1);
   border: 1px solid rgba(0,0,0,0.02);
-  
-  /* 点击反馈 */
   transition: transform 0.1s, box-shadow 0.1s;
 }
 
@@ -112,7 +107,7 @@ page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
 .lb-header { display: flex; justify-content: space-between; margin-bottom: 10rpx; border-bottom: 2rpx solid #f0f0f0; padding-bottom: 10rpx; font-size: 28rpx; }
 .lb-list {
   flex: 1;
-  height: 0;
+  /* height: 0; */
 }
 .lb-item {
   display: flex;
