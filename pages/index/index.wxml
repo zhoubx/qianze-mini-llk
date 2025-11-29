@@ -16,6 +16,7 @@
         <view class="diff-header">
           <text class="diff-title">{{item.title}}</text>
           <text class="diff-badge {{item.badgeClass}}">{{item.badge}}</text>
+          <text class="diff-multiplier {{item.badgeClass}}">x{{item.multiplier}}</text>
         </view>
         <text class="diff-desc">{{item.desc}}</text>
       </view>
