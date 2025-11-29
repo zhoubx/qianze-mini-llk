@@ -25,7 +25,10 @@
     <view class="leaderboard-box">
       <view class="lb-header">
         <text class="lb-title">👑 全服风云榜（72小时）</text>
-        <text class="lb-timer" bindtap="fetchLeaderboard">🔄 刷新</text>
+        <view class="lb-refresh-wrapper">
+          <text class="lb-timer" bindtap="fetchLeaderboard">🔄 刷新</text>
+          <text class="lb-loading-icon {{isRefreshing ? 'rotating' : ''}}" wx:if="{{isRefreshing}}">⏳</text>
+        </view>
       </view>
       <scroll-view scroll-y class="lb-list">
         <view wx:if="{{rankList.length === 0}}" style="text-align:center;color:#999;margin-top:50rpx;font-size:24rpx">暂无数据，快来抢占榜首！</view>

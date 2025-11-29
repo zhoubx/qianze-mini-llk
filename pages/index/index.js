@@ -130,7 +130,8 @@ Page({
     inputName: '',
     submitting: false,
     wechatNickName: '', // 新增：用于存储获取到的微信昵称
-    isUsingWechatNick: false // 新增：标记是否使用了微信昵称
+    isUsingWechatNick: false, // 新增：标记是否使用了微信昵称
+    isRefreshing: false // 新增：标记是否正在刷新排行榜
   },
 
   onLoad: function () {
@@ -154,6 +155,11 @@ Page({
   // [需求5, 6, 7] 修改排行榜获取逻辑：去重、取最高分、配置化时间
   // [Bug修复] 修复 iOS 日期解析问题
   fetchLeaderboard() {
+    // 开始刷新，显示加载动画
+    this.setData({
+      isRefreshing: true
+    });
+
     const query = Bmob.Query("GameScore");
 
     let date = new Date();
@@ -184,13 +190,17 @@ Page({
       let finalRankList = uniqueList;
 
       this.setData({
-        rankList: finalRankList
+        rankList: finalRankList,
+        isRefreshing: false // 刷新完成，隐藏加载动画
       });
     }).catch(err => {
       console.error('获取排行榜失败:', err);
       wx.showToast({
         title: '获取排行榜失败',
         icon: 'none'
+      });
+      this.setData({
+        isRefreshing: false // 刷新失败，也要隐藏加载动画
       });
     });
   },
