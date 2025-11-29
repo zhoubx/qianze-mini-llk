@@ -1,0 +1,3 @@
+<view class="music-btn {{isMusicPlaying ? 'playing' : ''}}" bindtap="toggleMusic">
+  🎵
+</view>
