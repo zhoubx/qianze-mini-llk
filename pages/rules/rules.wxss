@@ -2,7 +2,7 @@ page { background: #f4f7f6; }
 
 .container {
   display: block;
-  padding: 20rpx 40rpx;
+  padding: 20rpx 20rpx;
   min-height: 100vh;
   background: white;
   margin: 20rpx;
