@@ -477,17 +477,21 @@ Page({
     const app = getApp();
     app.playVictoryMusic();
 
-    // Bug修复：每次胜利时重新生成随机头像
-    this.setData({
-      isGameActive: false,
-      showModal: true,
-      tempScore: score,
-      tempTime: s,
-      myRank: rank,
-      finalPrizeName: prize,
-      finalPrizeLevel: level,
-      scoreBreakthrough: scoreBreakthrough,
-      avatarUrl: getRandomAvatar() // 重新生成随机头像
+    // 先尝试读取用户已保存的信息
+    this.loadUserInfo().then(userInfo => {
+      this.setData({
+        isGameActive: false,
+        showModal: true,
+        tempScore: score,
+        tempTime: s,
+        myRank: rank,
+        finalPrizeName: prize,
+        finalPrizeLevel: level,
+        scoreBreakthrough: scoreBreakthrough,
+        // 优先使用已保存的用户信息，否则使用随机头像
+        avatarUrl: userInfo.avatarUrl || getRandomAvatar(),
+        inputName: userInfo.nickName || ''
+      });
     });
 
     // 冠军、亚军、季军显示庆祝动画
@@ -512,6 +516,65 @@ Page({
       this.setData({
         avatarUrl: avatarUrl
       });
+    }
+  },
+
+  // 从 UserInfo 表读取用户信息
+  async loadUserInfo() {
+    try {
+      const openid = app.globalData.openid;
+      if (!openid) {
+        return { avatarUrl: '', nickName: '' };
+      }
+
+      const query = Bmob.Query('UserInfo');
+      query.equalTo('openid', '==', openid);
+      const results = await query.find();
+
+      if (results.length > 0) {
+        const userInfo = results[0];
+        return {
+          avatarUrl: userInfo.avatarUrl || '',
+          nickName: userInfo.nickName || '',
+          objectId: userInfo.objectId
+        };
+      }
+      return { avatarUrl: '', nickName: '' };
+    } catch (err) {
+      console.error('读取用户信息失败:', err);
+      return { avatarUrl: '', nickName: '' };
+    }
+  },
+
+  // 保存用户信息到 UserInfo 表
+  async saveUserInfo(nickName, avatarUrl) {
+    try {
+      const openid = app.globalData.openid;
+      if (!openid) return;
+
+      // 先查找是否已存在记录
+      const queryFind = Bmob.Query('UserInfo');
+      queryFind.equalTo('openid', '==', openid);
+      const results = await queryFind.find();
+
+      if (results.length > 0) {
+        // 更新现有记录
+        const query = Bmob.Query('UserInfo');
+        const userInfo = await query.get(results[0].objectId);
+        userInfo.set('nickName', nickName);
+        userInfo.set('avatarUrl', avatarUrl);
+        userInfo.set('updatedAt', new Date());
+        await userInfo.save();
+      } else {
+        // 创建新记录
+        const query = Bmob.Query('UserInfo');
+        query.set('openid', openid);
+        query.set('nickName', nickName);
+        query.set('avatarUrl', avatarUrl);
+        await query.save();
+      }
+    } catch (err) {
+      console.error('保存用户信息失败:', err);
     }
   },
 
@@ -633,6 +696,9 @@ Page({
       if (this.data.avatarUrl) query.set("avatarUrl", this.data.avatarUrl);
 
       await query.save();
+
+      // 同时保存用户信息到 UserInfo 表
+      await this.saveUserInfo(name, this.data.avatarUrl);
 
       wx.showToast({
         title: '上榜成功',

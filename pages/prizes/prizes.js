@@ -4,22 +4,160 @@ const dateFormat = require('../../utils/dateFormat.js'); // 引入日期格式�
 const config = require('../../config/index.js'); // 引入配置文件
 const app = getApp();
 
-// 从配置文件获取难度文案映射
+// 从配置文件获取配置项
 const DIFF_MAP = config.DIFFICULTY_CONFIG.TEXT_MAP;
+const { GAME_IMAGES, AVATAR_CONFIG } = config;
 
 Page({
   data: {
     prizes: [],
-    loading: true
+    loading: true,
+    // 用户信息
+    userInfo: {
+      avatarUrl: '',
+      nickName: '',
+      objectId: ''
+    },
+    defaultAvatarUrl: AVATAR_CONFIG.DEFAULT,
+    isEditingProfile: false // 是否正在编辑用户信息
   },
   
   onShow() {
+    this.fetchUserInfo(); // 获取用户信息
     this.fetchMyPrizes();
 
     // 同步音乐状态，确保页面显示时音乐组件状态正确
     const musicControl = this.selectComponent('#musicControl');
     if (musicControl) {
       musicControl.syncMusicStatus();
+    }
+  },
+
+  // 获取用户信息
+  async fetchUserInfo() {
+    try {
+      const openid = app.globalData.openid;
+      if (!openid) {
+        // 等待 openid 获取
+        setTimeout(() => {
+          if (app.globalData.openid) this.fetchUserInfo();
+        }, 1000);
+        return;
+      }
+
+      const query = Bmob.Query('UserInfo');
+      query.equalTo('openid', '==', openid);
+      const results = await query.find();
+
+      if (results.length > 0) {
+        const userInfo = results[0];
+        this.setData({
+          userInfo: {
+            avatarUrl: userInfo.avatarUrl || '',
+            nickName: userInfo.nickName || '',
+            objectId: userInfo.objectId
+          }
+        });
+      } else {
+        // 用户没有保存过信息，使用随机头像
+        this.setData({
+          userInfo: {
+            avatarUrl: GAME_IMAGES[Math.floor(Math.random() * GAME_IMAGES.length)],
+            nickName: '',
+            objectId: ''
+          }
+        });
+      }
+    } catch (err) {
+      console.error('获取用户信息失败:', err);
+    }
+  },
+
+  // 开始编辑用户信息
+  startEditProfile() {
+    this.setData({
+      isEditingProfile: true
+    });
+  },
+
+  // 取消编辑
+  cancelEditProfile() {
+    this.setData({
+      isEditingProfile: false
+    });
+    // 重新加载用户信息，恢复原来的值
+    this.fetchUserInfo();
+  },
+
+  // 处理头像选择
+  onChooseAvatar(e) {
+    const { avatarUrl } = e.detail;
+    if (avatarUrl) {
+      this.setData({
+        'userInfo.avatarUrl': avatarUrl
+      });
+    }
+  },
+
+  // 处理昵称输入
+  onNickNameInput(e) {
+    this.setData({
+      'userInfo.nickName': e.detail.value
+    });
+  },
+
+  // 保存用户信息
+  async saveUserInfo() {
+    const { userInfo } = this.data;
+    
+    if (!userInfo.nickName.trim()) {
+      wx.showToast({
+        title: '请输入昵称',
+        icon: 'none'
+      });
+      return;
+    }
+
+    try {
+      wx.showLoading({ title: '保存中' });
+      
+      const openid = app.globalData.openid;
+      if (!openid) {
+        wx.hideLoading();
+        wx.showToast({ title: '请先登录', icon: 'none' });
+        return;
+      }
+
+      if (userInfo.objectId) {
+        // 更新现有记录
+        const query = Bmob.Query('UserInfo');
+        const record = await query.get(userInfo.objectId);
+        record.set('nickName', userInfo.nickName);
+        record.set('avatarUrl', userInfo.avatarUrl);
+        await record.save();
+      } else {
+        // 创建新记录
+        const query = Bmob.Query('UserInfo');
+        query.set('openid', openid);
+        query.set('nickName', userInfo.nickName);
+        query.set('avatarUrl', userInfo.avatarUrl);
+        const result = await query.save();
+        this.setData({
+          'userInfo.objectId': result.objectId
+        });
+      }
+
+      wx.hideLoading();
+      wx.showToast({ title: '保存成功', icon: 'success' });
+      
+      this.setData({
+        isEditingProfile: false
+      });
+
+    } catch (err) {
+      console.error('保存用户信息失败:', err);
+      wx.hideLoading();
+      wx.showToast({ title: '保存失败', icon: 'none' });
     }
   },
   

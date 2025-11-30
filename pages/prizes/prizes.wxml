@@ -2,6 +2,44 @@
   <!-- 音乐控制组件 -->
   <music-control id="musicControl"></music-control>
 
+  <!-- 用户信息卡片 -->
+  <view class="user-card">
+    <view class="user-info-display" wx:if="{{!isEditingProfile}}">
+      <image class="user-avatar" src="{{userInfo.avatarUrl || defaultAvatarUrl}}" mode="aspectFill"></image>
+      <view class="user-details">
+        <text class="user-name">{{userInfo.nickName || '未设置昵称'}}</text>
+        <text class="user-tip">点击右侧按钮修改头像和昵称</text>
+      </view>
+      <button class="edit-btn" bindtap="startEditProfile">✏️ 修改</button>
+    </view>
+
+    <!-- 编辑模式 -->
+    <view class="user-info-edit" wx:if="{{isEditingProfile}}">
+      <view class="edit-row">
+        <text class="edit-label">头像</text>
+        <button class="avatar-picker" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
+          <image class="edit-avatar" src="{{userInfo.avatarUrl || defaultAvatarUrl}}" mode="aspectFill"></image>
+          <text class="avatar-tip">点击更换</text>
+        </button>
+      </view>
+      <view class="edit-row">
+        <text class="edit-label">昵称</text>
+        <input 
+          type="nickname" 
+          class="nickname-input" 
+          placeholder="请输入昵称" 
+          value="{{userInfo.nickName}}"
+          bindinput="onNickNameInput"
+          maxlength="20"
+        />
+      </view>
+      <view class="edit-actions">
+        <button class="cancel-btn" bindtap="cancelEditProfile">取消</button>
+        <button class="save-btn" bindtap="saveUserInfo">保存</button>
+      </view>
+    </view>
+  </view>
+
   <!-- 页面标题栏 -->
   <view class="page-header">
     <view class="header-main">

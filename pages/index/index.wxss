@@ -196,8 +196,16 @@ page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
 
 .lb-rank { width: 40rpx; font-weight: bold; color: #999; text-align: center; }
 .rank-1 { color: #FFD700; font-size: 28rpx; } .rank-2 { color: #C0C0C0; font-size: 28rpx; } .rank-3 { color: #B87333; font-size: 28rpx; }
-.lb-info { flex: 1; margin-left: 10rpx; }
-.lb-name-row { display: flex; align-items: center; flex-wrap: wrap; }
+.lb-info {
+  flex: 1;
+  margin-left: 10rpx;
+}
+
+.lb-name-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
 .lb-avatar {
   width: 60rpx;
   height: 60rpx;
