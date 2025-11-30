@@ -6,27 +6,50 @@
   <view class="section">
     <text class="h2">1. 积分与排名</text>
     <text class="p">• 榜单采取 <text class="highlight">72小时滚动制</text>，只会保留最近3天的挑战成绩，让每位顾客都有机会霸榜。</text>
-    <text class="p">• 积分计算公式：(消除对数 ÷ 耗时) × 难度系数 <text class="highlight">+ 洗牌加分</text></text>
+    <text class="p">• 积分计算公式：<text class="highlight">基础分数 + 洗牌加分</text></text>
+    <text class="sub-title">基础分数计算：</text>
+    <text class="p indent">基础分数 = (消除对数 × 1000 ÷ 耗时) × 难度系数</text>
+    <view class="difficulty-box">
+      <text class="difficulty-item">• 简单模式：难度系数 = 1.0</text>
+      <text class="difficulty-item">• 普通模式：难度系数 = 1.3</text>
+      <text class="difficulty-item">• 困难模式：难度系数 = 1.6</text>
+    </view>
     <text class="sub-title">洗牌加分说明：</text>
-    <text class="p indent">每使用一次洗牌功能会 <text class="highlight">扣除 10 分</text>，洗牌次数越少，最终得分越高。</text>
+    <text class="p indent">当游戏出现死局（无可消除方块）时，系统会自动洗牌并 <text class="highlight">奖励加分</text>：</text>
+    <text class="p indent">洗牌加分 = 10 + 剩余方块数 × 8</text>
     <text class="sub-title">计分举例：</text>
     <view class="example-box">
-      <text class="example-title">示例 1：不使用洗牌</text>
-      <text class="example-text">• 消除对数：8 对</text>
-      <text class="example-text">• 耗时：45 秒</text>
-      <text class="example-text">• 难度系数：100（简单模式）</text>
-      <text class="example-text">• 洗牌次数：0 次</text>
-      <text class="example-result">得分 = (8 ÷ 45) × 100 + 0 × (-10) = <text class="score-highlight">17.78 分</text></text>
+      <text class="example-title">示例 1：普通模式，顺利通关（无死局）</text>
+      <text class="example-text">• 消除对数：18 对</text>
+      <text class="example-text">• 耗时：60 秒</text>
+      <text class="example-text">• 难度系数：1.3（普通模式）</text>
+      <text class="example-text">• 洗牌次数：0 次（无死局）</text>
+      <text class="example-result">基础分 = (18 × 1000 ÷ 60) × 1.3 = 390 分</text>
+      <text class="example-result">洗牌加分 = 0</text>
+      <text class="example-result">最终得分 = 390 + 0 = <text class="score-highlight">390 分</text></text>
     </view>
     <view class="example-box">
-      <text class="example-title">示例 2：使用洗牌</text>
-      <text class="example-text">• 消除对数：8 对</text>
-      <text class="example-text">• 耗时：40 秒</text>
-      <text class="example-text">• 难度系数：100（简单模式）</text>
-      <text class="example-text">• 洗牌次数：2 次</text>
-      <text class="example-result">得分 = (8 ÷ 40) × 100 + 2 × (-10) = 20.00 - 20 = <text class="score-highlight">0.00 分</text></text>
+      <text class="example-title">示例 2：困难模式，遇到1次死局</text>
+      <text class="example-text">• 消除对数：24 对</text>
+      <text class="example-text">• 耗时：80 秒</text>
+      <text class="example-text">• 难度系数：1.6（困难模式）</text>
+      <text class="example-text">• 死局时剩余：16 块（8对）</text>
+      <text class="example-result">基础分 = (24 × 1000 ÷ 80) × 1.6 = 480 分</text>
+      <text class="example-result">洗牌加分 = 10 + 16 × 8 = 138 分</text>
+      <text class="example-result">最终得分 = 480 + 138 = <text class="score-highlight">618 分</text></text>
     </view>
-    <text class="p tip">💡 温馨提示：合理使用洗牌功能可以更快完成游戏，但要注意把握平衡，避免过度使用导致扣分过多哦！</text>
+    <view class="example-box">
+      <text class="example-title">示例 3：困难模式，速度快但多次死局</text>
+      <text class="example-text">• 消除对数：24 对</text>
+      <text class="example-text">• 耗时：50 秒</text>
+      <text class="example-text">• 难度系数：1.6（困难模式）</text>
+      <text class="example-text">• 第1次死局剩余：20 块，加分 = 10 + 20×8 = 170 分</text>
+      <text class="example-text">• 第2次死局剩余：12 块，加分 = 10 + 12×8 = 106 分</text>
+      <text class="example-result">基础分 = (24 × 1000 ÷ 50) × 1.6 = 768 分</text>
+      <text class="example-result">洗牌加分 = 170 + 106 = 276 分</text>
+      <text class="example-result">最终得分 = 768 + 276 = <text class="score-highlight">1044 分</text></text>
+    </view>
+    <text class="p tip">💡 温馨提示：洗牌是<text class="highlight">加分机制</text>，死局越多、剩余方块越多，加分越高！但要平衡速度和加分的关系，因为耗时越长基础分越低哦！</text>
   </view>
   <view class="section">
     <text class="h2">2. 奖品兑换</text>

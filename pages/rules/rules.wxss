@@ -66,6 +66,22 @@ page { background: #f4f7f6; }
   padding-left: 32rpx;
 }
 
+.difficulty-box {
+  background: #f0f8f4;
+  border-radius: 8rpx;
+  padding: 16rpx 20rpx;
+  margin: 12rpx 0 20rpx 16rpx;
+  border-left: 4rpx solid #4a7c59;
+}
+
+.difficulty-item {
+  font-size: 24rpx;
+  color: #666;
+  line-height: 2;
+  display: block;
+  padding-left: 8rpx;
+}
+
 .example-box {
   background: #f8faf9;
   border-left: 4rpx solid #4a7c59;
