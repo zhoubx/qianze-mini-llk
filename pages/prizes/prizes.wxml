@@ -34,7 +34,7 @@
         </view>
 
         <view class="row-time">
-          <text>领取时间：{{item.createTimeStr}}</text>
+          <text>过关时间：{{item.createTimeStr}}</text>
         </view>
       </view>
 

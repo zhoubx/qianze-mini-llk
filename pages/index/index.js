@@ -134,10 +134,8 @@ Page({
     finalPrizeName: '',
     finalPrizeLevel: 6,
     inputName: '',
-    submitting: false,
     wechatNickName: '', // 新增：用于存储获取到的微信昵称
     isUsingWechatNick: false, // 新增：标记是否使用了微信昵称
-    avatarUrl: getDefaultAvatar(), // 默认随机头像
     defaultAvatarUrl: defaultAvatarUrl, // 排行榜默认头像
     isRefreshing: false // 新增：标记是否正在刷新排行榜
   },
@@ -598,60 +596,6 @@ Page({
     });
   },
 
-  // 头像选择事件
-  onChooseAvatar(e) {
-    const { avatarUrl } = e.detail;
-
-    // 注意：这里的 avatarUrl 只是一个临时的本地路径
-    // 如果需要永久保存，必须通过 wx.uploadFile 上传到你自己的服务器
-    this.setData({
-      avatarUrl
-    });
-
-    console.log('选择的头像URL:', avatarUrl);
-  },
-
-  // [需求4] 获取微信用户昵称
-  onGetUserInfo(e) {
-    console.log('获取用户信息事件', e);
-
-    if (e.detail.errMsg && e.detail.errMsg.includes('auth deny')) {
-      wx.showToast({
-        title: '需要授权才能获取昵称',
-        icon: 'none'
-      });
-      return;
-    }
-
-    if (e.detail && e.detail.userInfo) {
-      const nickName = e.detail.userInfo.nickName;
-      console.log('获取到昵称:', nickName);
-
-      this.setData({
-        wechatNickName: nickName,
-        isUsingWechatNick: true
-      });
-
-      wx.showModal({
-        title: '获取成功',
-        content: `您的微信昵称是"${nickName}"，是否直接使用它作为游戏上榜昵称？`,
-        success: (modalRes) => {
-          if (modalRes.confirm) {
-            this.setData({
-              inputName: nickName
-            });
-          }
-        }
-      });
-    } else {
-      console.log('获取用户信息失败', e.detail);
-      wx.showToast({
-        title: '获取失败，请手动输入',
-        icon: 'none'
-      });
-    }
-  },
-
   // 主要修改 submitScore 函数
   // [需求1] 提交成绩：同级别奖品按分数高低PK
   async submitScore() {
@@ -663,10 +607,6 @@ Page({
       });
       return;
     }
-
-    this.setData({
-      submitting: true
-    });
 
     try {
       const app = getApp();
@@ -784,7 +724,6 @@ Page({
       this.setData({
         showModal: false,
         showPostSubmitModal: true,
-        submitting: false
       });
       this.fetchLeaderboard();
 
@@ -793,9 +732,6 @@ Page({
       wx.showToast({
         title: '提交失败',
         icon: 'none'
-      });
-      this.setData({
-        submitting: false
       });
     }
   },
@@ -861,13 +797,11 @@ Page({
       this.timer = null;
     }
     
-    // 停止音频（不销毁，因为音频上下文是模块级常量，销毁后无法自动恢复）
-    // 如果确实需要销毁，可以在 onLoad 中重新创建
-    if (bgmCtx) {
-      bgmCtx.stop();
-    }
+    // 停止消除音效（matchCtx 是本文件的模块级变量）
     if (matchCtx) {
       matchCtx.stop();
     }
+    // 注意：bgmCtx 是 app.js 中的全局变量，不应在此处直接访问
+    // 全局背景音乐由 app.js 统一管理，无需在页面卸载时停止
   }
 });

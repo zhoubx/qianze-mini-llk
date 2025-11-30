@@ -71,7 +71,7 @@ App({
     if (!shuffleCtx) {
       shuffleCtx = wx.createInnerAudioContext();
       shuffleCtx.src = 'http://qianze.xyz/music/shuffle2.mp3';
-      shuffleCtx.volume = 1.3;
+      shuffleCtx.volume = 1.0; // 音量范围应为 0-1
     }
 
     // 检查用户设置并自动播放
