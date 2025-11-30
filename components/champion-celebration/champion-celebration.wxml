@@ -1,0 +1,23 @@
+<view class="champion-celebration {{show ? 'show' : ''}}" wx:if="{{show}}">
+  <!-- 奖杯 -->
+  <view class="trophy {{rank === 1 ? 'gold' : rank === 2 ? 'silver' : 'bronze'}}">
+    <view class="trophy-icon">{{rank === 1 ? '🏆' : rank === 2 ? '🥈' : '🥉'}}</view>
+    <view class="trophy-text">{{rank === 1 ? '冠军' : rank === 2 ? '亚军' : '季军'}}</view>
+  </view>
+
+  <!-- 礼花动画 -->
+  <view class="fireworks">
+    <view class="firework firework-1">✨</view>
+    <view class="firework firework-2">🎉</view>
+    <view class="firework firework-3">🎊</view>
+    <view class="firework firework-4">⭐</view>
+    <view class="firework firework-5">🌟</view>
+    <view class="firework firework-6">💫</view>
+  </view>
+
+  <!-- 庆祝文字 -->
+  <view class="celebration-text">
+    <view class="congrats">🎊 恭喜获得{{rank === 1 ? '冠军' : rank === 2 ? '亚军' : '季军'}}！🎊</view>
+    <view class="prize-info">获得 {{prizeName}}</view>
+  </view>
+</view>
