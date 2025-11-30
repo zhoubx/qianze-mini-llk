@@ -29,7 +29,7 @@ const imgConfig = [
 
 // 消除音效上下文
 const matchCtx = wx.createInnerAudioContext();
-matchCtx.src = 'http://qianze.xyz/music/llk-音效.MP3'; // 💡 需求：消除音效 (请上传一个短促的pop声到OSS)
+matchCtx.src = 'http://qianze.xyz/music/disappear.mp3'; // 💡 需求：消除音效 (请上传一个短促的pop声到OSS)
 
 Page({
   data: {
@@ -198,6 +198,13 @@ Page({
   startGame(e) {
     let diff = e.currentTarget.dataset.diff;
     let conf = this.data.config[diff];
+
+    // 切换难度背景音乐
+    const app = getApp();
+    app.switchDifficultyMusic(diff);
+
+    // 播放开始游戏音效
+    app.playGameStartSound();
 
     this.gameState = {
       diff: diff,
@@ -529,6 +536,10 @@ Page({
       }
     }
 
+    // 播放胜利音乐（挑战成功时播放）
+    const app = getApp();
+    app.playVictoryMusic();
+
     this.setData({
       isGameActive: false,
       showModal: true,
@@ -685,12 +696,6 @@ Page({
         icon: 'success'
       });
 
-      // 播放过关音乐
-      const musicControl = this.selectComponent('#musicControl');
-      if (musicControl) {
-        musicControl.playVictoryMusic();
-      }
-
       this.setData({
         showModal: false,
         submitting: false
@@ -710,6 +715,10 @@ Page({
   },
 
   backToMenu() {
+    // 播放退出游戏音效
+    const app = getApp();
+    app.playGameQuitSound();
+
     clearInterval(this.timer);
     this.setData({
       isGameActive: false,

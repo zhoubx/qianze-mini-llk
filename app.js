@@ -10,6 +10,9 @@ Bmob.initialize("4fa0f30d648a4b33", "123zbx");
 // 全局音乐管理器
 let bgmCtx = null;
 let victoryCtx = null;
+let gameStartCtx = null; // 开始游戏音效
+let gameQuitCtx = null; // 退出游戏音效
+let currentDifficulty = 'default'; // 当前难度
 let musicCallbacks = []; // 存储所有音乐状态变化的回调函数
 let isMusicPlaying = false; // 内部播放状态跟踪
 
@@ -34,10 +37,10 @@ App({
   },
 
   initGlobalMusic() {
-    // 初始化背景音乐
+    // 初始化默认背景音乐（简单难度使用）
     if (!bgmCtx) {
       bgmCtx = wx.createInnerAudioContext();
-      bgmCtx.src = 'http://qianze.xyz/music/backMusic1.mp4';
+      bgmCtx.src = 'http://qianze.xyz/music/bgm1.mp4';
       bgmCtx.loop = true;
       bgmCtx.volume = 0.6; // 默认60%音量
     }
@@ -47,6 +50,20 @@ App({
       victoryCtx = wx.createInnerAudioContext();
       victoryCtx.src = 'http://qianze.xyz/music/victory.mp3';
       victoryCtx.volume = 0.6; // 默认60%音量
+    }
+
+    // 初始化开始游戏音效
+    if (!gameStartCtx) {
+      gameStartCtx = wx.createInnerAudioContext();
+      gameStartCtx.src = 'http://qianze.xyz/music/ReadyGo.mp3';
+      gameStartCtx.volume = 0.7; // 音效音量稍高
+    }
+
+    // 初始化退出游戏音效
+    if (!gameQuitCtx) {
+      gameQuitCtx = wx.createInnerAudioContext();
+      gameQuitCtx.src = 'http://qianze.xyz/music/drop.mp3';
+      gameQuitCtx.volume = 0.6;
     }
 
     // 检查用户设置并自动播放
@@ -109,6 +126,59 @@ App({
   playVictoryMusic() {
     if (victoryCtx) {
       victoryCtx.play();
+    }
+  },
+
+  // 播放开始游戏音效
+  playGameStartSound() {
+    if (gameStartCtx) {
+      gameStartCtx.play();
+    }
+  },
+
+  // 播放退出游戏音效
+  playGameQuitSound() {
+    if (gameQuitCtx) {
+      gameQuitCtx.play();
+    }
+  },
+
+  // 切换难度背景音乐
+  switchDifficultyMusic(difficulty) {
+    if (currentDifficulty === difficulty) return;
+
+    currentDifficulty = difficulty;
+    let musicUrl = '';
+
+    switch (difficulty) {
+      case 'easy':
+        musicUrl = 'http://qianze.xyz/music/bgm1.mp4'; // 简单难度使用默认背景音乐
+        break;
+      case 'medium':
+        musicUrl = 'http://qianze.xyz/music/bgm2.mp4'; // 中等难度背景音乐
+        break;
+      case 'hard':
+        musicUrl = 'http://qianze.xyz/music/bgm3.mp4'; // 困难难度背景音乐
+        break;
+      default:
+        musicUrl = 'http://qianze.xyz/music/bgm1.mp4';
+    }
+
+    // 如果当前正在播放，先停止
+    if (isMusicPlaying && bgmCtx) {
+      bgmCtx.stop();
+    }
+
+    // 设置新的音乐源
+    if (bgmCtx) {
+      bgmCtx.src = musicUrl;
+
+      // 如果原来在播放，重新开始播放
+      if (isMusicPlaying) {
+        setTimeout(() => {
+          bgmCtx.play();
+        }, 100);
+      }
     }
   },
 
