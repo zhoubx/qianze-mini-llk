@@ -86,6 +86,8 @@ Page({
         if (!userMap[key] || item.score > userMap[key].score) {
           // 使用统一的日期格式化工具函数
           item.createTimeStr = dateFormat.formatDate(item.createdAt);
+          // 添加难度文案
+          item.diffText = DIFFICULTY_CONFIG.TEXT_MAP[item.difficulty] || '未知';
 
           userMap[key] = item;
         }
@@ -475,6 +477,7 @@ Page({
     const app = getApp();
     app.playVictoryMusic();
 
+    // Bug修复：每次胜利时重新生成随机头像
     this.setData({
       isGameActive: false,
       showModal: true,
@@ -483,7 +486,8 @@ Page({
       myRank: rank,
       finalPrizeName: prize,
       finalPrizeLevel: level,
-      scoreBreakthrough: scoreBreakthrough
+      scoreBreakthrough: scoreBreakthrough,
+      avatarUrl: getRandomAvatar() // 重新生成随机头像
     });
 
     // 冠军、亚军、季军显示庆祝动画
@@ -499,6 +503,16 @@ Page({
     this.setData({
       inputName: e.detail.value
     });
+  },
+
+  // 处理微信头像选择
+  onChooseAvatar(e) {
+    const { avatarUrl } = e.detail;
+    if (avatarUrl) {
+      this.setData({
+        avatarUrl: avatarUrl
+      });
+    }
   },
 
   // 主要修改 submitScore 函数

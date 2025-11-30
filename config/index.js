@@ -140,22 +140,18 @@ const PRIZE_CONFIG = {
 
 // ==================== 默认头像配置 ====================
 const AVATAR_CONFIG = {
-  // 随机默认头像（芊、泽两个字）
-  RANDOM_AVATARS: [
-    'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjNGFmYzY3Ii8+Cjx0ZXh0IHg9IjUwIiB5PSI2NSIgZm9udC1mYW1pbHk9Ik1pY3Jvc29mdCBZYWhlaSIgZm9udC1zaXplPSI0MCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPk7PC90ZXh0Pgo8L3N2Zz4K',
-    'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjNGFmYzY3Ii8+Cjx0ZXh0IHg9IjUwIiB5PSI2NSIgZm9udC1mYW1pbHk9Ik1pY3Jvc29mdCBZYWhlaSIgZm9udC1zaXplPSI0MCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkT6PC90ZXh0Pgo8L3N2Zz4K'
-  ],
-  // 排行榜默认头像
-  DEFAULT: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjZjBmMGYwIi8+Cjx0ZXh0IHg9IjUwIiB5PSI2NSIgZm9udC1mYW1pbHk9Ik1pY3Jvc29mdCBZYWhlaSIgZm9udC1zaXplPSI0MCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+P7w8L3RleHQ+Cjwvc3ZnPgo='
+  // 随机默认头像：直接复用 GAME_IMAGES（在 getRandomAvatar 函数中实现）
+  // 排行榜默认头像：使用服务器图片
+  DEFAULT: `${BASE_URL.IMAGE}/avatar_default.png`
 };
 
 // ==================== 辅助函数 ====================
 /**
- * 获取随机默认头像
- * @returns {string} 随机头像的 data URI
+ * 获取随机默认头像（从游戏图片中随机选择）
+ * @returns {string} 随机头像的 URL
  */
 function getRandomAvatar() {
-  return AVATAR_CONFIG.RANDOM_AVATARS[Math.floor(Math.random() * AVATAR_CONFIG.RANDOM_AVATARS.length)];
+  return GAME_IMAGES[Math.floor(Math.random() * GAME_IMAGES.length)];
 }
 
 /**

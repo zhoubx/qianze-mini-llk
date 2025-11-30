@@ -30,7 +30,7 @@
 
     <view class="leaderboard-box">
       <view class="lb-header">
-        <text class="lb-title">👑 全服风云榜（72小时）</text>
+        <text class="lb-title">👑 全服风云榜（72小时擂台赛）</text>
         <view class="lb-refresh-wrapper">
           <text class="lb-timer" bindtap="fetchLeaderboard">🔄 刷新</text>
           <text class="lb-loading-icon {{isRefreshing ? 'rotating' : ''}}" wx:if="{{isRefreshing}}">⏳</text>
@@ -44,9 +44,11 @@
             <view class="lb-name-row">
               <image class="lb-avatar" src="{{item.avatarUrl || defaultAvatarUrl}}" mode="aspectFill"></image>
               <text class="lb-name">{{item.playerName}}</text>
-              <view class="lb-prize-tag">🎁 {{item.prizeName}}</view>
             </view>
-            <text class="lb-time-row">{{item.createTimeStr}} · 耗时{{item.timeCost}}s</text>
+            <text class="lb-time-row">{{item.createTimeStr}} · {{item.diffText || '未知'}} · 耗时 {{item.timeCost}}s</text>
+          </view>
+          <view class="lb-prize-col">
+            <view class="lb-prize-tag">🎁 {{item.prizeName}}</view>
           </view>
           <text class="lb-score">{{item.score}}</text>
         </view>

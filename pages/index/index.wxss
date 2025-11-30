@@ -199,14 +199,32 @@ page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
 .lb-info { flex: 1; margin-left: 10rpx; }
 .lb-name-row { display: flex; align-items: center; flex-wrap: wrap; }
 .lb-avatar {
-  width: 40rpx;
-  height: 40rpx;
-  border-radius: 50%;
+  width: 60rpx;
+  height: 60rpx;
+  border-radius:30%;
   margin-right: 8rpx;
   border: 1rpx solid #eee;
 }
-.lb-name { font-weight: bold; color: #333; margin-right: 10rpx; max-width: 140rpx; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.lb-prize-tag { background: linear-gradient(135deg, #ff6b6b, #ff8e53); color: white; font-size: 18rpx; padding: 2rpx 10rpx; border-radius: 20rpx; }
+.lb-name { font-weight: bold; color: #333; margin-right: 10rpx; max-width: 180rpx; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
+/* 奖品列样式 */
+.lb-prize-col {
+  width: 240rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 10rpx;
+}
+.lb-prize-tag { 
+  background: linear-gradient(135deg, #ff6b6b, #ff8e53); 
+  color: white; 
+  font-size: 22rpx; 
+  padding: 6rpx 14rpx; 
+  border-radius: 20rpx;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
 .lb-time-row { font-size: 20rpx; color: #999; margin-top: 4rpx; }
 
 .lb-score {
