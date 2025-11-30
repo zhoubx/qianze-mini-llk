@@ -1,3 +1,4 @@
+
 // pages/rules/rules.js
 Page({
 
@@ -66,5 +67,44 @@ Page({
    */
   onShareAppMessage() {
 
+  },
+
+  // 1. 监听头像选择
+  onChooseAvatar(e) {
+    const { avatarUrl } = e.detail;
+    
+    // 注意：这里的 avatarUrl 只是一个临时的本地路径
+    // 如果需要永久保存，必须通过 wx.uploadFile 上传到你自己的服务器
+    this.setData({
+      avatarUrl
+    });
+    
+    // 可以在这里触发上传逻辑
+    // this.uploadImage(avatarUrl); 
+  },
+
+  // 2. 监听昵称输入（注意使用 bind:change 或 bindblur）
+  onInputChange(e) {
+    // 微信会自动在键盘上方提供“使用微信昵称”的选项
+    // 用户点击后，这里就能获取到值
+    const nickName = e.detail.value;
+    this.setData({
+      nickName
+    });
+  },
+
+  // 3. 提交保存
+  onSubmit() {
+    if (!this.data.nickName) {
+      wx.showToast({ title: '请输入昵称', icon: 'none' });
+      return;
+    }
+    
+    console.log('最终提交的数据：', {
+      avatar: this.data.avatarUrl,
+      name: this.data.nickName
+    });
+
+    // 这里发送请求给后端保存用户信息
   }
 })

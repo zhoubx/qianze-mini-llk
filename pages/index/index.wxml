@@ -7,6 +7,9 @@
   <!-- 音乐控制组件 -->
   <music-control id="musicControl"></music-control>
 
+  <!-- 冠军庆祝动画 -->
+  <champion-celebration id="championCelebration"></champion-celebration>
+
   <view class="top-actions" wx:if="{{!isGameActive}}">
     <navigator url="/pages/rules/rules" class="action-link">📖 游戏规则</navigator>
     <navigator url="/pages/prizes/prizes" class="action-link">🎁 我的奖品</navigator>
@@ -39,6 +42,7 @@
           <text class="lb-rank rank-{{index+1}}">{{index + 1}}</text>
           <view class="lb-info">
             <view class="lb-name-row">
+              <image class="lb-avatar" src="{{item.avatarUrl || defaultAvatarUrl}}" mode="aspectFill"></image>
               <text class="lb-name">{{item.playerName}}</text>
               <view class="lb-prize-tag">🎁 {{item.prizeName}}</view>
             </view>
@@ -71,26 +75,54 @@
     <view class="modal">
       <view class="win-header">挑战成功!</view>
       <view class="prize-alert">
-        <view class="prize-rank">预计排名: 第 <text style="font-weight:bold;">{{myRank}}</text> 名</view>
+        <view class="score-display">
+          <view class="score-value">{{tempScore}} 分</view>
+          <view class="score-tip" wx:if="{{scoreBreakthrough}}">{{scoreBreakthrough}}</view>
+        </view>
+        <view class="prize-rank">本次排名: 第 <text style="font-weight:bold;">{{myRank}}</text> 名</view>
         <view class="prize-name">{{finalPrizeName}}</view>
       </view>
-      
-      <view class="input-group">
-        <text class="input-label">请录入您的玩家名(用于领奖核销)：</text>
-        
-        <button 
-          bindtap="getUserProfile" 
-          size="mini" 
-          type="default" 
-          style="font-size: 24rpx; margin-bottom: 10rpx; width: 100%;">
-          👇 点我一键获取微信昵称
-        </button>
+      <text class="input-label">请设置您的头像/昵称（用于排行榜展示和领奖核销）</text>
 
-        <input class="name-input" placeholder="请输入您的昵称/手机号" value="{{inputName}}" bindinput="onNameInput" maxlength="12"/>
+      <view style="display:flex; align-items:center; justify-content:center; margin-bottom: 20rpx;">
+        <!-- 头像选择 -->
+        <button class="avatar-wrapper" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar" style="margin-bottom:0; margin-right:20rpx;">
+          <image class="avatar" src="{{avatarUrl}}"></image>
+        </button>
+        <!-- 昵称输入 -->
+        <view class="nickname-section" style="flex:1;">
+          <input
+            type="nickname"
+            class="name-input"
+            placeholder="请输入您的昵称"
+            value="{{inputName}}"
+            bindinput="onNameInput"
+            maxlength="30"
+            style="margin-bottom:0;"/>
+        </view>
       </view>
    
       <button class="btn-primary" loading="{{submitting}}" bindtap="submitScore">确认领取并上榜</button>
       <button style="font-size:24rpx; color:#666; background:transparent;" open-type="share">🎉 炫耀战绩</button>
+    </view>
+  </view>
+
+  <!-- 提交成功后的选择弹窗 -->
+  <view class="modal-overlay" wx:if="{{showPostSubmitModal}}">
+    <view class="modal post-submit-modal">
+      <view class="win-header">🎉 提交成功！</view>
+      <view class="prize-alert">
+        <view class="prize-name">您可以选择接下来的操作：</view>
+      </view>
+
+      <view class="action-buttons">
+        <button class="action-btn continue-btn" bindtap="continueChallenge">🎮 继续挑战</button>
+        <button class="action-btn leaderboard-btn" bindtap="viewLeaderboard">🏆 查看排行榜</button>
+        <button class="action-btn invite-btn" open-type="share">🎁 邀请好友（再得5元券）</button>
+        <button class="action-btn store-btn" bindtap="visitStore">🏪 进店看看</button>
+      </view>
+
+      <button class="close-btn" bindtap="closePostSubmitModal">关闭</button>
     </view>
   </view>
   

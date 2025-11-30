@@ -1,11 +1,59 @@
 /* pages/prizes/prizes.wxss */
-.container { 
-  padding: 20rpx; 
-  background: #f4f7f6; 
+.container {
+  padding: 20rpx;
+  background: #f4f7f6;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
-.list { width: 100%; }
+.page-header {
+  text-align: center;
+  padding: 15rpx 30rpx 10rpx 10rpx;
+  background: rgb(255, 255, 255);
+  border-radius: 16rpx;
+  margin: 0rpx 10rpx 10rpx 10rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.08);
+  width: calc(100% - 40rpx);
+}
+
+.header-main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4rpx;
+}
+
+.header-icon {
+  font-size: 32rpx;
+  margin-right: 8rpx;
+}
+
+.header-title {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #4a7c59;
+}
+
+.header-subtitle {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+  font-size: 20rpx;
+  color: #666;
+  line-height: 1.4;
+}
+
+.header-subtitle text {
+  display: block;
+}
+
+.list {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
 .empty { text-align: center; color: #999; margin-top: 100rpx; font-size: 28rpx; }
 
 .card {
@@ -67,19 +115,35 @@
 .card-right {
   margin-left: 20rpx;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: flex-end;
-  min-width: 120rpx;
+  min-width: 80rpx;
+}
+
+.status-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  padding-right: 20rpx;
 }
 
 .use-btn {
-  background: #d4a017; /* 醒目的核销色 */
+  background: #df6e81; /* 醒目的核销色 */
   color: white;
-  font-size: 26rpx;
-  padding: 10rpx 30rpx;
+  font-size: 35rpx;
+  padding: 5rpx 1rpx;
   border-radius: 30rpx;
   margin: 0;
   line-height: 1.5;
+  max-width: 150rpx;
+  height: 60rpx;
+}
+
+.redemption-time {
+  font-size: 22rpx;
+  color: #666;
+  margin-top: 6rpx;
 }
 
 .status-text {

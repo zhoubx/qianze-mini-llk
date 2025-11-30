@@ -1,5 +1,6 @@
 {
   "usingComponents": {
-    "music-control": "../../components/music-control/music-control"
+    "music-control": "../../components/music-control/music-control",
+    "champion-celebration": "../../components/champion-celebration/champion-celebration"
   }
 }

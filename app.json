@@ -10,6 +10,11 @@
     "navigationBarTitleText": "芊泽养生-玩乐惠",
     "navigationBarTextStyle": "black"
   },
+  "permission": {
+    "scope.userInfo": {
+      "desc": "用于获取您的游戏昵称，参与排行榜展示"
+    }
+  },
   "style": "v2",
   "sitemapLocation": "sitemap.json",
   "debug": true

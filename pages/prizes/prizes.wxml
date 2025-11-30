@@ -2,6 +2,18 @@
   <!-- 音乐控制组件 -->
   <music-control id="musicControl"></music-control>
 
+  <!-- 页面标题栏 -->
+  <view class="page-header">
+    <view class="header-main">
+      <view class="header-icon">🎁</view>
+      <view class="header-title">我的奖品</view>
+    </view>
+    <view class="header-subtitle">
+      <text>系统只会保留您游戏中领取到的最高奖项，核销使用后可再次领取。</text>
+      <text>邀请好友一起玩游戏，还可额外获得奖励！</text>
+    </view>
+  </view>
+
   <view class="list">
     <view wx:if="{{prizes.length===0 && !loading}}" class="empty">暂无奖品记录，快去玩游戏赢取吧！</view>
     
@@ -22,16 +34,21 @@
         </view>
 
         <view class="row-time">
-          <text>{{item.createTimeStr}}</text>
+          <text>领取时间：{{item.createTimeStr}}</text>
         </view>
       </view>
 
       <view class="card-right">
-        <block wx:if="{{item.status === 'pending'}}">
+        <block wx:if="{{item.status === 'pending'}}" >
            <button class="use-btn" bindtap="usePrize" data-id="{{item.objectId}}">核销</button>
         </block>
         <block wx:else>
-           <text class="status-text">{{item.statusText}}</text>
+           <view class="status-info">
+             <text class="status-text">{{item.statusText}}</text>
+             <view wx:if="{{item.status === 'used'}}" class="redemption-time">
+               {{item.redeemedTime ? item.redeemedTimeStr : '暂无时间记录'}}
+             </view>
+           </view>
         </block>
       </view>
     </view>

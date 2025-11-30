@@ -27,6 +27,15 @@ const imgConfig = [
   `${imgBaseUrl}/011.jpg`
 ];
 
+// 默认头像URL（芊泽两个字中随机一个）
+const defaultAvatars = [
+  'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjNGFmYzY3Ii8+Cjx0ZXh0IHg9IjUwIiB5PSI2NSIgZm9udC1mYW1pbHk9Ik1pY3Jvc29mdCBZYWhlaSIgZm9udC1zaXplPSI0MCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPk7PC90ZXh0Pgo8L3N2Zz4K', // 芊
+  'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjNGFmYzY3Ii8+Cjx0ZXh0IHg9IjUwIiB5PSI2NSIgZm9udC1mYW1pbHk9Ik1pY3Jvc29mdCBZYWhlaSIgZm9udC1zaXplPSI0MCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkT6PC90ZXh0Pgo8L3N2Zz4K'  // 泽
+];
+
+const getDefaultAvatar = () => defaultAvatars[Math.floor(Math.random() * defaultAvatars.length)];
+const defaultAvatarUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjZjBmMGYwIi8+Cjx0ZXh0IHg9IjUwIiB5PSI2NSIgZm9udC1mYW1pbHk9Ik1pY3Jvc29mdCBZYWhlaSIgZm9udC1zaXplPSI0MCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+？PC90ZXh0Pgo8L3N2Zz4K'; // 默认头像
+
 // 消除音效上下文
 const matchCtx = wx.createInnerAudioContext();
 matchCtx.src = 'http://qianze.xyz/music/disappear.mp3'; // 💡 需求：消除音效 (请上传一个短促的pop声到OSS)
@@ -35,6 +44,8 @@ Page({
   data: {
     isGameActive: false,
     showModal: false,
+    showPostSubmitModal: false,
+    avatarUrl: getDefaultAvatar(), // 默认随机头像
     diffConfig: [{
         id: 'easy',
         class: 'diff-easy',
@@ -126,6 +137,8 @@ Page({
     submitting: false,
     wechatNickName: '', // 新增：用于存储获取到的微信昵称
     isUsingWechatNick: false, // 新增：标记是否使用了微信昵称
+    avatarUrl: getDefaultAvatar(), // 默认随机头像
+    defaultAvatarUrl: defaultAvatarUrl, // 排行榜默认头像
     isRefreshing: false // 新增：标记是否正在刷新排行榜
   },
 
@@ -221,7 +234,7 @@ Page({
     clearInterval(this.timer);
     this.timer = setInterval(() => {
       let s = Math.floor((Date.now() - this.gameState.startTime) / 1000);
-      let score = this.calculateScore(s, this.gameState.matchedPairs);
+      let score = this.calculateScore(s, this.gameState.matchedPairs, this.gameState.bonusScore || 0);
       this.setData({
         timeDisplay: s,
         liveScore: score
@@ -397,10 +410,22 @@ Page({
   // 💡 Bug修复：死局检测与自动洗牌
   checkDeadlock() {
     while (!this.hasMoves()) {
+      // 播放洗牌音效
+      const app = getApp();
+      app.playShuffleSound();
+
+      // 给予分数奖励
+      const bonusScore = 50;
+      this.gameState.bonusScore = (this.gameState.bonusScore || 0) + bonusScore;
+
+      // 醒目显示奖励信息（不打断游戏节奏）
       wx.showToast({
-        title: '无解！自动洗牌',
-        icon: 'none'
+        title: `🔄 自动洗牌 +${bonusScore}分奖励！`,
+        icon: 'none',
+        duration: 3000,
+        mask: false
       });
+
       this.shuffleBoard();
     }
   },
@@ -507,19 +532,19 @@ Page({
     return null;
   },
 
-  calculateScore(s, p) {
+  calculateScore(s, p, bonusScore = 0) {
     if (s <= 0) s = 1;
     let mult = 1.0;
     this.data.diffConfig.forEach(d => {
       if (d.id === this.gameState.diff) mult = d.multiplier;
     });
-    return Math.floor(((p * 1000) / s) * mult);
+    return Math.floor(((p * 1000) / s) * mult + bonusScore);
   },
 
   gameWin() {
     clearInterval(this.timer);
     let s = Math.floor((Date.now() - this.gameState.startTime) / 1000);
-    let score = this.calculateScore(s, this.gameState.totalPairs);
+    let score = this.calculateScore(s, this.gameState.totalPairs, this.gameState.bonusScore || 0);
 
     let rank = 1;
     this.data.rankList.forEach(r => {
@@ -536,6 +561,13 @@ Page({
       }
     }
 
+    // 检查是否打破个人最好成绩
+    let scoreBreakthrough = '';
+    const userHistory = wx.getStorageSync('userHistory') || {};
+    if (userHistory.bestScore && score > userHistory.bestScore) {
+      scoreBreakthrough = '🎉 打破个人最好成绩！';
+    }
+
     // 播放胜利音乐（挑战成功时播放）
     const app = getApp();
     app.playVictoryMusic();
@@ -547,8 +579,17 @@ Page({
       tempTime: s,
       myRank: rank,
       finalPrizeName: prize,
-      finalPrizeLevel: level
+      finalPrizeLevel: level,
+      scoreBreakthrough: scoreBreakthrough
     });
+
+    // 冠军、亚军、季军显示庆祝动画
+    if (rank <= 3) {
+      const championCelebration = this.selectComponent('#championCelebration');
+      if (championCelebration) {
+        championCelebration.showCelebration(rank, prize);
+      }
+    }
   },
 
   onNameInput(e) {
@@ -557,38 +598,58 @@ Page({
     });
   },
 
-  // [需求4] 获取微信用户昵称
-  getUserProfile(e) {
-    wx.getUserProfile({
-      desc: '用于记录排行榜和奖品归属',
-      success: (res) => {
-        const nickName = res.userInfo.nickName;
-        this.setData({
-          wechatNickName: nickName,
-          // 询问用户是否直接填入输入框
-          isUsingWechatNick: true
-        });
+  // 头像选择事件
+  onChooseAvatar(e) {
+    const { avatarUrl } = e.detail;
 
-        wx.showModal({
-          title: '获取成功',
-          content: `您的微信昵称是“${nickName}”，是否直接使用它作为游戏上榜昵称？`,
-          success: (modalRes) => {
-            if (modalRes.confirm) {
-              this.setData({
-                inputName: nickName
-              });
-            }
-          }
-        });
-      },
-      fail: (err) => {
-        console.log("获取用户信息失败", err);
-        wx.showToast({
-          title: '获取失败，请手动输入',
-          icon: 'none'
-        });
-      }
+    // 注意：这里的 avatarUrl 只是一个临时的本地路径
+    // 如果需要永久保存，必须通过 wx.uploadFile 上传到你自己的服务器
+    this.setData({
+      avatarUrl
     });
+
+    console.log('选择的头像URL:', avatarUrl);
+  },
+
+  // [需求4] 获取微信用户昵称
+  onGetUserInfo(e) {
+    console.log('获取用户信息事件', e);
+
+    if (e.detail.errMsg && e.detail.errMsg.includes('auth deny')) {
+      wx.showToast({
+        title: '需要授权才能获取昵称',
+        icon: 'none'
+      });
+      return;
+    }
+
+    if (e.detail && e.detail.userInfo) {
+      const nickName = e.detail.userInfo.nickName;
+      console.log('获取到昵称:', nickName);
+
+      this.setData({
+        wechatNickName: nickName,
+        isUsingWechatNick: true
+      });
+
+      wx.showModal({
+        title: '获取成功',
+        content: `您的微信昵称是"${nickName}"，是否直接使用它作为游戏上榜昵称？`,
+        success: (modalRes) => {
+          if (modalRes.confirm) {
+            this.setData({
+              inputName: nickName
+            });
+          }
+        }
+      });
+    } else {
+      console.log('获取用户信息失败', e.detail);
+      wx.showToast({
+        title: '获取失败，请手动输入',
+        icon: 'none'
+      });
+    }
   },
 
   // 主要修改 submitScore 函数
@@ -623,11 +684,26 @@ Page({
 
       let currentLevel = this.data.finalPrizeLevel;
       let currentScore = this.data.tempScore; // 获取当前分数
+      let shouldSavePrize = true; // 是否保存奖品
 
       if (oldRecords.length > 0) {
+        // 检查是否有更高等级的奖品
+        const highestExistingLevel = Math.min(...oldRecords.map(r => r.prizeLevel));
+
+        // 如果当前奖品等级低于现有奖品等级，则不保存
+        if (currentLevel > highestExistingLevel) {
+          wx.showModal({
+            title: '奖品等级不足',
+            content: '您当前已有更高等级的奖品，本次奖品将不予保存。如需领取本次奖品，请先使用现有的高等级奖品。',
+            showCancel: false,
+            confirmText: '知道了'
+          });
+          shouldSavePrize = false;
+        }
+
         // 使用 Promise.all 确保所有异步操作完成，并添加错误处理
         const updatePromises = [];
-        
+
         for (let record of oldRecords) {
           // 情况A: 新奖品等级更高 (数值更小) -> 旧奖品失效
           if (currentLevel < record.prizeLevel) {
@@ -684,10 +760,18 @@ Page({
       query.set("rankSnapshot", this.data.myRank);
 
       // 如果 currentLevel 被标记为 999，说明PK输了，直接存为 expired
-      query.set("status", currentLevel === 999 ? "expired" : "pending");
+      // 如果 shouldSavePrize 为 false，说明奖品等级不足，设为 invalid
+      let status = "pending";
+      if (currentLevel === 999) {
+        status = "expired";
+      } else if (!shouldSavePrize) {
+        status = "invalid";
+      }
+      query.set("status", status);
 
       if (openid) query.set("openid", openid);
       if (this.data.wechatNickName) query.set("wechatNickName", this.data.wechatNickName);
+      if (this.data.avatarUrl) query.set("avatarUrl", this.data.avatarUrl);
 
       await query.save();
 
@@ -696,8 +780,10 @@ Page({
         icon: 'success'
       });
 
+      // 显示后续操作选择弹窗
       this.setData({
         showModal: false,
+        showPostSubmitModal: true,
         submitting: false
       });
       this.fetchLeaderboard();
@@ -722,9 +808,49 @@ Page({
     clearInterval(this.timer);
     this.setData({
       isGameActive: false,
-      showModal: false
+      showModal: false,
+      showPostSubmitModal: false
     });
     this.fetchLeaderboard();
+  },
+
+  // 继续挑战
+  continueChallenge() {
+    this.setData({
+      showPostSubmitModal: false
+    });
+    // 重新开始游戏选择界面
+    this.setData({
+      isGameActive: false
+    });
+  },
+
+  // 查看排行榜
+  viewLeaderboard() {
+    this.setData({
+      showPostSubmitModal: false
+    });
+    wx.navigateTo({
+      url: '/pages/prizes/prizes'
+    });
+  },
+
+  // 进店看看
+  visitStore() {
+    this.setData({
+      showPostSubmitModal: false
+    });
+    wx.showToast({
+      title: '即将开放，敬请期待',
+      icon: 'none'
+    });
+  },
+
+  // 关闭后续操作弹窗
+  closePostSubmitModal() {
+    this.setData({
+      showPostSubmitModal: false
+    });
   },
 
   // 页面卸载时清理资源，防止内存泄漏

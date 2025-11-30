@@ -12,6 +12,7 @@ let bgmCtx = null;
 let victoryCtx = null;
 let gameStartCtx = null; // 开始游戏音效
 let gameQuitCtx = null; // 退出游戏音效
+let shuffleCtx = null; // 洗牌音效
 let currentDifficulty = 'default'; // 当前难度
 let musicCallbacks = []; // 存储所有音乐状态变化的回调函数
 let isMusicPlaying = false; // 内部播放状态跟踪
@@ -64,6 +65,13 @@ App({
       gameQuitCtx = wx.createInnerAudioContext();
       gameQuitCtx.src = 'http://qianze.xyz/music/drop.mp3';
       gameQuitCtx.volume = 0.6;
+    }
+
+    // 初始化洗牌音效
+    if (!shuffleCtx) {
+      shuffleCtx = wx.createInnerAudioContext();
+      shuffleCtx.src = 'http://qianze.xyz/music/shuffle2.mp3';
+      shuffleCtx.volume = 1.3;
     }
 
     // 检查用户设置并自动播放
@@ -143,6 +151,13 @@ App({
     }
   },
 
+  // 播放洗牌音效
+  playShuffleSound() {
+    if (shuffleCtx) {
+      shuffleCtx.play();
+    }
+  },
+
   // 切换难度背景音乐
   switchDifficultyMusic(difficulty) {
     if (currentDifficulty === difficulty) return;
@@ -158,7 +173,7 @@ App({
         musicUrl = 'http://qianze.xyz/music/bgm2.mp4'; // 中等难度背景音乐
         break;
       case 'hard':
-        musicUrl = 'http://qianze.xyz/music/bgm3.mp4'; // 困难难度背景音乐
+        musicUrl = 'http://qianze.xyz/music/bgm3.mp3'; // 困难难度背景音乐
         break;
       default:
         musicUrl = 'http://qianze.xyz/music/bgm1.mp4';

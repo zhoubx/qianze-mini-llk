@@ -4,9 +4,9 @@ const dateFormat = require('../../utils/dateFormat.js'); // 引入日期格式�
 const app = getApp();
 
 const DIFF_MAP = {
-  'easy': '小白',
-  'medium': '达人',
-  'hard': '宗师'
+  'easy': '简单',
+  'medium': '普通',
+  'hard': '困难'
 };
 
 Page({
@@ -55,7 +55,46 @@ Page({
         
         // [需求] 处理排名 (旧数据可能没有 rankSnapshot)
         item.rankText = item.rankSnapshot ? `第${item.rankSnapshot}名` : '未记录';
-        
+
+        // 处理核销时间显示
+        if (item.redeemedTime) {
+          try {
+            // 处理不同格式的时间数据
+            let redeemedDate;
+
+            // Bmob可能返回不同的时间格式，尝试多种处理方式
+            if (typeof item.redeemedTime === 'string') {
+              // 如果是字符串，可能是ISO格式或普通格式
+              redeemedDate = new Date(item.redeemedTime);
+            } else if (item.redeemedTime instanceof Date) {
+              // 如果已经是Date对象
+              redeemedDate = item.redeemedTime;
+            } else if (item.redeemedTime && typeof item.redeemedTime === 'object' && item.redeemedTime.iso) {
+              // Bmob特有的时间对象格式
+              redeemedDate = new Date(item.redeemedTime.iso);
+            } else {
+              // 其他情况，尝试直接构造
+              redeemedDate = new Date(item.redeemedTime);
+            }
+
+            if (!isNaN(redeemedDate.getTime())) {
+              const month = (redeemedDate.getMonth() + 1).toString().padStart(2, '0');
+              const day = redeemedDate.getDate().toString().padStart(2, '0');
+              const hours = redeemedDate.getHours().toString().padStart(2, '0');
+              const minutes = redeemedDate.getMinutes().toString().padStart(2, '0');
+              const seconds = redeemedDate.getSeconds().toString().padStart(2, '0');
+              item.redeemedTimeStr = `${month}-${day} ${hours}:${minutes}:${seconds}`;
+            } else {
+              item.redeemedTimeStr = '时间格式错误';
+            }
+          } catch (error) {
+            console.warn('核销时间格式化失败:', error);
+            item.redeemedTimeStr = '时间格式错误';
+          }
+        } else {
+          item.redeemedTimeStr = '暂无时间记录';
+        }
+
         return item;
       });
 
@@ -96,7 +135,9 @@ Page({
         if(res.confirm) {
           const query = Bmob.Query('GameScore');
           query.get(id).then(item => {
+            const currentTime = new Date();
             item.set('status', 'used');
+            item.set('redeemedTime', currentTime); // 记录核销时间
             item.save().then(() => {
               wx.showToast({ title: '核销成功' });
               this.fetchMyPrizes(); // 刷新列表
