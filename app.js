@@ -1,11 +1,12 @@
 // app.js
 var Bmob = require('utils/Bmob-2.6.3.min.js');
+const config = require('config/index.js');
 
 // ⚠️ 安全警告：API密钥硬编码在客户端代码中
 // 风险：密钥暴露在客户端，可能被恶意用户获取并滥用
 // 建议：使用云函数获取密钥，或从服务器端获取
 // 初始化 Bmob
-Bmob.initialize("4fa0f30d648a4b33", "123zbx");
+Bmob.initialize(config.BMOB_CONFIG.APPLICATION_ID, config.BMOB_CONFIG.REST_API_KEY);
 
 // 全局音乐管理器
 let bgmCtx = null;
@@ -38,40 +39,42 @@ App({
   },
 
   initGlobalMusic() {
+    const { AUDIO_CONFIG } = config;
+
     // 初始化默认背景音乐（简单难度使用）
     if (!bgmCtx) {
       bgmCtx = wx.createInnerAudioContext();
-      bgmCtx.src = 'http://qianze.xyz/music/bgm1.mp4';
+      bgmCtx.src = AUDIO_CONFIG.BGM.DEFAULT;
       bgmCtx.loop = true;
-      bgmCtx.volume = 0.6; // 默认60%音量
+      bgmCtx.volume = AUDIO_CONFIG.VOLUME.BGM;
     }
 
     // 初始化胜利音乐
     if (!victoryCtx) {
       victoryCtx = wx.createInnerAudioContext();
-      victoryCtx.src = 'http://qianze.xyz/music/victory.mp3';
-      victoryCtx.volume = 0.6; // 默认60%音量
+      victoryCtx.src = AUDIO_CONFIG.EFFECTS.VICTORY;
+      victoryCtx.volume = AUDIO_CONFIG.VOLUME.VICTORY;
     }
 
     // 初始化开始游戏音效
     if (!gameStartCtx) {
       gameStartCtx = wx.createInnerAudioContext();
-      gameStartCtx.src = 'http://qianze.xyz/music/ReadyGo.mp3';
-      gameStartCtx.volume = 0.7; // 音效音量稍高
+      gameStartCtx.src = AUDIO_CONFIG.EFFECTS.GAME_START;
+      gameStartCtx.volume = AUDIO_CONFIG.VOLUME.GAME_START;
     }
 
     // 初始化退出游戏音效
     if (!gameQuitCtx) {
       gameQuitCtx = wx.createInnerAudioContext();
-      gameQuitCtx.src = 'http://qianze.xyz/music/drop.mp3';
-      gameQuitCtx.volume = 0.6;
+      gameQuitCtx.src = AUDIO_CONFIG.EFFECTS.GAME_QUIT;
+      gameQuitCtx.volume = AUDIO_CONFIG.VOLUME.GAME_QUIT;
     }
 
     // 初始化洗牌音效
     if (!shuffleCtx) {
       shuffleCtx = wx.createInnerAudioContext();
-      shuffleCtx.src = 'http://qianze.xyz/music/shuffle2.mp3';
-      shuffleCtx.volume = 1.0; // 音量范围应为 0-1
+      shuffleCtx.src = AUDIO_CONFIG.EFFECTS.SHUFFLE;
+      shuffleCtx.volume = AUDIO_CONFIG.VOLUME.SHUFFLE;
     }
 
     // 检查用户设置并自动播放
@@ -163,21 +166,8 @@ App({
     if (currentDifficulty === difficulty) return;
 
     currentDifficulty = difficulty;
-    let musicUrl = '';
-
-    switch (difficulty) {
-      case 'easy':
-        musicUrl = 'http://qianze.xyz/music/bgm1.mp4'; // 简单难度使用默认背景音乐
-        break;
-      case 'medium':
-        musicUrl = 'http://qianze.xyz/music/bgm2.mp4'; // 中等难度背景音乐
-        break;
-      case 'hard':
-        musicUrl = 'http://qianze.xyz/music/bgm3.mp3'; // 困难难度背景音乐
-        break;
-      default:
-        musicUrl = 'http://qianze.xyz/music/bgm1.mp4';
-    }
+    // 使用配置文件中的辅助函数获取音乐URL
+    const musicUrl = config.getBgmUrl(difficulty);
 
     // 如果当前正在播放，先停止
     if (isMusicPlaying && bgmCtx) {

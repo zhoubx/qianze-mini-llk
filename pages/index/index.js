@@ -1,127 +1,34 @@
 // index.js
 var Bmob = require('../../utils/Bmob-2.6.3.min.js'); // 引入SDK
 const dateFormat = require('../../utils/dateFormat.js'); // 引入日期格式化工具
+const config = require('../../config/index.js'); // 引入配置文件
 const app = getApp();
 
-// [需求7] 配置项：排名统计的时间范围（小时）
-const RANK_DURATION_HOURS = 72;
-
-// 注意：Bmob已在app.js中初始化，此处不需要重复初始化
-// Bmob.initialize("4fa0f30d648a4b33", "123zbx");
-
-const imgBaseUrl = "http://qianze.xyz/images"; // 同样记得换成您OSS的图
-const imgConfig = [
-  `${imgBaseUrl}/012.jpg?text=芊`,
-  `${imgBaseUrl}/013.jpg?text=泽`,
-  // ... 把您之前的10张图链接填在这里，凑齐10个
-  `${imgBaseUrl}/001.jpg`,
-  `${imgBaseUrl}/002.jpg`,
-  `${imgBaseUrl}/003.jpg`,
-  `${imgBaseUrl}/004.jpg`,
-  `${imgBaseUrl}/005.jpg`,
-  `${imgBaseUrl}/006.jpg`,
-  `${imgBaseUrl}/007.jpg`,
-  `${imgBaseUrl}/008.jpg`,
-  `${imgBaseUrl}/009.jpg`,
-  `${imgBaseUrl}/010.jpg`,
-  `${imgBaseUrl}/011.jpg`
-];
-
-// 默认头像URL（芊泽两个字中随机一个）
-const defaultAvatars = [
-  'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjNGFmYzY3Ii8+Cjx0ZXh0IHg9IjUwIiB5PSI2NSIgZm9udC1mYW1pbHk9Ik1pY3Jvc29mdCBZYWhlaSIgZm9udC1zaXplPSI0MCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPk7PC90ZXh0Pgo8L3N2Zz4K', // 芊
-  'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjNGFmYzY3Ii8+Cjx0ZXh0IHg9IjUwIiB5PSI2NSIgZm9udC1mYW1pbHk9Ik1pY3Jvc29mdCBZYWhlaSIgZm9udC1zaXplPSI0MCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkT6PC90ZXh0Pgo8L3N2Zz4K'  // 泽
-];
-
-const getDefaultAvatar = () => defaultAvatars[Math.floor(Math.random() * defaultAvatars.length)];
-const defaultAvatarUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjZjBmMGYwIi8+Cjx0ZXh0IHg9IjUwIiB5PSI2NSIgZm9udC1mYW1pbHk9Ik1pY3Jvc29mdCBZYWhlaSIgZm9udC1zaXplPSI0MCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+？PC90ZXh0Pgo8L3N2Zz4K'; // 默认头像
+// 从配置文件获取配置项
+const { 
+  GAME_IMAGES, 
+  LEADERBOARD_CONFIG, 
+  DIFFICULTY_CONFIG, 
+  PRIZE_CONFIG, 
+  AVATAR_CONFIG, 
+  AUDIO_CONFIG,
+  getRandomAvatar 
+} = config;
 
 // 消除音效上下文
 const matchCtx = wx.createInnerAudioContext();
-matchCtx.src = 'http://qianze.xyz/music/disappear.mp3'; // 💡 需求：消除音效 (请上传一个短促的pop声到OSS)
+matchCtx.src = AUDIO_CONFIG.EFFECTS.MATCH;
+matchCtx.volume = AUDIO_CONFIG.VOLUME.MATCH;
 
 Page({
   data: {
     isGameActive: false,
     showModal: false,
     showPostSubmitModal: false,
-    avatarUrl: getDefaultAvatar(), // 默认随机头像
-    diffConfig: [{
-        id: 'easy',
-        class: 'diff-easy',
-        title: '养生小白',
-        badge: ' 简单',
-        badgeClass: 'badge-easy',
-        multiplier: 1.0,
-        desc: '轻松休闲·重在参与（低保奖励）',
-        icon: '🍵'
-      },
-      {
-        id: 'medium',
-        class: 'diff-med',
-        title: '养生达人',
-        badge: ' 普通',
-        badgeClass: 'badge-med',
-        multiplier: 1.3,
-        desc: '进阶挑战·稳中求进（小富即安）',
-        icon: '🌿'
-      },
-      {
-        id: 'hard',
-        class: 'diff-hard',
-        title: '养生宗师',
-        badge: ' 困难',
-        badgeClass: 'badge-hard',
-        multiplier: 1.6,
-        desc: '极限手速·冲高夺冠（抢代金券）',
-        icon: '🏆'
-      }
-    ],
-    config: {
-      easy: {
-        rows: 2,
-        cols: 2
-      },
-      medium: {
-        rows: 6,
-        cols: 6
-      },
-      hard: {
-        rows: 8,
-        cols: 6
-      }
-    },
-    prizeTiers: [{
-        rankEnd: 1,
-        level: 1,
-        name: "10元代金券"
-      },
-      {
-        rankEnd: 3,
-        level: 2,
-        name: "8元代金券"
-      },
-      {
-        rankEnd: 10,
-        level: 3,
-        name: "6元代金券"
-      },
-      {
-        rankEnd: 20,
-        level: 4,
-        name: "4元代金券"
-      },
-      {
-        rankEnd: 50,
-        level: 5,
-        name: "2元代金券"
-      },
-      {
-        rankEnd: 9999,
-        level: 6,
-        name: "再接再厉"
-      }
-    ],
+    avatarUrl: getRandomAvatar(), // 默认随机头像
+    diffConfig: DIFFICULTY_CONFIG.OPTIONS,
+    config: DIFFICULTY_CONFIG.BOARD,
+    prizeTiers: PRIZE_CONFIG.TIERS,
     rankList: [],
     domTiles: [],
     tileSize: '100rpx',
@@ -136,7 +43,7 @@ Page({
     inputName: '',
     wechatNickName: '', // 新增：用于存储获取到的微信昵称
     isUsingWechatNick: false, // 新增：标记是否使用了微信昵称
-    defaultAvatarUrl: defaultAvatarUrl, // 排行榜默认头像
+    defaultAvatarUrl: AVATAR_CONFIG.DEFAULT, // 排行榜默认头像
     isRefreshing: false // 新增：标记是否正在刷新排行榜
   },
 
@@ -164,12 +71,10 @@ Page({
     const query = Bmob.Query("GameScore");
 
     let date = new Date();
-    date.setHours(date.getHours() - RANK_DURATION_HOURS);
+    date.setHours(date.getHours() - LEADERBOARD_CONFIG.DURATION_HOURS);
     query.equalTo("createdAt", ">", date.toISOString());
-    // console.log("date:" + date);
-    // console.log("date.toISOString():" + date.toISOString());
     query.order("-score");
-    query.limit(500);
+    query.limit(LEADERBOARD_CONFIG.QUERY_LIMIT);
 
     query.find().then(res => {
       let userMap = {}; // 数据处理：同一用户取最高分
@@ -257,7 +162,7 @@ Page({
       totalPairs
     } = this.gameState;
     let data = [];
-    for (let i = 0; i < totalPairs; i++) data.push(i % imgConfig.length, i % imgConfig.length);
+    for (let i = 0; i < totalPairs; i++) data.push(i % GAME_IMAGES.length, i % GAME_IMAGES.length);
     data.sort(() => Math.random() - 0.5);
 
     let tr = rows + 2,
@@ -275,7 +180,7 @@ Page({
           id: `${r}-${c}`,
           r,
           c,
-          img: imgConfig[type],
+          img: GAME_IMAGES[type],
           selected: false,
           matched: false,
           isPath: false
@@ -412,8 +317,8 @@ Page({
       const app = getApp();
       app.playShuffleSound();
 
-      // 给予分数奖励
-      const bonusScore = 50;
+      // 给予分数奖励（使用配置文件中的值）
+      const bonusScore = PRIZE_CONFIG.SHUFFLE_BONUS;
       this.gameState.bonusScore = (this.gameState.bonusScore || 0) + bonusScore;
 
       // 醒目显示奖励信息（不打断游戏节奏）
@@ -471,7 +376,7 @@ Page({
       this.gameState.logicBoard[t.r][t.c] = types[i];
       // 更新视图
       let idx = tiles.findIndex(x => x.id === t.id);
-      tiles[idx].img = imgConfig[types[i]];
+      tiles[idx].img = GAME_IMAGES[types[i]];
       tiles[idx].selected = false;
     });
 
@@ -675,13 +580,13 @@ Page({
                 });
               updatePromises.push(updatePromise);
             } else {
-              // 旧分数更高(或相等) -> 新奖品直接失效
-              currentLevel = 999;
+              // 旧分数更高(或相等) -> 新奖品直接失效（使用配置文件中的常量）
+              currentLevel = PRIZE_CONFIG.INVALID_LEVEL;
             }
           }
           // 情况C: 旧奖品等级更高 -> 新奖品直接失效
           else {
-            currentLevel = 999;
+            currentLevel = PRIZE_CONFIG.INVALID_LEVEL;
           }
         }
         
@@ -699,10 +604,10 @@ Page({
       query.set("prizeLevel", this.data.finalPrizeLevel);
       query.set("rankSnapshot", this.data.myRank);
 
-      // 如果 currentLevel 被标记为 999，说明PK输了，直接存为 expired
+      // 如果 currentLevel 被标记为无效等级，说明PK输了，直接存为 expired
       // 如果 shouldSavePrize 为 false，说明奖品等级不足，设为 invalid
       let status = "pending";
-      if (currentLevel === 999) {
+      if (currentLevel === PRIZE_CONFIG.INVALID_LEVEL) {
         status = "expired";
       } else if (!shouldSavePrize) {
         status = "invalid";

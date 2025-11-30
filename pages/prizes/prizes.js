@@ -1,13 +1,11 @@
 // pages/prizes/prizes.js
 var Bmob = require('../../utils/Bmob-2.6.3.min.js');
 const dateFormat = require('../../utils/dateFormat.js'); // 引入日期格式化工具
+const config = require('../../config/index.js'); // 引入配置文件
 const app = getApp();
 
-const DIFF_MAP = {
-  'easy': '简单',
-  'medium': '普通',
-  'hard': '困难'
-};
+// 从配置文件获取难度文案映射
+const DIFF_MAP = config.DIFFICULTY_CONFIG.TEXT_MAP;
 
 Page({
   data: {
