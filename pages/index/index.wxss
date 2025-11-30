@@ -213,7 +213,15 @@ page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
   margin-right: 8rpx;
   border: 1rpx solid #eee;
 }
-.lb-name { font-weight: bold; color: #333; margin-right: 10rpx; max-width: 180rpx; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.lb-name {
+  font-weight: bold;
+  color: #333;
+  margin-right: 10rpx;
+  max-width: 220rpx;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
 
 /* 奖品列样式 */
 .lb-prize-col {
@@ -246,6 +254,41 @@ page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
 
 /* 游戏区 */
 .status-bar { width: 100%; display: flex; justify-content: space-between; padding: 0 40rpx; font-weight: bold; color: #4a7c59; font-size: 32rpx; margin-bottom: 10rpx; box-sizing: border-box; }
+
+/* 洗牌奖励提示 */
+.shuffle-toast {
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  color: white;
+  padding: 16rpx 32rpx;
+  border-radius: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 15rpx;
+  box-shadow: 0 6rpx 20rpx rgba(255, 152, 0, 0.4);
+  opacity: 0;
+  transform: scale(0.8) translateY(20rpx);
+  transition: all 0.3s ease-out;
+}
+.shuffle-toast.visible {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+.shuffle-icon {
+  font-size: 40rpx;
+  margin-right: 12rpx;
+  animation: spin 1s linear infinite;
+}
+.shuffle-text {
+  font-size: 32rpx;
+  font-weight: bold;
+  text-shadow: 0 2rpx 4rpx rgba(0,0,0,0.2);
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 .game-board { background: #e8efec; padding: 10rpx; border-radius: 20rpx; display: grid; gap: 6rpx; margin-bottom: 20rpx; position: relative; }
 .tile { background-color: white; border: 4rpx solid #cce0d6; border-radius: 10rpx; background-size: cover; background-position: center; transition: all 0.1s; position: relative; }
 .tile.selected { border-color: #d4a017; transform: scale(1.1); box-shadow: 0 0 10rpx #d4a017; z-index: 10; }

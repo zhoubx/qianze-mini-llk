@@ -89,6 +89,11 @@ Page({
     this.fetchUserInfo();
   },
 
+  // 阻止事件冒泡
+  preventBubble() {
+    // 空函数，仅用于阻止事件冒泡
+  },
+
   // 处理头像选择
   onChooseAvatar(e) {
     const { avatarUrl } = e.detail;
@@ -96,6 +101,42 @@ Page({
       this.setData({
         'userInfo.avatarUrl': avatarUrl
       });
+      // 如果不在编辑模式，直接保存头像
+      if (!this.data.isEditingProfile) {
+        this.saveAvatarOnly(avatarUrl);
+      }
+    }
+  },
+
+  // 仅保存头像
+  async saveAvatarOnly(avatarUrl) {
+    try {
+      const openid = app.globalData.openid;
+      if (!openid) return;
+
+      const queryFind = Bmob.Query('UserInfo');
+      queryFind.equalTo('openid', '==', openid);
+      const results = await queryFind.find();
+
+      if (results.length > 0) {
+        const query = Bmob.Query('UserInfo');
+        const record = await query.get(results[0].objectId);
+        record.set('avatarUrl', avatarUrl);
+        record.set('updatedAt', new Date());
+        await record.save();
+        wx.showToast({ title: '头像已更新', icon: 'success' });
+      } else {
+        // 如果没有记录，创建新记录
+        const query = Bmob.Query('UserInfo');
+        query.set('openid', openid);
+        query.set('avatarUrl', avatarUrl);
+        query.set('nickName', this.data.userInfo.nickName || '');
+        await query.save();
+        wx.showToast({ title: '头像已更新', icon: 'success' });
+      }
+    } catch (err) {
+      console.error('保存头像失败:', err);
+      wx.showToast({ title: '保存失败', icon: 'none' });
     }
   },
 

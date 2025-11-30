@@ -134,8 +134,8 @@ const PRIZE_CONFIG = {
   ],
   // 无效奖品等级标记
   INVALID_LEVEL: 999,
-  // 洗牌奖励分数
-  SHUFFLE_BONUS: 50
+  // 洗牌奖励分数基数
+  SHUFFLE_BONUS: 10
 };
 
 // ==================== 默认头像配置 ====================

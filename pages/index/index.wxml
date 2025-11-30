@@ -61,13 +61,19 @@
       <text>⏱️ {{timeDisplay}}s</text>
       <text>⭐ {{liveScore}}</text>
     </view>
-    
+
     <view class="game-board" style="grid-template-columns: repeat({{cols}}, 1fr);">
       <view wx:for="{{domTiles}}" wx:key="id" 
             class="tile {{item.selected ? 'selected' : ''}} {{item.matched ? 'matched' : ''}} {{item.isPath ? 'path-highlight' : ''}}"
             style="background-image: url('{{item.img}}'); width:{{tileSize}}; height:{{tileSize}};"
             bindtap="handleTileClick" data-r="{{item.r}}" data-c="{{item.c}}">
       </view>
+    </view>
+
+    <!-- 洗牌奖励提示（放在游戏窗口下方） -->
+    <view class="shuffle-toast {{shuffleToastVisible ? 'visible' : ''}}" wx:if="{{shuffleToastText}}">
+      <text class="shuffle-icon">🔄</text>
+      <text class="shuffle-text">{{shuffleToastText}}</text>
     </view>
     
     <button style="background:transparent; color:#888; font-size:28rpx; margin-top:20rpx;" bindtap="backToMenu">放弃挑战</button>

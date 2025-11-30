@@ -41,10 +41,10 @@ Page({
     finalPrizeName: '',
     finalPrizeLevel: 6,
     inputName: '',
-    wechatNickName: '', // 新增：用于存储获取到的微信昵称
-    isUsingWechatNick: false, // 新增：标记是否使用了微信昵称
     defaultAvatarUrl: AVATAR_CONFIG.DEFAULT, // 排行榜默认头像
-    isRefreshing: false // 新增：标记是否正在刷新排行榜
+    isRefreshing: false, // 新增：标记是否正在刷新排行榜
+    shuffleToastText: '', // 洗牌提示文字
+    shuffleToastVisible: false // 洗牌提示是否可见
   },
 
   onLoad: function () {
@@ -61,56 +61,87 @@ Page({
 
 
   // [需求5, 6, 7] 修改排行榜获取逻辑：去重、取最高分、配置化时间
-  // [Bug修复] 修复 iOS 日期解析问题
-  fetchLeaderboard() {
+  // [重构] 用户信息从 UserInfo 表获取，通过 openid 关联
+  async fetchLeaderboard() {
     // 开始刷新，显示加载动画
     this.setData({
       isRefreshing: true
     });
 
-    const query = Bmob.Query("GameScore");
+    try {
+      // 1. 查询 GameScore 表获取排行榜数据
+      const query = Bmob.Query("GameScore");
+      let date = new Date();
+      date.setHours(date.getHours() - LEADERBOARD_CONFIG.DURATION_HOURS);
+      query.equalTo("createdAt", ">", date.toISOString());
+      query.order("-score");
+      query.limit(LEADERBOARD_CONFIG.QUERY_LIMIT);
 
-    let date = new Date();
-    date.setHours(date.getHours() - LEADERBOARD_CONFIG.DURATION_HOURS);
-    query.equalTo("createdAt", ">", date.toISOString());
-    query.order("-score");
-    query.limit(LEADERBOARD_CONFIG.QUERY_LIMIT);
+      const gameScores = await query.find();
 
-    query.find().then(res => {
-      let userMap = {}; // 数据处理：同一用户取最高分
+      // 2. 数据处理：同一用户取最高分
+      let userMap = {};
+      let openidSet = new Set();
 
-      res.forEach(item => {
-        let key = item.openid || item.playerName;
+      gameScores.forEach(item => {
+        let key = item.openid;
+        if (!key) return; // 跳过没有 openid 的记录
+
+        openidSet.add(key);
 
         // 如果该用户还没记录，或者当前这条分数更高，则保存/更新
         if (!userMap[key] || item.score > userMap[key].score) {
-          // 使用统一的日期格式化工具函数
           item.createTimeStr = dateFormat.formatDate(item.createdAt);
-          // 添加难度文案
           item.diffText = DIFFICULTY_CONFIG.TEXT_MAP[item.difficulty] || '未知';
-
           userMap[key] = item;
         }
       });
 
+      // 3. 批量查询 UserInfo 表获取用户信息
+      const openidList = Array.from(openidSet);
+      let userInfoMap = {};
+
+      if (openidList.length > 0) {
+        // Bmob 的 containedIn 查询
+        const userQuery = Bmob.Query("UserInfo");
+        userQuery.containedIn("openid", openidList);
+        userQuery.limit(500);
+        const userInfos = await userQuery.find();
+
+        userInfos.forEach(info => {
+          userInfoMap[info.openid] = {
+            nickName: info.nickName || '匿名玩家',
+            avatarUrl: info.avatarUrl || ''
+          };
+        });
+      }
+
+      // 4. 合并数据：将用户信息添加到排行榜数据中
       let uniqueList = Object.values(userMap);
+      uniqueList.forEach(item => {
+        const userInfo = userInfoMap[item.openid] || {};
+        item.playerName = userInfo.nickName || '匿名玩家';
+        item.avatarUrl = userInfo.avatarUrl || '';
+      });
+
+      // 5. 按分数排序
       uniqueList.sort((a, b) => b.score - a.score);
-      let finalRankList = uniqueList;
 
       this.setData({
-        rankList: finalRankList,
-        isRefreshing: false // 刷新完成，隐藏加载动画
+        rankList: uniqueList,
+        isRefreshing: false
       });
-    }).catch(err => {
+
+    } catch (err) {
       console.error('获取排行榜失败:', err);
       wx.showToast({
         title: '获取排行榜失败',
         icon: 'none'
       });
       this.setData({
-        isRefreshing: false // 刷新失败，也要隐藏加载动画
+        isRefreshing: false
       });
-    });
+    }
   },
 
   startGame(e) {
@@ -319,20 +350,43 @@ Page({
       const app = getApp();
       app.playShuffleSound();
 
-      // 给予分数奖励（使用配置文件中的值）
-      const bonusScore = PRIZE_CONFIG.SHUFFLE_BONUS;
+      // 计算剩余方块数量
+      const remainingTiles = this.data.domTiles.filter(t => !t.matched).length;
+      
+      // 根据剩余方块数量计算奖励（剩余越多，奖励越多）
+      // 基础奖励 + 剩余方块数 * 系数
+      const baseBonus = PRIZE_CONFIG.SHUFFLE_BONUS || 50;
+      const bonusPerTile = 8; // 每个剩余方块额外奖励8分
+      const bonusScore = baseBonus + remainingTiles * bonusPerTile;
+      
       this.gameState.bonusScore = (this.gameState.bonusScore || 0) + bonusScore;
 
-      // 醒目显示奖励信息（不打断游戏节奏）
-      wx.showToast({
-        title: `🔄 自动洗牌 +${bonusScore}分奖励！`,
-        icon: 'none',
-        duration: 3000,
-        mask: false
-      });
+      // 使用自定义提示显示奖励信息
+      this.showShuffleToast(`自动洗牌 +${bonusScore}分！(剩余${remainingTiles}块)`);
 
       this.shuffleBoard();
     }
+  },
+
+  // 显示洗牌奖励提示
+  showShuffleToast(text) {
+    this.setData({
+      shuffleToastText: text,
+      shuffleToastVisible: true
+    });
+    
+    // 3秒后隐藏
+    setTimeout(() => {
+      this.setData({
+        shuffleToastVisible: false
+      });
+      // 再等动画结束后清空文字
+      setTimeout(() => {
+        this.setData({
+          shuffleToastText: ''
+        });
+      }, 300);
+    }, 2000);
   },
 
   hasMoves() {
@@ -563,7 +617,7 @@ Page({
         const userInfo = await query.get(results[0].objectId);
         userInfo.set('nickName', nickName);
         userInfo.set('avatarUrl', avatarUrl);
-        userInfo.set('updatedAt', new Date());
+        // userInfo.set('updatedAt', new Date()); // 不需要设置updatedAt，Bmob会自动设置，这里手动设置反而会报错
         await userInfo.save();
       } else {
         // 创建新记录
@@ -671,9 +725,11 @@ Page({
         await Promise.allSettled(updatePromises);
       }
 
-      // 3. 保存新记录
+      // 3. 先保存用户信息到 UserInfo 表
+      await this.saveUserInfo(name, this.data.avatarUrl);
+
+      // 4. 保存游戏记录到 GameScore 表（不再保存用户信息，只保留 openid 关联）
       const query = Bmob.Query('GameScore');
-      query.set("playerName", name);
       query.set("score", this.data.tempScore);
       query.set("timeCost", this.data.tempTime);
       query.set("difficulty", this.gameState.diff);
@@ -691,14 +747,10 @@ Page({
       }
       query.set("status", status);
 
+      // 只保存 openid 用于关联 UserInfo 表
       if (openid) query.set("openid", openid);
-      if (this.data.wechatNickName) query.set("wechatNickName", this.data.wechatNickName);
-      if (this.data.avatarUrl) query.set("avatarUrl", this.data.avatarUrl);
 
       await query.save();
-
-      // 同时保存用户信息到 UserInfo 表
-      await this.saveUserInfo(name, this.data.avatarUrl);
 
       wx.showToast({
         title: '上榜成功',

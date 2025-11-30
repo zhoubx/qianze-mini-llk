@@ -7,150 +7,10 @@
   flex-direction: column;
 }
 
-/* ==================== 用户信息卡片 ==================== */
-.user-card {
-  background: linear-gradient(135deg, #4a7c59, #3a6346);
-  border-radius: 20rpx;
-  padding: 24rpx 30rpx;
-  margin: 0 10rpx 15rpx 10rpx;
-  box-shadow: 0 6rpx 20rpx rgba(74, 124, 89, 0.3);
-}
-
-/* 展示模式 */
-.user-info-display {
-  display: flex;
-  align-items: center;
-}
-
-.user-avatar {
-  width: 100rpx;
-  height: 100rpx;
-  border-radius: 50%;
-  border: 4rpx solid rgba(255, 255, 255, 0.5);
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.2);
-}
-
-.user-details {
-  flex: 1;
-  margin-left: 20rpx;
-}
-
-.user-name {
-  font-size: 32rpx;
-  font-weight: bold;
-  color: white;
-  display: block;
-  margin-bottom: 6rpx;
-}
-
-.user-tip {
-  font-size: 22rpx;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.edit-btn {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  font-size: 24rpx;
-  padding: 12rpx 24rpx;
-  border-radius: 30rpx;
-  border: 1rpx solid rgba(255, 255, 255, 0.3);
-  line-height: 1.5;
-}
-
-.edit-btn:active {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-/* 编辑模式 */
-.user-info-edit {
-  padding: 10rpx 0;
-}
-
-.edit-row {
-  display: flex;
-  align-items: center;
-  margin-bottom: 20rpx;
-}
-
-.edit-label {
-  width: 80rpx;
-  font-size: 26rpx;
-  color: rgba(255, 255, 255, 0.9);
-  font-weight: bold;
-}
-
-.avatar-picker {
-  display: flex;
-  align-items: center;
-  background: transparent;
-  padding: 0;
-  margin: 0;
-  border: none;
-  line-height: normal;
-}
-
-.avatar-picker::after {
-  border: none;
-}
-
-.edit-avatar {
-  width: 80rpx;
-  height: 80rpx;
-  border-radius: 50%;
-  border: 3rpx solid rgba(255, 255, 255, 0.5);
-}
-
-.avatar-tip {
-  font-size: 22rpx;
-  color: rgba(255, 255, 255, 0.7);
-  margin-left: 15rpx;
-}
-
-.nickname-input {
-  flex: 1;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 12rpx;
-  padding: 16rpx 20rpx;
-  font-size: 28rpx;
-  color: #333;
-}
-
-.edit-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 20rpx;
-  margin-top: 10rpx;
-}
-
-.cancel-btn {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  font-size: 26rpx;
-  padding: 14rpx 36rpx;
-  border-radius: 30rpx;
-  border: 1rpx solid rgba(255, 255, 255, 0.3);
-  line-height: 1.5;
-}
-
-.save-btn {
-  background: white;
-  color: #4a7c59;
-  font-size: 26rpx;
-  font-weight: bold;
-  padding: 14rpx 36rpx;
-  border-radius: 30rpx;
-  line-height: 1.5;
-}
-
-.save-btn:active {
-  background: #f0f0f0;
-}
-
 /* ==================== 页面标题 ==================== */
 .page-header {
   text-align: center;
-  padding: 15rpx 30rpx 10rpx 10rpx;
+  padding: 20rpx 30rpx 16rpx 30rpx;
   background: rgb(255, 255, 255);
   border-radius: 16rpx;
   margin: 0rpx 10rpx 10rpx 10rpx;
@@ -162,16 +22,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 4rpx;
+  margin-bottom: 12rpx;
 }
 
 .header-icon {
-  font-size: 32rpx;
-  margin-right: 8rpx;
+  font-size: 48rpx;
+  margin-right: 12rpx;
 }
 
 .header-title {
-  font-size: 28rpx;
+  font-size: 44rpx;
   font-weight: bold;
   color: #4a7c59;
 }
@@ -179,14 +39,30 @@
 .header-subtitle {
   display: flex;
   flex-direction: column;
-  gap: 4rpx;
-  font-size: 20rpx;
+  align-items: center;
+  gap: 8rpx;
+  font-size: 24rpx;
   color: #666;
-  line-height: 1.4;
+  line-height: 1.6;
+  padding: 0 20rpx;
 }
 
 .header-subtitle text {
   display: block;
+  text-align: center;
+}
+
+.header-subtitle text:first-child {
+  color: #4a7c59;
+  font-weight: 500;
+}
+
+.header-subtitle text:last-child {
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: bold;
 }
 
 /* ==================== 奖品列表 ==================== */
@@ -271,7 +147,7 @@
 }
 
 .use-btn {
-  background: #df6e81; /* 醒目的核销色 */
+  background: #df6e81;
   color: white;
   font-size: 35rpx;
   padding: 5rpx 1rpx;
@@ -294,3 +170,148 @@
 }
 .card.used .status-text { color: #4a7c59; }
 .card.expired .status-text { color: #999; }
+
+/* ==================== 个人信息模块 ==================== */
+.profile-section {
+  background: linear-gradient(135deg, #f8faf9 0%, #e8f5e9 100%);
+  border-radius: 16rpx;
+  padding: 16rpx 20rpx;
+  margin: 0 0 15rpx 0;
+  border: 1rpx solid #d4e5d8;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* 展示模式 */
+.profile-display {
+  display: flex;
+  align-items: center;
+}
+
+.profile-avatar {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  border: 2rpx solid #4a7c59;
+  flex-shrink: 0;
+}
+
+.profile-details {
+  margin-left: 16rpx;
+  flex: 1;
+}
+
+.profile-name {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #4a7c59;
+  display: block;
+}
+
+.profile-hint {
+  font-size: 20rpx;
+  color: #888;
+}
+
+.profile-edit-btn {
+  background: #4a7c59;
+  color: white;
+  font-size: 22rpx;
+  padding: 8rpx 20rpx;
+  border-radius: 16rpx;
+  line-height: 1.5;
+  margin: 0;
+  min-width: 0;
+  width: auto;
+  flex-shrink: 0;
+}
+
+.profile-edit-btn:active {
+  background: #3a6346;
+}
+
+/* 编辑模式 */
+.profile-edit {
+  padding: 0;
+}
+
+.edit-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-bottom: 16rpx;
+}
+
+.avatar-btn {
+  display: flex;
+  align-items: center;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  border: none;
+  line-height: normal;
+  flex-shrink: 0;
+}
+
+.avatar-btn::after {
+  border: none;
+}
+
+.avatar-preview {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  border: 2rpx solid #4a7c59;
+}
+
+.avatar-tip {
+  font-size: 20rpx;
+  color: #4a7c59;
+  margin-left: 10rpx;
+}
+
+.field-input {
+  flex: 1;
+  background: white;
+  border: 2rpx solid #d4e5d8;
+  border-radius: 12rpx;
+  padding: 14rpx 16rpx;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16rpx;
+}
+
+.btn-cancel {
+  background: white;
+  color: #666;
+  font-size: 24rpx;
+  padding: 10rpx 28rpx;
+  border-radius: 20rpx;
+  border: 1rpx solid #ddd;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.btn-cancel:active {
+  background: #f5f5f5;
+}
+
+.btn-save {
+  background: #4a7c59;
+  color: white;
+  font-size: 24rpx;
+  font-weight: bold;
+  padding: 10rpx 28rpx;
+  border-radius: 20rpx;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.btn-save:active {
+  background: #3a6346;
+}
