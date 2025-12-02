@@ -138,3 +138,66 @@ page { background: #f4f7f6; }
   line-height: 1.6;
   display: block;
 }
+
+/* 展开链接样式（小巧） */
+.toggle-link {
+  display: inline-flex;
+  align-items: center;
+  margin: 12rpx 0 8rpx 16rpx;
+  padding: 6rpx 0;
+}
+
+.toggle-link:active {
+  opacity: 0.7;
+}
+
+.toggle-link-text {
+  color: #4a7c59;
+  font-size: 24rpx;
+  text-decoration: underline;
+}
+
+.toggle-link-icon {
+  color: #4a7c59;
+  font-size: 20rpx;
+  margin-left: 6rpx;
+}
+
+/* 底部收起链接 */
+.collapse-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 24rpx 0 8rpx 0;
+  padding: 12rpx 0;
+  border-top: 1rpx dashed #ddd;
+}
+
+.collapse-link:active {
+  opacity: 0.7;
+}
+
+.collapse-link-text {
+  color: #999;
+  font-size: 24rpx;
+}
+
+.collapse-link-icon {
+  color: #999;
+  font-size: 20rpx;
+  margin-right: 6rpx;
+}
+
+/* 可折叠区域 */
+.collapsible {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease-out, opacity 0.3s ease;
+  opacity: 0;
+}
+
+.collapsible.expanded {
+  max-height: 3000rpx;
+  opacity: 1;
+  transition: max-height 0.5s ease-in, opacity 0.3s ease;
+}

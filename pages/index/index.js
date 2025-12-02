@@ -353,16 +353,19 @@ Page({
       // 计算剩余方块数量
       const remainingTiles = this.data.domTiles.filter(t => !t.matched).length;
       
-      // 根据剩余方块数量计算奖励（剩余越多，奖励越多）
-      // 基础奖励 + 剩余方块数 * 系数
-      const baseBonus = PRIZE_CONFIG.SHUFFLE_BONUS || 50;
-      const bonusPerTile = 8; // 每个剩余方块额外奖励8分
-      const bonusScore = baseBonus + remainingTiles * bonusPerTile;
+      // 根据难度从配置中获取洗牌加分
+      const difficulty = this.gameState.diff;
+      const bonusScore = PRIZE_CONFIG.SHUFFLE_BONUS[difficulty] || 0;
+      
+      // 生成提示文字
+      const toastText = bonusScore > 0 
+        ? `自动洗牌 +${bonusScore}分！` 
+        : `自动洗牌（简单模式不加分）`;
       
       this.gameState.bonusScore = (this.gameState.bonusScore || 0) + bonusScore;
 
       // 使用自定义提示显示奖励信息
-      this.showShuffleToast(`自动洗牌 +${bonusScore}分！(剩余${remainingTiles}块)`);
+      this.showShuffleToast(toastText);
 
       this.shuffleBoard();
     }
@@ -813,9 +816,23 @@ Page({
     this.setData({
       showPostSubmitModal: false
     });
-    wx.showToast({
-      title: '即将开放，敬请期待',
-      icon: 'none'
+    
+    // 跳转到美团小程序 - 门店详情页
+    wx.navigateToMiniProgram({
+      appId: 'wxde8ac0a21135c07d', // 美团小程序的 appId
+      path: 'service-retail-poi/pages/poi/index?entrypoint=channel&id=932031008&pricecipher=vH4THqgHbPMHcB_0K6VVVionFo5BRsk9elX3jodyFoVa4Ok_vkJRXcQ68A48qFYBXeqakTylckRG7c0aJMsG9gz_NQ8_i0hGJhlCL1iEj1ZDQsJwjyMolP5vYHR-KwKkMPdLjkmpkC3qNGfQEOarC7catVQGplHT0_jjfG5fMbPoqbXwaA0ghw1Ox9bM4FrM0dtbw7mPGX9AlDHVIxbVih0HGzmO0pr4pWMwKbWuftzZkrwvr3f365vU8IKzhc5x0UPtjszVSYL8hkvTXUzrbxmnBa5TqjwqZIxD74EPZNBUe2i-IGbSE_ml2NyRwaHV52nLacxyTIcGLzuL3E6yACgn3ll6pXBxVD9otTVtn2sepvTwukfwLSpCbQaUhu_x5MElEokVala5owiy5hs0VezPXY6NvAssZyCXDrlj5ldeFEEY5nJK8ZGnlbuf34X-5QA4zgDj_MxNhi7zkqpdIKNnUb63c4l9Msb3q_JScjdacQuaHeFkeellgU_cdpAdcidUv47VlS148uT740nFZ0gmf3iiqf2ekw4Az1_mijqrziH5loLAPnG8qO3lABCfy0I6EvJK5MRHaj9z9BAMUZEZLLm2Uvi-s_gZak86NsQjonKiadtgxDVNXbS1Ii9h',
+      envVersion: 'release', // 正式版
+      success: function(res) {
+        console.log('跳转美团小程序成功', res);
+      },
+      fail: function(err) {
+        console.error('跳转美团小程序失败', err);
+        wx.showToast({
+          title: '跳转失败，请稍后重试',
+          icon: 'none',
+          duration: 2000
+        });
+      }
     });
   },
 

@@ -1,12 +1,73 @@
 
 // pages/rules/rules.js
+const config = require('../../config/index.js');
+const { PRIZE_CONFIG, DIFFICULTY_CONFIG } = config;
+
+// 从配置计算各难度的消除对数
+const BOARD = DIFFICULTY_CONFIG.BOARD;
+const pairsEasy = (BOARD.easy.rows * BOARD.easy.cols) / 2;
+const pairsMedium = (BOARD.medium.rows * BOARD.medium.cols) / 2;
+const pairsHard = (BOARD.hard.rows * BOARD.hard.cols) / 2;
+
+// 平均每1.5秒消除一对，计算示例耗时
+const timePerPair = 1.5;
+const timeEasy = pairsEasy * timePerPair;
+const timeMedium = pairsMedium * timePerPair;
+const timeHard = pairsHard * timePerPair;
+
+// 获取难度系数
+const multiplierEasy = DIFFICULTY_CONFIG.OPTIONS.find(d => d.id === 'easy').multiplier;
+const multiplierMedium = DIFFICULTY_CONFIG.OPTIONS.find(d => d.id === 'medium').multiplier;
+const multiplierHard = DIFFICULTY_CONFIG.OPTIONS.find(d => d.id === 'hard').multiplier;
+
+// 计算示例基础分（无洗牌情况）
+const baseScoreEasy = Math.floor((pairsEasy * 1000 / timeEasy) * multiplierEasy);
+const baseScoreMedium = Math.floor((pairsMedium * 1000 / timeMedium) * multiplierMedium);
+const baseScoreHard = Math.floor((pairsHard * 1000 / timeHard) * multiplierHard);
+
 Page({
 
   /**
    * 页面的初始数据
    */
   data: {
+    // 洗牌奖励配置
+    shuffleBonus: PRIZE_CONFIG.SHUFFLE_BONUS,
+    // 难度系数配置
+    difficultyOptions: DIFFICULTY_CONFIG.OPTIONS,
+    // 各难度消除对数（从配置计算）
+    pairs: {
+      easy: pairsEasy,
+      medium: pairsMedium,
+      hard: pairsHard
+    },
+    // 示例耗时（对数 × 1.5秒）
+    exampleTime: {
+      easy: timeEasy,
+      medium: timeMedium,
+      hard: timeHard
+    },
+    // 难度系数
+    multiplier: {
+      easy: multiplierEasy,
+      medium: multiplierMedium,
+      hard: multiplierHard
+    },
+    // 示例基础分
+    baseScore: {
+      easy: baseScoreEasy,
+      medium: baseScoreMedium,
+      hard: baseScoreHard
+    },
+    // 详细规则是否展开
+    showScoreDetail: false
+  },
 
+  // 切换分数计算详情的展开/折叠状态
+  toggleScoreDetail() {
+    this.setData({
+      showScoreDetail: !this.data.showScoreDetail
+    });
   },
 
   /**
