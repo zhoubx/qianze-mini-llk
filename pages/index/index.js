@@ -3,6 +3,7 @@
 const dateFormat = require('../../utils/dateFormat.js'); // 引入日期格式化工具
 const config = require('../../config/index.js'); // 引入配置文件
 const { uploadAvatarIfNeeded } = require('../../utils/avatarUploader.js'); // 引入头像上传工具
+const resourceManager = require('../../utils/resourceManager.js'); // 引入资源管理器
 const app = getApp();
 
 // 云数据库引用
@@ -20,7 +21,7 @@ const {
   getRandomAvatar 
 } = config;
 
-// 消除音效上下文
+// 消除音效上下文（初始化时使用配置URL，预加载完成后会更新）
 const matchCtx = wx.createInnerAudioContext();
 matchCtx.src = AUDIO_CONFIG.EFFECTS.MATCH;
 matchCtx.volume = AUDIO_CONFIG.VOLUME.MATCH;
@@ -51,10 +52,18 @@ Page({
     isRefreshing: false, // 新增：标记是否正在刷新排行榜
     submitting: false, // 提交状态
     shuffleToastText: '', // 洗牌提示文字
-    shuffleToastVisible: false // 洗牌提示是否可见
+    shuffleToastVisible: false, // 洗牌提示是否可见
+    imagesReady: false // 图片是否预加载完成
   },
 
+  // 实际使用的游戏图片列表
+  gameImages: GAME_IMAGES,
+
   onLoad: function () {
+    // 预加载游戏图片（确保开始游戏时图片已缓存）
+    this.preloadGameImages();
+    // 预加载音频资源
+    this.silentPreload();
     this.fetchLeaderboard();
   },
 
@@ -69,6 +78,81 @@ Page({
     const musicControl = this.selectComponent('#musicControl');
     if (musicControl) {
       musicControl.syncMusicStatus();
+    }
+  },
+
+  // 预加载游戏图片（获取临时URL并缓存到本地）
+  async preloadGameImages() {
+    console.log('开始预加载游戏图片...');
+    
+    try {
+      // 1. 获取所有图片的临时URL
+      const tempUrls = await resourceManager.getTempFileURLs(GAME_IMAGES);
+      
+      // 2. 将 cloud:// 转换为临时URL
+      const imageUrls = GAME_IMAGES.map(id => tempUrls[id] || id);
+      this.gameImages = imageUrls;
+      
+      console.log('临时URL获取完成，开始预加载图片...');
+      
+      // 3. 预加载图片到本地缓存
+      let loaded = 0;
+      const total = imageUrls.length;
+
+      imageUrls.forEach((imgUrl) => {
+        wx.getImageInfo({
+          src: imgUrl,
+          success: () => {
+            loaded++;
+            if (loaded >= total) {
+              console.log('游戏图片预加载完成');
+              this.setData({ imagesReady: true });
+            }
+          },
+          fail: (err) => {
+            console.warn('图片预加载失败:', imgUrl, err);
+            loaded++;
+            if (loaded >= total) {
+              this.setData({ imagesReady: true });
+            }
+          }
+        });
+      });
+
+      // 超时保护：15秒后强制标记完成
+      setTimeout(() => {
+        if (!this.data.imagesReady) {
+          console.warn('图片预加载超时，强制完成');
+          this.setData({ imagesReady: true });
+        }
+      }, 15000);
+      
+    } catch (err) {
+      console.error('获取图片临时URL失败:', err);
+      // 失败时使用原始 cloud:// URL
+      this.gameImages = GAME_IMAGES;
+      this.setData({ imagesReady: true });
+    }
+  },
+
+  // 静默预加载音频资源（不覆盖已预加载的图片）
+  async silentPreload() {
+    // 只更新音频URL，不覆盖图片
+    this.updateMatchSoundUrl();
+  },
+
+  // 更新消除音效URL（获取云存储临时链接）
+  async updateMatchSoundUrl() {
+    const cloudId = AUDIO_CONFIG.EFFECTS.MATCH;
+    if (cloudId && cloudId.startsWith('cloud://')) {
+      try {
+        const tempUrl = await resourceManager.getResourceUrl(cloudId);
+        if (tempUrl && matchCtx) {
+          matchCtx.src = tempUrl;
+        }
+      } catch (err) {
+        console.warn('更新消除音效URL失败:', err);
+      }
     }
   },
 
@@ -252,8 +336,12 @@ Page({
       cols,
       totalPairs
     } = this.gameState;
+    
+    // 使用预加载后的游戏图片
+    const images = this.gameImages || GAME_IMAGES;
+    
     let data = [];
-    for (let i = 0; i < totalPairs; i++) data.push(i % GAME_IMAGES.length, i % GAME_IMAGES.length);
+    for (let i = 0; i < totalPairs; i++) data.push(i % images.length, i % images.length);
     data.sort(() => Math.random() - 0.5);
 
     let tr = rows + 2,
@@ -271,7 +359,7 @@ Page({
           id: `${r}-${c}`,
           r,
           c,
-          img: GAME_IMAGES[type],
+          img: images[type],
           selected: false,
           matched: false,
           isPath: false
@@ -489,11 +577,14 @@ Page({
 
     types.sort(() => Math.random() - 0.5);
 
+    // 使用预加载后的游戏图片
+    const images = this.gameImages || GAME_IMAGES;
+
     availableTiles.forEach((t, i) => {
       this.gameState.logicBoard[t.r][t.c] = types[i];
       // 更新视图
       let idx = tiles.findIndex(x => x.id === t.id);
-      tiles[idx].img = GAME_IMAGES[types[i]];
+      tiles[idx].img = images[types[i]];
       tiles[idx].selected = false;
     });
 

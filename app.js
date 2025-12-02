@@ -1,5 +1,6 @@
 // app.js
 const config = require('config/index.js');
+const resourceManager = require('utils/resourceManager.js');
 
 // 全局音乐管理器
 let bgmCtx = null;
@@ -11,11 +12,17 @@ let currentDifficulty = 'default'; // 当前难度
 let musicCallbacks = []; // 存储所有音乐状态变化的回调函数
 let isMusicPlaying = false; // 内部播放状态跟踪
 
+// 资源预加载相关
+let resourceUrls = null; // 存储预加载后的资源URL
+let preloadPromise = null; // 预加载Promise
+
 App({
   globalData: {
     openid: null,
     userInfo: null,
-    needRefreshLeaderboard: false // 标志位：是否需要刷新排行榜
+    needRefreshLeaderboard: false, // 标志位：是否需要刷新排行榜
+    resourcesLoaded: false, // 资源是否加载完成
+    gameImages: null // 预加载后的游戏图片URL列表
   },
 
   onLaunch: function () {
@@ -32,7 +39,10 @@ App({
     // 获取 OpenID (通过云函数)
     this.getOpenId();
 
-    // 初始化全局音乐
+    // 预加载游戏资源
+    this.preloadResources();
+
+    // 初始化全局音乐（会在预加载完成后自动使用云存储URL）
     this.initGlobalMusic();
   },
 
@@ -47,6 +57,97 @@ App({
     } catch (err) {
       console.error('登录失败', err);
     }
+  },
+
+  // 预加载游戏资源
+  async preloadResources() {
+    // 如果已经在加载中，返回现有的 Promise
+    if (preloadPromise) {
+      return preloadPromise;
+    }
+
+    preloadPromise = (async () => {
+      try {
+        console.log('开始预加载游戏资源...');
+        
+        // 使用资源管理器预加载
+        resourceUrls = await resourceManager.preloadAllResources();
+        
+        // 保存游戏图片URL到全局
+        this.globalData.gameImages = resourceUrls.gameImages;
+        this.globalData.resourcesLoaded = true;
+        
+        console.log('游戏资源预加载完成', resourceUrls);
+        
+        // 更新音频上下文的URL（如果使用云存储）
+        this.updateAudioUrls(resourceUrls.urlMap);
+        
+        return resourceUrls;
+      } catch (err) {
+        console.error('预加载资源失败:', err);
+        // 即使失败也标记为完成，使用降级配置
+        this.globalData.resourcesLoaded = true;
+        this.globalData.gameImages = config.GAME_IMAGES;
+        return null;
+      }
+    })();
+
+    return preloadPromise;
+  },
+
+  // 获取预加载状态
+  getPreloadStatus() {
+    return resourceManager.getPreloadStatus();
+  },
+
+  // 注册预加载状态回调
+  onPreloadStatusChange(callback) {
+    resourceManager.onStatusChange(callback);
+  },
+
+  // 取消预加载状态回调
+  offPreloadStatusChange(callback) {
+    resourceManager.offStatusChange(callback);
+  },
+
+  // 更新音频上下文的URL（使用预加载的临时链接）
+  updateAudioUrls(urlMap) {
+    if (!urlMap) return;
+
+    const { AUDIO_CONFIG } = config;
+
+    // 更新背景音乐URL
+    if (bgmCtx && urlMap[AUDIO_CONFIG.BGM.DEFAULT]) {
+      bgmCtx.src = urlMap[AUDIO_CONFIG.BGM.DEFAULT];
+    }
+
+    // 更新胜利音乐URL
+    if (victoryCtx && urlMap[AUDIO_CONFIG.EFFECTS.VICTORY]) {
+      victoryCtx.src = urlMap[AUDIO_CONFIG.EFFECTS.VICTORY];
+    }
+
+    // 更新开始游戏音效URL
+    if (gameStartCtx && urlMap[AUDIO_CONFIG.EFFECTS.GAME_START]) {
+      gameStartCtx.src = urlMap[AUDIO_CONFIG.EFFECTS.GAME_START];
+    }
+
+    // 更新退出游戏音效URL
+    if (gameQuitCtx && urlMap[AUDIO_CONFIG.EFFECTS.GAME_QUIT]) {
+      gameQuitCtx.src = urlMap[AUDIO_CONFIG.EFFECTS.GAME_QUIT];
+    }
+
+    // 更新洗牌音效URL
+    if (shuffleCtx && urlMap[AUDIO_CONFIG.EFFECTS.SHUFFLE]) {
+      shuffleCtx.src = urlMap[AUDIO_CONFIG.EFFECTS.SHUFFLE];
+    }
+  },
+
+  // 获取游戏图片URL列表（优先使用预加载的云存储URL）
+  getGameImages() {
+    if (this.globalData.gameImages && this.globalData.gameImages.length > 0) {
+      return this.globalData.gameImages;
+    }
+    return config.GAME_IMAGES;
   },
 
   initGlobalMusic() {
@@ -173,12 +274,26 @@ App({
   },
 
   // 切换难度背景音乐
-  switchDifficultyMusic(difficulty) {
+  async switchDifficultyMusic(difficulty) {
     if (currentDifficulty === difficulty) return;
 
     currentDifficulty = difficulty;
-    // 使用配置文件中的辅助函数获取音乐URL
-    const musicUrl = config.getBgmUrl(difficulty);
+    
+    // 获取音乐云文件ID
+    const cloudId = config.getBgmUrl(difficulty);
+    let musicUrl = cloudId;
+    
+    // 获取临时链接
+    if (cloudId && cloudId.startsWith('cloud://')) {
+      try {
+        const tempUrl = await resourceManager.getResourceUrl(cloudId);
+        if (tempUrl) {
+          musicUrl = tempUrl;
+        }
+      } catch (err) {
+        console.warn('获取云存储音乐URL失败:', err);
+      }
+    }
 
     // 如果当前正在播放，先停止
     if (isMusicPlaying && bgmCtx) {

@@ -3,38 +3,46 @@
  * 集中管理所有配置项，便于维护和修改
  */
 
-// ==================== 基础 URL 配置 ====================
-const BASE_URL = {
-  // 图片资源基础 URL
-  IMAGE: 'http://qianze.xyz/images',
-  // 音频资源基础 URL
-  MUSIC: 'http://qianze.xyz/music'
+// ==================== 云开发配置 ====================
+const CLOUD_CONFIG = {
+  ENV_ID: 'cloud1-5gcovdng3cfbf3ee'
 };
 
-// ==================== 云开发配置 ====================
-// 请将 ENV_ID 替换为你的云开发环境 ID
-const CLOUD_CONFIG = {
-  ENV_ID: 'cloud1-5gcovdng3cfbf3ee' // TODO: 替换为实际的云开发环境ID
-};
+// 云存储基础路径
+const CLOUD_BASE_URL = 'cloud://cloud1-5gcovdng3cfbf3ee.636c-cloud1-5gcovdng3cfbf3ee-1390068510';
+
+// ==================== 游戏图片配置 ====================
+const GAME_IMAGES = [
+  `${CLOUD_BASE_URL}/images/012.jpg`,
+  `${CLOUD_BASE_URL}/images/013.jpg`,
+  `${CLOUD_BASE_URL}/images/001.jpg`,
+  `${CLOUD_BASE_URL}/images/002.jpg`,
+  `${CLOUD_BASE_URL}/images/003.jpg`,
+  `${CLOUD_BASE_URL}/images/004.jpg`,
+  `${CLOUD_BASE_URL}/images/005.jpg`,
+  `${CLOUD_BASE_URL}/images/006.jpg`,
+  `${CLOUD_BASE_URL}/images/007.jpg`,
+  `${CLOUD_BASE_URL}/images/008.jpg`,
+  `${CLOUD_BASE_URL}/images/009.jpg`,
+  `${CLOUD_BASE_URL}/images/010.jpg`,
+  `${CLOUD_BASE_URL}/images/011.jpg`
+];
 
 // ==================== 音频配置 ====================
 const AUDIO_CONFIG = {
-  // 背景音乐
   BGM: {
-    EASY: `${BASE_URL.MUSIC}/bgm1.mp4`,
-    MEDIUM: `${BASE_URL.MUSIC}/bgm2.mp4`,
-    HARD: `${BASE_URL.MUSIC}/bgm3.mp3`,
-    DEFAULT: `${BASE_URL.MUSIC}/bgm1.mp4`
+    EASY: `${CLOUD_BASE_URL}/music/bgm1.mp4`,
+    MEDIUM: `${CLOUD_BASE_URL}/music/bgm2.mp4`,
+    HARD: `${CLOUD_BASE_URL}/music/bgm3.mp3`,
+    DEFAULT: `${CLOUD_BASE_URL}/music/bgm1.mp4`
   },
-  // 音效
   EFFECTS: {
-    VICTORY: `${BASE_URL.MUSIC}/victory.mp3`,
-    GAME_START: `${BASE_URL.MUSIC}/ReadyGo.mp3`,
-    GAME_QUIT: `${BASE_URL.MUSIC}/drop.mp3`,
-    SHUFFLE: `${BASE_URL.MUSIC}/shuffle2.mp3`,
-    MATCH: `${BASE_URL.MUSIC}/disappear.mp3`
+    VICTORY: `${CLOUD_BASE_URL}/music/victory.mp3`,
+    GAME_START: `${CLOUD_BASE_URL}/music/ReadyGo.mp3`,
+    GAME_QUIT: `${CLOUD_BASE_URL}/music/drop.mp3`,
+    SHUFFLE: `${CLOUD_BASE_URL}/music/shuffle2.mp3`,
+    MATCH: `${CLOUD_BASE_URL}/music/disappear.mp3`
   },
-  // 音量设置 (范围 0-1)
   VOLUME: {
     BGM: 0.6,
     VICTORY: 0.6,
@@ -45,34 +53,14 @@ const AUDIO_CONFIG = {
   }
 };
 
-// ==================== 游戏图片配置 ====================
-const GAME_IMAGES = [
-  `${BASE_URL.IMAGE}/012.jpg?text=芊`,
-  `${BASE_URL.IMAGE}/013.jpg?text=泽`,
-  `${BASE_URL.IMAGE}/001.jpg`,
-  `${BASE_URL.IMAGE}/002.jpg`,
-  `${BASE_URL.IMAGE}/003.jpg`,
-  `${BASE_URL.IMAGE}/004.jpg`,
-  `${BASE_URL.IMAGE}/005.jpg`,
-  `${BASE_URL.IMAGE}/006.jpg`,
-  `${BASE_URL.IMAGE}/007.jpg`,
-  `${BASE_URL.IMAGE}/008.jpg`,
-  `${BASE_URL.IMAGE}/009.jpg`,
-  `${BASE_URL.IMAGE}/010.jpg`,
-  `${BASE_URL.IMAGE}/011.jpg`
-];
-
 // ==================== 排行榜配置 ====================
 const LEADERBOARD_CONFIG = {
-  // 排名统计的时间范围（小时）
   DURATION_HOURS: 72,
-  // 查询限制数量
   QUERY_LIMIT: 500
 };
 
 // ==================== 难度配置 ====================
 const DIFFICULTY_CONFIG = {
-  // 难度选项（用于UI展示）
   OPTIONS: [
     {
       id: 'easy',
@@ -105,13 +93,11 @@ const DIFFICULTY_CONFIG = {
       icon: '🏆'
     }
   ],
-  // 游戏棋盘配置
   BOARD: {
     easy: { rows: 2, cols: 2 },
     medium: { rows: 6, cols: 6 },
     hard: { rows: 8, cols: 6 }
   },
-  // 难度文案映射
   TEXT_MAP: {
     'easy': '简单',
     'medium': '普通',
@@ -121,7 +107,6 @@ const DIFFICULTY_CONFIG = {
 
 // ==================== 奖品配置 ====================
 const PRIZE_CONFIG = {
-  // 奖品等级配置
   TIERS: [
     { rankEnd: 1, level: 1, name: '10元代金券' },
     { rankEnd: 3, level: 2, name: '8元代金券' },
@@ -130,63 +115,39 @@ const PRIZE_CONFIG = {
     { rankEnd: 50, level: 5, name: '2元代金券' },
     { rankEnd: 9999, level: 6, name: '再接再厉' }
   ],
-  // 无效奖品等级标记
   INVALID_LEVEL: 999,
-  // 洗牌奖励分数（按难度区分）
   SHUFFLE_BONUS: {
-    easy: 0,    // 简单模式：不加分
-    medium: 50, // 普通模式：每次+50分
-    hard: 100   // 困难模式：每次+100分
+    easy: 0,
+    medium: 50,
+    hard: 100
   }
 };
 
 // ==================== 默认头像配置 ====================
 const AVATAR_CONFIG = {
-  // 随机默认头像：直接复用 GAME_IMAGES（在 getRandomAvatar 函数中实现）
-  // 排行榜默认头像：使用服务器图片
-  DEFAULT: `${BASE_URL.IMAGE}/avatar_default.png`
+  DEFAULT: `${CLOUD_BASE_URL}/images/avatar_default.png`
 };
 
 // ==================== 辅助函数 ====================
-/**
- * 获取随机默认头像（从游戏图片中随机选择）
- * @returns {string} 随机头像的 URL
- */
 function getRandomAvatar() {
   return GAME_IMAGES[Math.floor(Math.random() * GAME_IMAGES.length)];
 }
 
-/**
- * 根据难度获取背景音乐 URL
- * @param {string} difficulty - 难度等级 (easy/medium/hard)
- * @returns {string} 音乐 URL
- */
 function getBgmUrl(difficulty) {
-  switch (difficulty) {
-    case 'easy':
-      return AUDIO_CONFIG.BGM.EASY;
-    case 'medium':
-      return AUDIO_CONFIG.BGM.MEDIUM;
-    case 'hard':
-      return AUDIO_CONFIG.BGM.HARD;
-    default:
-      return AUDIO_CONFIG.BGM.DEFAULT;
-  }
+  return AUDIO_CONFIG.BGM[difficulty.toUpperCase()] || AUDIO_CONFIG.BGM.DEFAULT;
 }
 
 // ==================== 导出配置 ====================
 module.exports = {
-  BASE_URL,
   CLOUD_CONFIG,
+  CLOUD_BASE_URL,
   AUDIO_CONFIG,
   GAME_IMAGES,
   LEADERBOARD_CONFIG,
   DIFFICULTY_CONFIG,
   PRIZE_CONFIG,
   AVATAR_CONFIG,
-  // 全局分享图片
   SHARE_IMAGE: '/images/share-landing.png',
-  // 辅助函数
   getRandomAvatar,
   getBgmUrl
 };

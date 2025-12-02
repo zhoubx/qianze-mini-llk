@@ -19,7 +19,13 @@
   </view>
 
   <view class="menu-screen" wx:if="{{!isGameActive}}">
-    <view class="difficulty-card {{item.class}}" wx:for="{{diffConfig}}" wx:key="id" bindtap="startGame" data-diff="{{item.id}}">
+    <!-- 图片加载提示 -->
+    <view class="preload-tip" wx:if="{{!imagesReady}}">
+      <text class="preload-icon">⏳</text>
+      <text class="preload-text">游戏资源加载中...</text>
+    </view>
+
+    <view class="difficulty-card {{item.class}} {{!imagesReady ? 'loading' : ''}}" wx:for="{{diffConfig}}" wx:key="id" bindtap="startGame" data-diff="{{item.id}}">
       <view class="diff-info">
         <view class="diff-header">
           <text class="diff-title">{{item.title}}</text>
@@ -68,8 +74,9 @@
     <view class="game-board" style="grid-template-columns: repeat({{cols}}, 1fr);">
       <view wx:for="{{domTiles}}" wx:key="id" 
             class="tile {{item.selected ? 'selected' : ''}} {{item.matched ? 'matched' : ''}} {{item.isPath ? 'path-highlight' : ''}}"
-            style="background-image: url('{{item.img}}'); width:{{tileSize}}; height:{{tileSize}};"
+            style="width:{{tileSize}}; height:{{tileSize}};"
             bindtap="handleTileClick" data-r="{{item.r}}" data-c="{{item.c}}">
+        <image class="tile-img" src="{{item.img}}" mode="aspectFill" />
       </view>
     </view>
 
