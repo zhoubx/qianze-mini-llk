@@ -171,6 +171,7 @@ page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
   display: flex;
   align-items: baseline;
   margin-bottom: 6rpx;
+  letter-spacing: 1rpx;
 }
 
 .diff-title {
@@ -178,11 +179,13 @@ page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
   font-weight: bold;
   color: #333;
   margin-right: 8rpx;
+  letter-spacing: 4rpx;
 }
 
 .diff-desc {
   font-size: 24rpx;
   color: #888;
+  letter-spacing: 1rpx;
 }
 
 /* 难度标签样式 */
@@ -194,6 +197,7 @@ page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
   color: white;
   display: inline-block;
   margin-bottom: 4rpx;
+  letter-spacing: 3rpx;
 }
 
 .badge-easy {
@@ -236,18 +240,6 @@ page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
   box-shadow: 0 0 0 0;
 }
 
-/* 右侧增加一个“开始”的视觉引导 */
-.diff-icon {
-  font-size: 48rpx;
-  background: rgba(255,255,255,0.8);
-  width: 80rpx;
-  height: 80rpx;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4rpx 8rpx rgba(0,0,0,0.05);
-}
 
 /* [需求4] 排行榜高度调高 */
 .leaderboard-box {
@@ -265,11 +257,41 @@ page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
   margin-bottom: 20rpx; /* 底部留白 */
 }
 
-.lb-header { display: flex; justify-content: space-between; margin-bottom: 10rpx; border-bottom: 2rpx solid #f0f0f0; padding-bottom: 10rpx; font-size: 28rpx; }
-.lb-refresh-wrapper { display: flex; align-items: center; gap: 8rpx; }
-.lb-loading-icon { font-size: 24rpx; display: inline-block; }
-.lb-loading-icon.rotating { animation: rotate 1s linear infinite; }
-@keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.lb-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10rpx;
+  border-bottom: 2rpx solid #f0f0f0;
+  padding-bottom: 10rpx;
+  font-size: 28rpx;
+  letter-spacing: 1rpx;
+}
+
+.lb-refresh-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.lb-loading-icon {
+  font-size: 24rpx;
+  display: inline-block;
+}
+
+.lb-loading-icon.rotating {
+  animation: rotate 1s linear infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .lb-list {
   flex: 1;
   /* height: 0; */
@@ -392,7 +414,15 @@ page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
 .tile.path-highlight::after { width: 60%; height: 60%; opacity: 0.8; box-shadow: 0 0 15rpx #ff5252; }
 
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 999; }
-.modal { background: white; width: 600rpx; padding: 40rpx; border-radius: 30rpx; text-align: center; }
+.modal { 
+  background: white; 
+  width: 600rpx; 
+  padding: 40rpx; 
+  border-radius: 30rpx; 
+  text-align: center;
+  /* 弹窗上移，确保分享截图能截全信息 */
+  transform: translateY(-200rpx);
+}
 .win-header { color: #4a7c59; font-size: 40rpx; font-weight: bold; margin-bottom: 20rpx; }
 
 .prize-alert {
@@ -409,10 +439,16 @@ page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
 }
 .prize-alert > .score-display,
 .prize-alert > .prize-rank,
+.prize-alert > .prize-beizhu,
 .prize-alert > .prize-name {
   margin: 0;
   width: 100%;
   text-align: center;
+}
+.prize-beizhu {
+  font-size: 20rpx;
+  color: #81a8a4;
+  letter-spacing: 0.4px;
 }
 .prize-rank {
   font-size: 30rpx;
@@ -493,9 +529,96 @@ page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
   margin-bottom: 30rpx;
   text-align: left;
   font-size: 28rpx;
-  width: 100%;
+  width: 93%;
 }
-.btn-primary { background: linear-gradient(135deg, #4a7c59, #3a6346); color: white; border-radius: 50rpx; font-weight: bold; margin-bottom: 20rpx; }
+
+.btn-primary {
+  background: linear-gradient(135deg, #4a7c59, #3a6346);
+  color: white;
+  border-radius: 50rpx;
+  font-weight: bold;
+  margin-bottom: 20rpx;
+  letter-spacing: 1px;
+}
+.btn-share-win {
+  width: 100%;
+  margin-top: 16rpx;
+  border: none;
+  /* 升级为更具质感的金色渐变，带有金属光泽 */
+  background: linear-gradient(90deg, #F2C94C 0%, #F2994A 50%, #F2C94C 100%);
+  background-size: 200% auto;
+  color: #92400E; /* 深褐色文字，提升可读性与质感 */
+  border-radius: 999rpx;
+  padding: 20rpx 30rpx;
+  letter-spacing: 2rpx;
+  position: relative;
+  overflow: hidden; /* 限制扫光范围 */
+  box-shadow: 0 12rpx 24rpx rgba(242, 153, 74, 0.4);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  /* 使用 shine 动画让背景流动 */
+  animation: btnShineMove 4s linear infinite;
+}
+
+.btn-share-win:active {
+  transform: scale(0.97);
+  box-shadow: 0 6rpx 12rpx rgba(242, 153, 74, 0.3);
+}
+
+/* 添加一道扫光效果 */
+.btn-share-win::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(30deg) translate(-100%, 0);
+  animation: btnGlassShine 3s infinite;
+}
+
+.btn-share-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16rpx;
+  position: relative;
+  z-index: 2; /* 确保文字在扫光之上 */
+}
+
+.btn-share-icon {
+  font-size: 40rpx;
+  /* 移除阴影让图标更扁平化适配金色背景 */
+}
+
+.btn-share-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-share-label {
+  font-size: 32rpx;
+  font-weight: 800;
+  /* 文字描边增强对比度 */
+  text-shadow: 0 2rpx 0px rgba(255, 255, 255, 0.4);
+}
+
+@keyframes btnShineMove {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+@keyframes btnGlassShine {
+  0% { transform: rotate(30deg) translate(-120%, 0); }
+  20% { transform: rotate(30deg) translate(120%, 0); }
+  100% { transform: rotate(30deg) translate(120%, 0); }
+}
 
 .post-submit-modal { max-width: 500rpx; }
 .action-buttons { display: flex; flex-direction: column; gap: 15rpx; margin: 30rpx 0; }

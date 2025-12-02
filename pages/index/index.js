@@ -41,6 +41,7 @@ Page({
     finalPrizeName: '',
     finalPrizeLevel: 6,
     inputName: '',
+    bestScore: null,
     defaultAvatarUrl: AVATAR_CONFIG.DEFAULT, // 排行榜默认头像
     isRefreshing: false, // 新增：标记是否正在刷新排行榜
     shuffleToastText: '', // 洗牌提示文字
@@ -523,19 +524,20 @@ Page({
       }
     }
 
-    // 检查是否打破个人最好成绩
-    let scoreBreakthrough = '';
-    const userHistory = wx.getStorageSync('userHistory') || {};
-    if (userHistory.bestScore && score > userHistory.bestScore) {
-      scoreBreakthrough = '🎉 打破个人最好成绩！';
-    }
-
     // 播放胜利音乐（挑战成功时播放）
     const app = getApp();
     app.playVictoryMusic();
 
     // 先尝试读取用户已保存的信息
     this.loadUserInfo().then(userInfo => {
+      const storedBestScore = typeof userInfo.bestScore === 'number'
+        ? userInfo.bestScore
+        : (typeof this.data.bestScore === 'number' ? this.data.bestScore : null);
+      let scoreBreakthrough = '';
+      if (storedBestScore !== null && score > storedBestScore) {
+        scoreBreakthrough = '🎉 打破个人最好成绩！';
+      }
+
       this.setData({
         isGameActive: false,
         showModal: true,
@@ -545,6 +547,7 @@ Page({
         finalPrizeName: prize,
         finalPrizeLevel: level,
         scoreBreakthrough: scoreBreakthrough,
+        bestScore: storedBestScore,
         // 优先使用已保存的用户信息，否则使用随机头像
         avatarUrl: userInfo.avatarUrl || getRandomAvatar(),
         inputName: userInfo.nickName || ''
@@ -581,7 +584,7 @@ Page({
     try {
       const openid = app.globalData.openid;
       if (!openid) {
-        return { avatarUrl: '', nickName: '' };
+        return { avatarUrl: '', nickName: '', bestScore: null };
       }
 
       const query = Bmob.Query('UserInfo');
@@ -590,21 +593,23 @@ Page({
 
       if (results.length > 0) {
         const userInfo = results[0];
+        const bestScore = typeof userInfo.bestScore === 'number' ? userInfo.bestScore : null;
         return {
           avatarUrl: userInfo.avatarUrl || '',
           nickName: userInfo.nickName || '',
-          objectId: userInfo.objectId
+          objectId: userInfo.objectId,
+          bestScore
         };
       }
-      return { avatarUrl: '', nickName: '' };
+      return { avatarUrl: '', nickName: '', bestScore: null };
     } catch (err) {
       console.error('读取用户信息失败:', err);
-      return { avatarUrl: '', nickName: '' };
+      return { avatarUrl: '', nickName: '', bestScore: null };
     }
   },
 
-  // 保存用户信息到 UserInfo 表
-  async saveUserInfo(nickName, avatarUrl) {
+  // 保存用户信息到 UserInfo 表，并根据需要刷新 bestScore
+  async saveUserInfo(nickName, avatarUrl, bestScoreCandidate = null) {
     try {
       const openid = app.globalData.openid;
       if (!openid) return;
@@ -620,7 +625,14 @@ Page({
         const userInfo = await query.get(results[0].objectId);
         userInfo.set('nickName', nickName);
         userInfo.set('avatarUrl', avatarUrl);
-        // userInfo.set('updatedAt', new Date()); // 不需要设置updatedAt，Bmob会自动设置，这里手动设置反而会报错
+
+        if (bestScoreCandidate !== null && bestScoreCandidate !== undefined) {
+          const serverBestScore = typeof userInfo.bestScore === 'number' ? userInfo.bestScore : null;
+          if (serverBestScore === null || bestScoreCandidate > serverBestScore) {
+            userInfo.set('bestScore', bestScoreCandidate);
+          }
+        }
+
         await userInfo.save();
       } else {
         // 创建新记录
@@ -628,6 +640,9 @@ Page({
         query.set('openid', openid);
         query.set('nickName', nickName);
         query.set('avatarUrl', avatarUrl);
+        if (bestScoreCandidate !== null && bestScoreCandidate !== undefined) {
+          query.set('bestScore', bestScoreCandidate);
+        }
         await query.save();
       }
     } catch (err) {
@@ -666,19 +681,19 @@ Page({
       let shouldSavePrize = true; // 是否保存奖品
 
       if (oldRecords.length > 0) {
-        // 检查是否有更高等级的奖品
-        const highestExistingLevel = Math.min(...oldRecords.map(r => r.prizeLevel));
+        // // 检查是否有更高等级的奖品
+        // const highestExistingLevel = Math.min(...oldRecords.map(r => r.prizeLevel));
 
-        // 如果当前奖品等级低于现有奖品等级，则不保存
-        if (currentLevel > highestExistingLevel) {
-          wx.showModal({
-            title: '奖品等级不足',
-            content: '您当前已有更高等级的奖品，本次奖品将不予保存。如需领取本次奖品，请先使用现有的高等级奖品。',
-            showCancel: false,
-            confirmText: '知道了'
-          });
-          shouldSavePrize = false;
-        }
+        // // 如果当前奖品等级低于现有奖品等级，则不保存
+        // if (currentLevel > highestExistingLevel) {
+        //   wx.showModal({
+        //     title: '奖品等级不足',
+        //     content: '您当前已有更高等级的奖品，本次奖品将不予保存。如需领取本次奖品，请先使用现有的高等级奖品。',
+        //     showCancel: false,
+        //     confirmText: '知道了'
+        //   });
+        //   shouldSavePrize = false;
+        // }
 
         // 使用 Promise.all 确保所有异步操作完成，并添加错误处理
         const updatePromises = [];
@@ -728,8 +743,8 @@ Page({
         await Promise.allSettled(updatePromises);
       }
 
-      // 3. 先保存用户信息到 UserInfo 表
-      await this.saveUserInfo(name, this.data.avatarUrl);
+      // 3. 先保存用户信息到 UserInfo 表，并在需要时刷新 bestScore
+      await this.saveUserInfo(name, this.data.avatarUrl, currentScore);
 
       // 4. 保存游戏记录到 GameScore 表（不再保存用户信息，只保留 openid 关联）
       const query = Bmob.Query('GameScore');
@@ -754,6 +769,12 @@ Page({
       if (openid) query.set("openid", openid);
 
       await query.save();
+
+      // 本地同步 bestScore，便于下一次挑战使用
+      const prevBestScore = typeof this.data.bestScore === 'number' ? this.data.bestScore : null;
+      if (prevBestScore === null || currentScore > prevBestScore) {
+        this.setData({ bestScore: currentScore });
+      }
 
       wx.showToast({
         title: '上榜成功',
@@ -857,5 +878,34 @@ Page({
     }
     // 注意：bgmCtx 是 app.js 中的全局变量，不应在此处直接访问
     // 全局背景音乐由 app.js 统一管理，无需在页面卸载时停止
+  },
+
+  // 分享给好友
+  onShareAppMessage() {
+    let title = '快来挑战芊泽风云榜，赢取大奖！';
+    let path = '/pages/index/index';
+    
+    // 如果是在挑战成功弹窗中分享，带上战绩信息
+    if (this.data.showModal && this.data.tempScore) {
+      title = `我以 ${this.data.tempScore} 分赢得了【${this.data.finalPrizeName}】，排名第 ${this.data.myRank}！不服来战！`;
+    }
+    
+    return {
+      title: title,
+      path: path,
+      imageUrl: config.SHARE_IMAGE
+    };
+  },
+
+  // 分享到朋友圈
+  onShareTimeline() {
+    let title = '快来挑战芊泽风云榜，赢取大奖！';
+    if (this.data.showModal && this.data.tempScore) {
+      title = `我以 ${this.data.tempScore} 分赢得了【${this.data.finalPrizeName}】，排名第 ${this.data.myRank}！`;
+    }
+    return {
+      title: title,
+      imageUrl: config.SHARE_IMAGE
+    };
   }
 });

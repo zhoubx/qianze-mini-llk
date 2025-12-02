@@ -127,7 +127,19 @@ Page({
    * 用户点击右上角分享
    */
   onShareAppMessage() {
+    return {
+      title: '快来挑战芊泽风云榜，赢取大奖！',
+      path: '/pages/index/index',
+      imageUrl: config.SHARE_IMAGE
+    };
+  },
 
+  // 分享到朋友圈
+  onShareTimeline() {
+    return {
+      title:  '快来挑战芊泽风云榜，赢取大奖！',
+      imageUrl: config.SHARE_IMAGE
+    };
   },
 
   // 1. 监听头像选择

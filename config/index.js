@@ -186,6 +186,8 @@ module.exports = {
   DIFFICULTY_CONFIG,
   PRIZE_CONFIG,
   AVATAR_CONFIG,
+  // 全局分享图片
+  SHARE_IMAGE: '/images/share-landing.png',
   // 辅助函数
   getRandomAvatar,
   getBgmUrl

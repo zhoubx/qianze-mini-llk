@@ -28,12 +28,12 @@
         </view>
         <text class="diff-desc">{{item.desc}}</text>
       </view>
-      <view style="font-size:48rpx">{{item.icon}}</view>
+      <view style="font-size:58rpx">{{item.icon}}</view>
     </view>
 
     <view class="leaderboard-box">
       <view class="lb-header">
-        <text class="lb-title">👑 全服风云榜（72小时擂台赛）</text>
+        <text class="lb-title">👑 全服风云榜 (72小时擂台赛)</text>
         <view class="lb-refresh-wrapper">
           <text class="lb-timer" bindtap="fetchLeaderboard">🔄 刷新</text>
           <text class="lb-loading-icon {{isRefreshing ? 'rotating' : ''}}" wx:if="{{isRefreshing}}">⏳</text>
@@ -92,6 +92,7 @@
         </view>
         <view class="prize-rank">本次排名: 第 <text style="font-weight:bold;">{{myRank}}</text> 名</view>
         <view class="prize-name">{{finalPrizeName}}</view>
+      <text class="prize-beizhu">系统只会保留您在游戏中领取到的最高奖项</text>
       </view>
       <text class="input-label">请设置您的头像/昵称（用于排行榜展示和领奖核销）</text>
 
@@ -114,7 +115,14 @@
       </view>
    
       <button class="btn-primary" loading="{{submitting}}" bindtap="submitScore">确认领取并上榜</button>
-      <button style="font-size:24rpx; color:#666; background:transparent;" open-type="share">🎉 炫耀战绩</button>
+      <button class="btn-share-win" open-type="share">
+        <view class="btn-share-content">
+          <text class="btn-share-icon">🎉</text>
+          <view class="btn-share-text">
+            <text class="btn-share-label">炫耀战绩</text>
+          </view>
+        </view>
+      </button>
     </view>
   </view>
 
@@ -122,9 +130,6 @@
   <view class="modal-overlay" wx:if="{{showPostSubmitModal}}">
     <view class="modal post-submit-modal">
       <view class="win-header">🎉 提交成功！</view>
-      <view class="prize-alert">
-        <view class="prize-name">您可以选择接下来的操作：</view>
-      </view>
 
       <view class="action-buttons">
         <button class="action-btn continue-btn" bindtap="continueChallenge">🎮 继续挑战</button>
