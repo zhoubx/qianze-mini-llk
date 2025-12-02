@@ -1,9 +1,13 @@
 // index.js
-var Bmob = require('../../utils/Bmob-2.6.3.min.js'); // 引入SDK
+// 使用微信云开发替代 Bmob
 const dateFormat = require('../../utils/dateFormat.js'); // 引入日期格式化工具
 const config = require('../../config/index.js'); // 引入配置文件
 const { uploadAvatarIfNeeded } = require('../../utils/avatarUploader.js'); // 引入头像上传工具
 const app = getApp();
+
+// 云数据库引用
+const db = wx.cloud.database();
+const _ = db.command;
 
 // 从配置文件获取配置项
 const { 
@@ -55,6 +59,12 @@ Page({
   },
 
   onShow: function () {
+    // 检查是否需要刷新排行榜（从奖品页修改头像/昵称后返回）
+    if (app.globalData.needRefreshLeaderboard) {
+      app.globalData.needRefreshLeaderboard = false;
+      this.fetchLeaderboard();
+    }
+    
     // 同步音乐状态，确保页面显示时音乐组件状态正确
     const musicControl = this.selectComponent('#musicControl');
     if (musicControl) {
@@ -72,23 +82,28 @@ Page({
     });
 
     try {
-      // 1. 查询 GameScore 表获取排行榜数据
-      const query = Bmob.Query("GameScore");
+      // 1. 计算时间范围
       let date = new Date();
       date.setHours(date.getHours() - LEADERBOARD_CONFIG.DURATION_HOURS);
-      query.equalTo("createdAt", ">", date.toISOString());
-      query.order("-score");
-      query.limit(LEADERBOARD_CONFIG.QUERY_LIMIT);
 
-      const gameScores = await query.find();
+      // 2. 查询 GameScore 表获取排行榜数据 (云数据库版本)
+      const gameScoresRes = await db.collection('GameScore')
+        .where({
+          createdAt: _.gte(date)
+        })
+        .orderBy('score', 'desc')
+        .limit(LEADERBOARD_CONFIG.QUERY_LIMIT)
+        .get();
+
+      const gameScores = gameScoresRes.data;
 
       // 2. 数据处理：同一用户取最高分
       let userMap = {};
       let openidSet = new Set();
 
       gameScores.forEach(item => {
-        let key = item.openid;
-        if (!key) return; // 跳过没有 openid 的记录
+        let key = item._openid;
+        if (!key) return; // 跳过没有 _openid 的记录
 
         openidSet.add(key);
 
@@ -105,16 +120,51 @@ Page({
       let userInfoMap = {};
 
       if (openidList.length > 0) {
-        // Bmob 的 containedIn 查询
-        const userQuery = Bmob.Query("UserInfo");
-        userQuery.containedIn("openid", openidList);
-        userQuery.limit(500);
-        const userInfos = await userQuery.find();
+        // 云数据库的 in 查询 (使用 _openid 字段)
+        const userInfosRes = await db.collection('UserInfo')
+          .where({
+            _openid: _.in(openidList)
+          })
+          .limit(500)
+          .get();
 
-        userInfos.forEach(info => {
-          userInfoMap[info.openid] = {
+        // 收集需要转换的云文件 ID
+        const cloudFileIds = [];
+        userInfosRes.data.forEach(info => {
+          if (info.avatarUrl && info.avatarUrl.startsWith('cloud://')) {
+            cloudFileIds.push(info.avatarUrl);
+          }
+        });
+
+        // 通过云函数批量获取云文件临时链接（云函数有管理员权限）
+        let fileUrlMap = {};
+        if (cloudFileIds.length > 0) {
+          try {
+            const tempUrlRes = await wx.cloud.callFunction({
+              name: 'getTempFileURL',
+              data: { fileList: cloudFileIds }
+            });
+            if (tempUrlRes.result && tempUrlRes.result.success) {
+              tempUrlRes.result.fileList.forEach(file => {
+                if (file.status === 0 && file.tempFileURL) {
+                  fileUrlMap[file.fileID] = file.tempFileURL;
+                }
+              });
+            }
+          } catch (err) {
+            console.warn('获取云文件临时链接失败:', err);
+          }
+        }
+
+        userInfosRes.data.forEach(info => {
+          let avatarUrl = info.avatarUrl || '';
+          // 如果是云文件 ID，使用转换后的临时链接
+          if (avatarUrl.startsWith('cloud://') && fileUrlMap[avatarUrl]) {
+            avatarUrl = fileUrlMap[avatarUrl];
+          }
+          userInfoMap[info._openid] = {
             nickName: info.nickName || '匿名玩家',
-            avatarUrl: info.avatarUrl || ''
+            avatarUrl: avatarUrl
           };
         });
       }
@@ -122,7 +172,7 @@ Page({
       // 4. 合并数据：将用户信息添加到排行榜数据中
       let uniqueList = Object.values(userMap);
       uniqueList.forEach(item => {
-        const userInfo = userInfoMap[item.openid] || {};
+        const userInfo = userInfoMap[item._openid] || {};
         item.playerName = userInfo.nickName || '匿名玩家';
         item.avatarUrl = userInfo.avatarUrl || '';
       });
@@ -586,7 +636,7 @@ Page({
     }
   },
 
-  // 从 UserInfo 表读取用户信息
+  // 从 UserInfo 表读取用户信息 (云数据库版本)
   async loadUserInfo() {
     try {
       const openid = app.globalData.openid;
@@ -594,17 +644,17 @@ Page({
         return { avatarUrl: '', nickName: '', bestScore: null };
       }
 
-      const query = Bmob.Query('UserInfo');
-      query.equalTo('openid', '==', openid);
-      const results = await query.find();
+      const res = await db.collection('UserInfo')
+        .where({ _openid: openid })
+        .get();
 
-      if (results.length > 0) {
-        const userInfo = results[0];
+      if (res.data.length > 0) {
+        const userInfo = res.data[0];
         const bestScore = typeof userInfo.bestScore === 'number' ? userInfo.bestScore : null;
         return {
           avatarUrl: userInfo.avatarUrl || '',
           nickName: userInfo.nickName || '',
-          objectId: userInfo.objectId,
+          objectId: userInfo._id, // 云数据库使用 _id
           bestScore
         };
       }
@@ -615,49 +665,54 @@ Page({
     }
   },
 
-  // 保存用户信息到 UserInfo 表，并根据需要刷新 bestScore
+  // 保存用户信息到 UserInfo 表，并根据需要刷新 bestScore (云数据库版本)
   async saveUserInfo(nickName, avatarUrl, bestScoreCandidate = null) {
     try {
       const openid = app.globalData.openid;
       if (!openid) return;
 
-      // 先查找是否已存在记录
-      const queryFind = Bmob.Query('UserInfo');
-      queryFind.equalTo('openid', '==', openid);
-      const results = await queryFind.find();
+      // 先查找是否已存在记录 (使用 _openid 字段)
+      const res = await db.collection('UserInfo')
+        .where({ _openid: openid })
+        .get();
 
-      if (results.length > 0) {
+      if (res.data.length > 0) {
         // 更新现有记录
-        const query = Bmob.Query('UserInfo');
-        const userInfo = await query.get(results[0].objectId);
-        userInfo.set('nickName', nickName);
-        userInfo.set('avatarUrl', avatarUrl);
+        const record = res.data[0];
+        const updateData = {
+          nickName: nickName,
+          avatarUrl: avatarUrl,
+          updatedAt: db.serverDate()
+        };
 
         if (bestScoreCandidate !== null && bestScoreCandidate !== undefined) {
-          const serverBestScore = typeof userInfo.bestScore === 'number' ? userInfo.bestScore : null;
+          const serverBestScore = typeof record.bestScore === 'number' ? record.bestScore : null;
           if (serverBestScore === null || bestScoreCandidate > serverBestScore) {
-            userInfo.set('bestScore', bestScoreCandidate);
+            updateData.bestScore = bestScoreCandidate;
           }
         }
 
-        await userInfo.save();
+        await db.collection('UserInfo').doc(record._id).update({
+          data: updateData
+        });
       } else {
-        // 创建新记录
-        const query = Bmob.Query('UserInfo');
-        query.set('openid', openid);
-        query.set('nickName', nickName);
-        query.set('avatarUrl', avatarUrl);
+        // 创建新记录 (_openid 会由云数据库自动添加)
+        const newData = {
+          nickName: nickName,
+          avatarUrl: avatarUrl,
+          createdAt: db.serverDate()
+        };
         if (bestScoreCandidate !== null && bestScoreCandidate !== undefined) {
-          query.set('bestScore', bestScoreCandidate);
+          newData.bestScore = bestScoreCandidate;
         }
-        await query.save();
+        await db.collection('UserInfo').add({ data: newData });
       }
     } catch (err) {
       console.error('保存用户信息失败:', err);
     }
   },
 
-  // 主要修改 submitScore 函数
+  // 主要修改 submitScore 函数 (云数据库版本)
   // [需求1] 提交成绩：同级别奖品按分数高低PK
   async submitScore() {
     let name = this.data.inputName;
@@ -691,46 +746,38 @@ Page({
       const app = getApp();
       const openid = app.globalData.openid;
 
-      // 1. 查找旧的待使用奖品
-      const queryOld = Bmob.Query("GameScore");
+      // 1. 查找旧的待使用奖品 (云数据库版本)
+      let oldRecordsQuery = db.collection('GameScore')
+        .where({
+          status: 'pending'
+        });
+      
       if (openid) {
-        queryOld.equalTo("openid", "==", openid);
-      } else {
-        queryOld.equalTo("playerName", "==", name);
+        oldRecordsQuery = db.collection('GameScore')
+          .where({
+            _openid: openid,
+            status: 'pending'
+          });
       }
-      queryOld.equalTo("status", "==", "pending");
-      const oldRecords = await queryOld.find();
+      
+      const oldRecordsRes = await oldRecordsQuery.get();
+      const oldRecords = oldRecordsRes.data;
 
       let currentLevel = this.data.finalPrizeLevel;
       let currentScore = this.data.tempScore; // 获取当前分数
       let shouldSavePrize = true; // 是否保存奖品
 
       if (oldRecords.length > 0) {
-        // // 检查是否有更高等级的奖品
-        // const highestExistingLevel = Math.min(...oldRecords.map(r => r.prizeLevel));
-
-        // // 如果当前奖品等级低于现有奖品等级，则不保存
-        // if (currentLevel > highestExistingLevel) {
-        //   wx.showModal({
-        //     title: '奖品等级不足',
-        //     content: '您当前已有更高等级的奖品，本次奖品将不予保存。如需领取本次奖品，请先使用现有的高等级奖品。',
-        //     showCancel: false,
-        //     confirmText: '知道了'
-        //   });
-        //   shouldSavePrize = false;
-        // }
-
         // 使用 Promise.all 确保所有异步操作完成，并添加错误处理
         const updatePromises = [];
 
         for (let record of oldRecords) {
           // 情况A: 新奖品等级更高 (数值更小) -> 旧奖品失效
           if (currentLevel < record.prizeLevel) {
-            const updatePromise = Bmob.Query('GameScore')
-              .get(record.objectId)
-              .then(res => {
-                res.set('status', 'expired');
-                return res.save();
+            const updatePromise = db.collection('GameScore')
+              .doc(record._id)
+              .update({
+                data: { status: 'expired' }
               })
               .catch(err => {
                 console.error('更新旧奖品状态失败:', err);
@@ -742,11 +789,10 @@ Page({
           else if (currentLevel === record.prizeLevel) {
             if (currentScore > record.score) {
               // 新分数更高 -> 旧奖品失效，保留新奖品
-              const updatePromise = Bmob.Query('GameScore')
-                .get(record.objectId)
-                .then(res => {
-                  res.set('status', 'expired');
-                  return res.save();
+              const updatePromise = db.collection('GameScore')
+                .doc(record._id)
+                .update({
+                  data: { status: 'expired' }
                 })
                 .catch(err => {
                   console.error('更新旧奖品状态失败:', err);
@@ -773,14 +819,6 @@ Page({
       await this.saveUserInfo(name, finalAvatarUrl, currentScore);
 
       // 4. 保存游戏记录到 GameScore 表（不再保存用户信息，只保留 openid 关联）
-      const query = Bmob.Query('GameScore');
-      query.set("score", this.data.tempScore);
-      query.set("timeCost", this.data.tempTime);
-      query.set("difficulty", this.gameState.diff);
-      query.set("prizeName", this.data.finalPrizeName);
-      query.set("prizeLevel", this.data.finalPrizeLevel);
-      query.set("rankSnapshot", this.data.myRank);
-
       // 如果 currentLevel 被标记为无效等级，说明PK输了，直接存为 expired
       // 如果 shouldSavePrize 为 false，说明奖品等级不足，设为 invalid
       let status = "pending";
@@ -789,12 +827,20 @@ Page({
       } else if (!shouldSavePrize) {
         status = "invalid";
       }
-      query.set("status", status);
 
-      // 只保存 openid 用于关联 UserInfo 表
-      if (openid) query.set("openid", openid);
+      const gameScoreData = {
+        score: this.data.tempScore,
+        timeCost: this.data.tempTime,
+        difficulty: this.gameState.diff,
+        prizeName: this.data.finalPrizeName,
+        prizeLevel: this.data.finalPrizeLevel,
+        rankSnapshot: this.data.myRank,
+        status: status,
+        createdAt: db.serverDate()
+      };
 
-      await query.save();
+      // _openid 会由云数据库自动添加，无需手动设置
+      await db.collection('GameScore').add({ data: gameScoreData });
 
       // 本地同步 bestScore，便于下一次挑战使用
       const prevBestScore = typeof this.data.bestScore === 'number' ? this.data.bestScore : null;

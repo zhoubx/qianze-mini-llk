@@ -30,15 +30,16 @@
     <view class="profile-edit" wx:if="{{isEditingProfile}}">
       <view class="edit-row">
         <button class="avatar-btn" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
-          <image class="avatar-preview" src="{{userInfo.avatarUrl || defaultAvatarUrl}}" mode="aspectFill"></image>
+          <image class="avatar-preview" src="{{editingAvatarUrl || defaultAvatarUrl}}" mode="aspectFill"></image>
           <text class="avatar-tip">点击换头像</text>
         </button>
         <input 
           type="nickname" 
           class="field-input" 
           placeholder="请输入昵称" 
-          value="{{userInfo.nickName}}"
+          value="{{editingNickName}}"
           bindinput="onNickNameInput"
+          bindblur="onNickNameBlur"
           maxlength="20"
         />
       </view>

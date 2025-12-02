@@ -1,6 +1,6 @@
 // utils/avatarUploader.js
 // 统一处理头像上传与地址规范化逻辑
-const Bmob = require('./Bmob-2.6.3.min.js');
+// 使用微信云存储替代 Bmob 文件存储
 
 // 判定 chooseAvatar 返回的临时路径前缀
 const TEMP_URL_PATTERNS = [
@@ -20,21 +20,21 @@ function isTempAvatarUrl(url) {
 }
 
 /**
- * 上传头像到 Bmob 文件存储（如有需要）
+ * 上传头像到云存储（如有需要）
  * @param {string} avatarUrl chooseAvatar 返回的地址或已有远程地址
- * @returns {Promise<string>} 可被他人访问的远程 URL
+ * @returns {Promise<string>} 可被他人访问的云文件 ID 或原始 URL
  */
 async function uploadAvatarIfNeeded(avatarUrl) {
   if (!avatarUrl) return '';
   
-  // 如果不是临时路径（已经是 http/https 的远程路径，且不是 tmp），直接返回
+  // 如果不是临时路径（已经是 http/https 的远程路径，或者是 cloud:// 开头的云文件），直接返回
   if (!isTempAvatarUrl(avatarUrl)) {
     return avatarUrl;
   }
 
   const uploadTask = async () => {
     try {
-      console.log('开始上传头像:', avatarUrl);
+      console.log('开始上传头像到云存储:', avatarUrl);
       
       // 1. 获取文件扩展名
       let ext = 'jpg';
@@ -43,48 +43,27 @@ async function uploadAvatarIfNeeded(avatarUrl) {
         ext = match[1];
       }
       
-      const fileName = `avatar_${Date.now()}_${Math.floor(Math.random() * 1000)}.${ext}`;
+      // 2. 生成云存储路径
+      const cloudPath = `avatars/avatar_${Date.now()}_${Math.floor(Math.random() * 1000)}.${ext}`;
       
-      // 2. 创建 Bmob 文件对象
-      // 针对 wx.uploadFile 的兼容性处理
-      // 如果是 Bmob v2.6.x，Bmob.File 构造函数在小程序环境下会自动调用上传逻辑，
-      // 但部分版本可能存在路径解析问题或需要特殊配置。
-      // 尝试直接调用 Bmob.File(fileName, file) 其中 file 为路径字符串（非数组）
-      // 某些 Bmob 版本将数组识别为批量上传，单个文件直接传字符串路径即可。
-      const file = Bmob.File(fileName, avatarUrl);
+      // 3. 使用云存储上传
+      const res = await wx.cloud.uploadFile({
+        cloudPath: cloudPath,
+        filePath: avatarUrl
+      });
+
+      console.log('头像上传成功:', res.fileID);
       
-      const result = await file.save();
-  
-      console.log('头像上传结果:', result);
-  
-      // 解析返回结果
-      if (Array.isArray(result) && result.length > 0 && result[0].url) {
-        return result[0].url;
-      } else if (result && result.url) {
-        return result.url;
-      } else {
-        try {
-          // 尝试解析 JSON 字符串
-          const json = typeof result === 'string' ? JSON.parse(result) : result;
-          if (json && json.url) return json.url;
-          // 某些情况可能是数组字符串
-          if (Array.isArray(json) && json.length > 0 && json[0].url) return json[0].url;
-        } catch (e) {
-          // ignore
-        }
-      }
-      
-      // 如果没拿到 URL，视为上传失败，返回原路径
-      console.warn('Bmob 未返回有效 URL，使用原路径');
-      return avatarUrl;
-  
+      // 返回云文件 ID (可直接用于 <image> 组件展示)
+      return res.fileID;
+
     } catch (err) {
       console.error('上传逻辑出错:', err);
-      throw err; 
+      throw err;
     }
   };
 
-  // 3. 增加超时控制 (5秒)
+  // 增加超时控制 (5秒)
   // 防止上传卡死导致用户无法提交
   const timeoutPromise = new Promise((_, reject) => {
     setTimeout(() => {

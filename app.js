@@ -1,12 +1,5 @@
 // app.js
-var Bmob = require('utils/Bmob-2.6.3.min.js');
 const config = require('config/index.js');
-
-// ⚠️ 安全警告：API密钥硬编码在客户端代码中
-// 风险：密钥暴露在客户端，可能被恶意用户获取并滥用
-// 建议：使用云函数获取密钥，或从服务器端获取
-// 初始化 Bmob
-Bmob.initialize(config.BMOB_CONFIG.APPLICATION_ID, config.BMOB_CONFIG.REST_API_KEY);
 
 // 全局音乐管理器
 let bgmCtx = null;
@@ -21,21 +14,39 @@ let isMusicPlaying = false; // 内部播放状态跟踪
 App({
   globalData: {
     openid: null,
-    userInfo: null
+    userInfo: null,
+    needRefreshLeaderboard: false // 标志位：是否需要刷新排行榜
   },
 
   onLaunch: function () {
-    // 一键登录获取 OpenID
-    Bmob.User.auth().then(res => {
-      console.log('登录成功', res);
-      // [需求2] 保存 OpenID 到全局
-      this.globalData.openid = res.authData.weapp.openid;
-    }).catch(err => {
-      console.log('登录失败', err);
-    });
+    // 初始化云开发
+    if (!wx.cloud) {
+      console.error('请使用 2.2.3 或以上的基础库以使用云能力');
+    } else {
+      wx.cloud.init({
+        env: config.CLOUD_CONFIG.ENV_ID,
+        traceUser: true
+      });
+    }
+
+    // 获取 OpenID (通过云函数)
+    this.getOpenId();
 
     // 初始化全局音乐
     this.initGlobalMusic();
+  },
+
+  // 获取 OpenID
+  async getOpenId() {
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'login'
+      });
+      console.log('登录成功', res);
+      this.globalData.openid = res.result.openid;
+    } catch (err) {
+      console.error('登录失败', err);
+    }
   },
 
   initGlobalMusic() {

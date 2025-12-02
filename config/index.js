@@ -11,12 +11,10 @@ const BASE_URL = {
   MUSIC: 'http://qianze.xyz/music'
 };
 
-// ==================== Bmob 配置 ====================
-// ⚠️ 安全警告：API密钥暴露在客户端代码中
-// 建议：生产环境应使用云函数获取密钥
-const BMOB_CONFIG = {
-  APPLICATION_ID: '4fa0f30d648a4b33',
-  REST_API_KEY: '123zbx'
+// ==================== 云开发配置 ====================
+// 请将 ENV_ID 替换为你的云开发环境 ID
+const CLOUD_CONFIG = {
+  ENV_ID: 'cloud1-5gcovdng3cfbf3ee' // TODO: 替换为实际的云开发环境ID
 };
 
 // ==================== 音频配置 ====================
@@ -179,7 +177,7 @@ function getBgmUrl(difficulty) {
 // ==================== 导出配置 ====================
 module.exports = {
   BASE_URL,
-  BMOB_CONFIG,
+  CLOUD_CONFIG,
   AUDIO_CONFIG,
   GAME_IMAGES,
   LEADERBOARD_CONFIG,
@@ -192,4 +190,3 @@ module.exports = {
   getRandomAvatar,
   getBgmUrl
 };
-
