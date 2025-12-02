@@ -10,9 +10,39 @@ page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
   box-sizing: border-box; /* 确保 padding 不会撑大宽度 */
 }
 
+/* 游戏模式：纯 CSS 背景图案（无需加载图片，极速渲染） */
+.container.game-mode {
+  /* 底色：接近白色 */
+  background-color: #f9faf9;
+  /* 斜纹布料质感 */
+  background-image: 
+    /* 斜条纹 */
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 10rpx,
+      rgba(76, 175, 80, 0.06) 10rpx,
+      rgba(76, 175, 80, 0.06) 12rpx
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 10rpx,
+      rgba(76, 175, 80, 0.04) 10rpx,
+      rgba(76, 175, 80, 0.04) 12rpx
+    );
+}
+
 /* --- 头部横幅图片 --- */
 .header { width: 100%; text-align: center; margin-bottom: 10rpx; position: relative; padding-top: 0; margin-left: -15rpx; margin-right: -15rpx; width: calc(100% + 30rpx); }
+
+.banner-box {
+  position: relative;
+  width: 100%;
+}
 .header-banner { width: 100%; display: block; }
+
+
 .music-btn { position: absolute; top: 0; right: 10rpx; width: 50rpx; height: 50rpx; background: #eee; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 26rpx; z-index: 99; }
 .music-btn.playing { background: #4a7c59; color: white; animation: rotate 4s linear infinite; }
 
@@ -298,6 +328,7 @@ page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
   border-radius: 20rpx;
   font-weight: bold;
   white-space: nowrap;
+  letter-spacing: 1rpx;
 }
 
 .lb-time-row { font-size: 20rpx; color: #999; margin-top: 4rpx; }

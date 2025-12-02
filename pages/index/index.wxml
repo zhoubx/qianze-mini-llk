@@ -1,6 +1,9 @@
-<view class="container">
+<view class="container {{isGameActive ? 'game-mode' : ''}}">
+
   <view class="header">
-    <image class="header-banner" src="/images/header-banner.png" mode="widthFix"></image>
+    <view class="banner-box">
+      <image class="header-banner" src="/images/header-banner.png" mode="widthFix"></image>
+    </view>
   </view>
 
   <!-- 音乐控制组件 -->
