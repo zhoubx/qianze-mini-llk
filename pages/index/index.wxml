@@ -136,9 +136,9 @@
           <text class="btn-icon">🎮</text>
           <text class="btn-text">继续挑战</text>
         </button>
-        <button class="action-btn leaderboard-btn" bindtap="viewLeaderboard">
-          <text class="btn-icon">🏆</text>
-          <text class="btn-text">排行榜</text>
+        <button class="action-btn prizes-btn" bindtap="viewPrizes">
+          <text class="btn-icon">🎁</text>
+          <text class="btn-text">我的奖品</text>
         </button>
         <button class="action-btn invite-btn" open-type="share">
           <text class="btn-icon">🎁</text>
@@ -146,7 +146,7 @@
           <text class="btn-sub">再得5元券</text>
         </button>
         <button class="action-btn store-btn" bindtap="visitStore">
-          <text class="btn-icon">🏪</text>
+          <text class="btn-icon">🛍️</text>
           <text class="btn-text">进店看看</text>
         </button>
       </view>

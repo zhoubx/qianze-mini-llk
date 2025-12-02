@@ -549,7 +549,7 @@ page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
   background-size: 200% auto;
   color: #92400E; /* 深褐色文字，提升可读性与质感 */
   border-radius: 999rpx;
-  padding: 20rpx 30rpx;
+  padding: 12rpx 30rpx;
   letter-spacing: 2rpx;
   position: relative;
   overflow: hidden; /* 限制扫光范围 */
@@ -670,7 +670,7 @@ page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
   color: #1b5e20; 
 }
 
-.leaderboard-btn { 
+.prizes-btn { 
   background: linear-gradient(135deg, #fff8e1 0%, #ffe0b2 100%); 
   color: #e65100; 
 }

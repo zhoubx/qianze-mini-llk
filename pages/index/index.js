@@ -146,7 +146,12 @@ Page({
   },
 
   startGame(e) {
-    let diff = e.currentTarget.dataset.diff;
+    let diff;
+    if (typeof e === 'string') {
+      diff = e;
+    } else {
+      diff = e.currentTarget.dataset.diff;
+    }
     let conf = this.data.config[diff];
 
     // 切换难度背景音乐
@@ -816,14 +821,20 @@ Page({
     this.setData({
       showPostSubmitModal: false
     });
-    // 重新开始游戏选择界面
-    this.setData({
-      isGameActive: false
-    });
+    
+    // 直接重新开始游戏 (使用当前难度)
+    if (this.gameState && this.gameState.diff) {
+      this.startGame(this.gameState.diff);
+    } else {
+      // Fallback: 重新开始游戏选择界面
+      this.setData({
+        isGameActive: false
+      });
+    }
   },
 
-  // 查看排行榜
-  viewLeaderboard() {
+  // 我的奖品
+  viewPrizes() {
     this.setData({
       showPostSubmitModal: false
     });
