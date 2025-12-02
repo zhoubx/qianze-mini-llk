@@ -620,26 +620,85 @@ page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
   100% { transform: rotate(30deg) translate(120%, 0); }
 }
 
-.post-submit-modal { max-width: 500rpx; }
-.action-buttons { display: flex; flex-direction: column; gap: 15rpx; margin: 30rpx 0; }
-.action-btn {
-  padding: 20rpx;
-  border-radius: 15rpx;
-  font-size: 28rpx;
-  font-weight: bold;
-  border: none;
-  transition: all 0.2s;
+.post-submit-modal { max-width: 600rpx; width: 85%; }
+.action-buttons { 
+  display: flex; 
+  flex-wrap: wrap; 
+  gap: 24rpx; 
+  justify-content: space-between; 
+  margin: 40rpx 0; 
 }
-.continue-btn { background: linear-gradient(135deg, #4a7c59, #3a6346); color: white; }
-.leaderboard-btn { background: linear-gradient(135deg, #ff9800, #f57c00); color: white; }
-.invite-btn { background: linear-gradient(135deg, #e91e63, #c2185b); color: white; }
-.store-btn { background: linear-gradient(135deg, #9c27b0, #7b1fa2); color: white; }
-.action-btn:active { transform: scale(0.98); }
+
+.action-btn {
+  width: 47% !important;
+  margin: 0 !important;
+  padding: 30rpx 10rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 24rpx;
+  border: none;
+  box-shadow: 0 6rpx 16rpx rgba(0,0,0,0.06);
+  transition: all 0.2s;
+  line-height: 1.4;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-icon {
+  font-size: 52rpx;
+  margin-bottom: 12rpx;
+  line-height: 1;
+}
+
+.btn-text {
+  font-size: 30rpx;
+  font-weight: bold;
+  letter-spacing: 1rpx;
+}
+
+.btn-sub {
+  font-size: 22rpx;
+  margin-top: 6rpx;
+  font-weight: normal;
+  opacity: 0.9;
+}
+
+.continue-btn { 
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); 
+  color: #1b5e20; 
+}
+
+.leaderboard-btn { 
+  background: linear-gradient(135deg, #fff8e1 0%, #ffe0b2 100%); 
+  color: #e65100; 
+}
+
+.invite-btn { 
+  background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%); 
+  color: #880e4f; 
+}
+.invite-btn .btn-sub { color: #d81b60; font-weight: bold; background: rgba(255,255,255,0.4); padding: 2rpx 12rpx; border-radius: 10rpx; }
+
+.store-btn { 
+  background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%); 
+  color: #4a148c; 
+}
+
+.action-btn:active { 
+  transform: scale(0.96); 
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
+}
+
 .close-btn {
-  background: transparent;
-  color: #666;
-  font-size: 26rpx;
-  border: 1rpx solid #ddd;
-  border-radius: 25rpx;
-  padding: 12rpx 30rpx;
+  background: #f5f5f5;
+  color: #999;
+  font-size: 28rpx;
+  border: none;
+  border-radius: 40rpx;
+  padding: 16rpx 60rpx;
+  margin-top: 10rpx;
+  width: auto !important;
+  display: inline-block;
 }

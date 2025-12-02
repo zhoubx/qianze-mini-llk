@@ -132,10 +132,23 @@
       <view class="win-header">🎉 提交成功！</view>
 
       <view class="action-buttons">
-        <button class="action-btn continue-btn" bindtap="continueChallenge">🎮 继续挑战</button>
-        <button class="action-btn leaderboard-btn" bindtap="viewLeaderboard">🏆 查看排行榜</button>
-        <button class="action-btn invite-btn" open-type="share">🎁 邀请好友（再得5元券）</button>
-        <button class="action-btn store-btn" bindtap="visitStore">🏪 进店看看</button>
+        <button class="action-btn continue-btn" bindtap="continueChallenge">
+          <text class="btn-icon">🎮</text>
+          <text class="btn-text">继续挑战</text>
+        </button>
+        <button class="action-btn leaderboard-btn" bindtap="viewLeaderboard">
+          <text class="btn-icon">🏆</text>
+          <text class="btn-text">排行榜</text>
+        </button>
+        <button class="action-btn invite-btn" open-type="share">
+          <text class="btn-icon">🎁</text>
+          <text class="btn-text">邀请好友</text>
+          <text class="btn-sub">再得5元券</text>
+        </button>
+        <button class="action-btn store-btn" bindtap="visitStore">
+          <text class="btn-icon">🏪</text>
+          <text class="btn-text">进店看看</text>
+        </button>
       </view>
 
       <button class="close-btn" bindtap="closePostSubmitModal">关闭</button>
