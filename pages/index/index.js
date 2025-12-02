@@ -2,6 +2,7 @@
 var Bmob = require('../../utils/Bmob-2.6.3.min.js'); // 引入SDK
 const dateFormat = require('../../utils/dateFormat.js'); // 引入日期格式化工具
 const config = require('../../config/index.js'); // 引入配置文件
+const { uploadAvatarIfNeeded } = require('../../utils/avatarUploader.js'); // 引入头像上传工具
 const app = getApp();
 
 // 从配置文件获取配置项
@@ -44,6 +45,7 @@ Page({
     bestScore: null,
     defaultAvatarUrl: AVATAR_CONFIG.DEFAULT, // 排行榜默认头像
     isRefreshing: false, // 新增：标记是否正在刷新排行榜
+    submitting: false, // 提交状态
     shuffleToastText: '', // 洗牌提示文字
     shuffleToastVisible: false // 洗牌提示是否可见
   },
@@ -667,7 +669,25 @@ Page({
       return;
     }
 
+    // 防止重复提交
+    if (this.data.submitting) return;
+    
+    this.setData({ submitting: true });
+
     try {
+      // 0. 上传头像获取永久 URL
+      let finalAvatarUrl = this.data.avatarUrl;
+      try {
+        finalAvatarUrl = await uploadAvatarIfNeeded(this.data.avatarUrl);
+        // 如果上传成功且 URL 变了，更新 data
+        if (finalAvatarUrl !== this.data.avatarUrl) {
+          this.setData({ avatarUrl: finalAvatarUrl });
+        }
+      } catch (uploadErr) {
+        console.error('头像上传失败，将使用临时路径继续:', uploadErr);
+        // 即使上传失败也继续流程，避免卡死，虽然图片可能会失效
+      }
+
       const app = getApp();
       const openid = app.globalData.openid;
 
@@ -749,7 +769,8 @@ Page({
       }
 
       // 3. 先保存用户信息到 UserInfo 表，并在需要时刷新 bestScore
-      await this.saveUserInfo(name, this.data.avatarUrl, currentScore);
+      // 使用上传后的永久 URL
+      await this.saveUserInfo(name, finalAvatarUrl, currentScore);
 
       // 4. 保存游戏记录到 GameScore 表（不再保存用户信息，只保留 openid 关联）
       const query = Bmob.Query('GameScore');
@@ -799,6 +820,8 @@ Page({
         title: '提交失败',
         icon: 'none'
       });
+    } finally {
+      this.setData({ submitting: false });
     }
   },
 
