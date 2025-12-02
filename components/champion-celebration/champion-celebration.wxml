@@ -1,7 +1,9 @@
 <view class="champion-celebration {{show ? 'show' : ''}}" wx:if="{{show}}">
-  <!-- 奖杯 -->
+  <!-- 奖杯/奖牌 -->
   <view class="trophy {{rank === 1 ? 'gold' : rank === 2 ? 'silver' : 'bronze'}}">
-    <view class="trophy-icon">{{rank === 1 ? '🏆' : rank === 2 ? '🥈' : '🥉'}}</view>
+    <!-- 冠军和亚军显示奖杯，季军显示铜牌 -->
+    <view class="trophy-icon" wx:if="{{rank === 1 || rank === 2}}">🏆</view>
+    <view class="medal-icon" wx:if="{{rank === 3}}">🥉</view>
     <view class="trophy-text">{{rank === 1 ? '冠军' : rank === 2 ? '亚军' : '季军'}}</view>
   </view>
 

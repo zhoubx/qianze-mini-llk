@@ -6,11 +6,11 @@ Component({
   properties: {
     show: {
       type: Boolean,
-      value: false
+      value: true  // 临时改为 true 用于调试
     },
     rank: {
       type: Number,
-      value: 1
+      value: 2  // 临时改为 2 显示亚军奖杯
     },
     prizeName: {
       type: String,
@@ -37,10 +37,10 @@ Component({
         prizeName: prizeName
       });
 
-      // 3秒后自动隐藏
-      setTimeout(() => {
-        this.hideCelebration();
-      }, 3000);
+      // 3秒后自动隐藏（调试时暂时注释）
+      // setTimeout(() => {
+      //   this.hideCelebration();
+      // }, 3000);
     },
 
     // 隐藏庆祝动画

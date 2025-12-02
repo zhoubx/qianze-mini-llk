@@ -26,24 +26,65 @@
 }
 
 .trophy-icon {
-  font-size: 120rpx;
+  font-size: 180rpx;
   margin-bottom: 20rpx;
   animation: trophyGlow 1.5s ease-in-out infinite alternate;
 }
 
+/* 金色大奖杯 - 冠军 */
 .trophy.gold .trophy-icon {
-  color: #FFD700;
-  text-shadow: 0 0 20rpx #FFD700;
+  filter: drop-shadow(0 0 30rpx #FFD700) drop-shadow(0 0 60rpx rgba(255, 215, 0, 0.8));
+  animation: goldTrophyGlow 1.5s ease-in-out infinite alternate;
 }
 
+/* 银色大奖杯 - 亚军 */
 .trophy.silver .trophy-icon {
-  color: #C0C0C0;
-  text-shadow: 0 0 20rpx #C0C0C0;
+  filter: grayscale(0.85) brightness(1.15) contrast(1.2) saturate(0.3) drop-shadow(0 0 25rpx #A8B0B8) drop-shadow(0 0 50rpx rgba(160, 175, 190, 0.7));
+  animation: silverTrophyGlow 1.5s ease-in-out infinite alternate;
 }
 
-.trophy.bronze .trophy-icon {
-  color: #CD7F32;
-  text-shadow: 0 0 20rpx #CD7F32;
+/* 大铜牌样式 - 季军 */
+.medal-icon {
+  font-size: 200rpx;
+  margin-bottom: 20rpx;
+  filter: drop-shadow(0 0 30rpx #CD7F32) drop-shadow(0 0 60rpx rgba(205, 127, 50, 0.8));
+  animation: bronzeMedalGlow 1.5s ease-in-out infinite alternate;
+}
+
+/* 金色奖杯发光动画 */
+@keyframes goldTrophyGlow {
+  0% { 
+    filter: drop-shadow(0 0 30rpx #FFD700) drop-shadow(0 0 60rpx rgba(255, 215, 0, 0.6));
+    transform: scale(1);
+  }
+  100% { 
+    filter: drop-shadow(0 0 50rpx #FFD700) drop-shadow(0 0 100rpx rgba(255, 215, 0, 1));
+    transform: scale(1.05);
+  }
+}
+
+/* 银色奖杯发光动画 */
+@keyframes silverTrophyGlow {
+  0% { 
+    filter: grayscale(1) brightness(1.5) contrast(1.1) drop-shadow(0 0 30rpx #E8E8E8) drop-shadow(0 0 60rpx rgba(220, 220, 220, 0.7));
+    transform: scale(1);
+  }
+  100% { 
+    filter: grayscale(1) brightness(1.8) contrast(1.1) drop-shadow(0 0 50rpx #FFFFFF) drop-shadow(0 0 100rpx rgba(255, 255, 255, 0.9));
+    transform: scale(1.05);
+  }
+}
+
+/* 铜牌发光动画 */
+@keyframes bronzeMedalGlow {
+  0% { 
+    filter: drop-shadow(0 0 30rpx #CD7F32) drop-shadow(0 0 60rpx rgba(205, 127, 50, 0.6));
+    transform: scale(1);
+  }
+  100% { 
+    filter: drop-shadow(0 0 50rpx #E8A050) drop-shadow(0 0 100rpx rgba(232, 160, 80, 1));
+    transform: scale(1.05);
+  }
 }
 
 .trophy-text {
