@@ -5,12 +5,18 @@
   <!-- 页面标题栏 -->
   <view class="page-header">
     <view class="header-main">
-      <view class="header-icon">🎁</view>
-      <view class="header-title">我的奖品</view>
+      <text class="header-icon">🎁</text>
+      <text class="header-title">我的奖品</text>
     </view>
-    <view class="header-subtitle">
-      <text>系统只会保留您游戏中领取到的最高奖项，核销使用后可再次领取。</text>
-      <text>邀请好友一起玩游戏，还可额外获得奖励！</text>
+    <view class="header-tips">
+      <view class="tip-item">
+        <text class="tip-dot">•</text>
+        <text class="tip-text">系统只保留您游戏中领取到的最高奖项，核销后可再次领取</text>
+      </view>
+      <view class="tip-item tip-highlight">
+        <text class="tip-dot">•</text>
+        <text class="tip-text">邀请好友一起玩游戏，还可额外获得奖励！</text>
+      </view>
     </view>
   </view>
 
@@ -39,7 +45,6 @@
           placeholder="请输入昵称" 
           value="{{editingNickName}}"
           bindinput="onNickNameInput"
-          bindblur="onNickNameBlur"
           maxlength="20"
         />
       </view>

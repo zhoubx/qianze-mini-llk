@@ -184,21 +184,11 @@ Page({
     }
   },
 
-  // 处理昵称输入
+  // 处理昵称输入（仿照 index 页面的简洁实现）
   onNickNameInput(e) {
     this.setData({
       editingNickName: e.detail.value
     });
-  },
-
-  // 处理昵称输入框失去焦点
-  onNickNameBlur(e) {
-    // 确保失去焦点时保存最新值
-    if (e.detail.value) {
-      this.setData({
-        editingNickName: e.detail.value
-      });
-    }
   },
 
   // 保存用户信息 (云数据库版本)

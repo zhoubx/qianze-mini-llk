@@ -9,60 +9,61 @@
 
 /* ==================== 页面标题 ==================== */
 .page-header {
-  text-align: center;
-  padding: 20rpx 30rpx 16rpx 30rpx;
-  background: rgb(255, 255, 255);
+  padding: 24rpx 30rpx 20rpx;
+  background: #fff;
   border-radius: 16rpx;
-  margin: 0rpx 10rpx 10rpx 10rpx;
+  margin: 0 10rpx 16rpx;
   box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.08);
-  width: calc(100% - 40rpx);
 }
 
 .header-main {
   display: flex;
   align-items: center;
-  justify-content: center;
-  margin-bottom: 12rpx;
+  margin-bottom: 16rpx;
 }
 
 .header-icon {
-  font-size: 48rpx;
+  font-size: 44rpx;
   margin-right: 12rpx;
 }
 
 .header-title {
-  font-size: 44rpx;
+  font-size: 40rpx;
   font-weight: bold;
   color: #4a7c59;
 }
 
-.header-subtitle {
+.header-tips {
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 8rpx;
+}
+
+.tip-item {
+  display: flex;
+  align-items: flex-start;
   font-size: 24rpx;
   color: #666;
-  line-height: 1.6;
-  padding: 0 20rpx;
+  line-height: 1.5;
 }
 
-.header-subtitle text {
-  display: block;
-  text-align: center;
-}
-
-.header-subtitle text:first-child {
+.tip-dot {
   color: #4a7c59;
-  font-weight: 500;
+  margin-right: 8rpx;
+  flex-shrink: 0;
 }
 
-.header-subtitle text:last-child {
-  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  font-weight: bold;
+.tip-text {
+  flex: 1;
+}
+
+.tip-highlight .tip-dot {
+  color: #f57c00;
+}
+
+.tip-highlight .tip-text {
+  color: #f57c00;
+  font-weight: 500;
 }
 
 /* ==================== 奖品列表 ==================== */
