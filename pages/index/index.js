@@ -1,16 +1,12 @@
 // index.js
-// 使用微信云开发替代 Bmob
-const dateFormat = require('../../utils/dateFormat.js'); // 引入日期格式化工具
-const config = require('../../config/index.js'); // 引入配置文件
-const { uploadAvatarIfNeeded } = require('../../utils/avatarUploader.js'); // 引入头像上传工具
-const resourceManager = require('../../utils/resourceManager.js'); // 引入资源管理器
+const dateFormat = require('../../utils/dateFormat.js');
+const config = require('../../config/index.js');
+const { uploadAvatarIfNeeded } = require('../../utils/avatarUploader.js');
 const app = getApp();
 
-// 云数据库引用
 const db = wx.cloud.database();
 const _ = db.command;
 
-// 从配置文件获取配置项
 const { 
   GAME_IMAGES, 
   LEADERBOARD_CONFIG, 
@@ -21,7 +17,7 @@ const {
   getRandomAvatar 
 } = config;
 
-// 消除音效上下文（初始化时使用配置URL，预加载完成后会更新）
+// 消除音效
 const matchCtx = wx.createInnerAudioContext();
 matchCtx.src = AUDIO_CONFIG.EFFECTS.MATCH;
 matchCtx.volume = AUDIO_CONFIG.VOLUME.MATCH;
@@ -31,7 +27,7 @@ Page({
     isGameActive: false,
     showModal: false,
     showPostSubmitModal: false,
-    avatarUrl: getRandomAvatar(), // 默认随机头像
+    avatarUrl: getRandomAvatar(),
     diffConfig: DIFFICULTY_CONFIG.OPTIONS,
     config: DIFFICULTY_CONFIG.BOARD,
     prizeTiers: PRIZE_CONFIG.TIERS,
@@ -48,111 +44,26 @@ Page({
     finalPrizeLevel: 6,
     inputName: '',
     bestScore: null,
-    defaultAvatarUrl: AVATAR_CONFIG.DEFAULT, // 排行榜默认头像
-    isRefreshing: false, // 新增：标记是否正在刷新排行榜
-    submitting: false, // 提交状态
-    shuffleToastText: '', // 洗牌提示文字
-    shuffleToastVisible: false, // 洗牌提示是否可见
-    imagesReady: false // 图片是否预加载完成
+    defaultAvatarUrl: AVATAR_CONFIG.DEFAULT,
+    isRefreshing: false,
+    submitting: false,
+    shuffleToastText: '',
+    shuffleToastVisible: false
   },
 
-  // 实际使用的游戏图片列表
-  gameImages: GAME_IMAGES,
-
   onLoad: function () {
-    // 预加载游戏图片（确保开始游戏时图片已缓存）
-    this.preloadGameImages();
-    // 预加载音频资源
-    this.silentPreload();
     this.fetchLeaderboard();
   },
 
   onShow: function () {
-    // 检查是否需要刷新排行榜（从奖品页修改头像/昵称后返回）
     if (app.globalData.needRefreshLeaderboard) {
       app.globalData.needRefreshLeaderboard = false;
       this.fetchLeaderboard();
     }
     
-    // 同步音乐状态，确保页面显示时音乐组件状态正确
     const musicControl = this.selectComponent('#musicControl');
     if (musicControl) {
       musicControl.syncMusicStatus();
-    }
-  },
-
-  // 预加载游戏图片（获取临时URL并缓存到本地）
-  async preloadGameImages() {
-    console.log('开始预加载游戏图片...');
-    
-    try {
-      // 1. 获取所有图片的临时URL
-      const tempUrls = await resourceManager.getTempFileURLs(GAME_IMAGES);
-      
-      // 2. 将 cloud:// 转换为临时URL
-      const imageUrls = GAME_IMAGES.map(id => tempUrls[id] || id);
-      this.gameImages = imageUrls;
-      
-      console.log('临时URL获取完成，开始预加载图片...');
-      
-      // 3. 预加载图片到本地缓存
-      let loaded = 0;
-      const total = imageUrls.length;
-
-      imageUrls.forEach((imgUrl) => {
-        wx.getImageInfo({
-          src: imgUrl,
-          success: () => {
-            loaded++;
-            if (loaded >= total) {
-              console.log('游戏图片预加载完成');
-              this.setData({ imagesReady: true });
-            }
-          },
-          fail: (err) => {
-            console.warn('图片预加载失败:', imgUrl, err);
-            loaded++;
-            if (loaded >= total) {
-              this.setData({ imagesReady: true });
-            }
-          }
-        });
-      });
-
-      // 超时保护：15秒后强制标记完成
-      setTimeout(() => {
-        if (!this.data.imagesReady) {
-          console.warn('图片预加载超时，强制完成');
-          this.setData({ imagesReady: true });
-        }
-      }, 15000);
-      
-    } catch (err) {
-      console.error('获取图片临时URL失败:', err);
-      // 失败时使用原始 cloud:// URL
-      this.gameImages = GAME_IMAGES;
-      this.setData({ imagesReady: true });
-    }
-  },
-
-  // 静默预加载音频资源（不覆盖已预加载的图片）
-  async silentPreload() {
-    // 只更新音频URL，不覆盖图片
-    this.updateMatchSoundUrl();
-  },
-
-  // 更新消除音效URL（获取云存储临时链接）
-  async updateMatchSoundUrl() {
-    const cloudId = AUDIO_CONFIG.EFFECTS.MATCH;
-    if (cloudId && cloudId.startsWith('cloud://')) {
-      try {
-        const tempUrl = await resourceManager.getResourceUrl(cloudId);
-        if (tempUrl && matchCtx) {
-          matchCtx.src = tempUrl;
-        }
-      } catch (err) {
-        console.warn('更新消除音效URL失败:', err);
-      }
     }
   },
 
@@ -220,21 +131,18 @@ Page({
           }
         });
 
-        // 通过云函数批量获取云文件临时链接（云函数有管理员权限）
+        // 直接使用客户端API获取临时链接（云存储已设置为所有用户可读）
         let fileUrlMap = {};
         if (cloudFileIds.length > 0) {
           try {
-            const tempUrlRes = await wx.cloud.callFunction({
-              name: 'getTempFileURL',
-              data: { fileList: cloudFileIds }
+            const tempUrlRes = await wx.cloud.getTempFileURL({
+              fileList: cloudFileIds
             });
-            if (tempUrlRes.result && tempUrlRes.result.success) {
-              tempUrlRes.result.fileList.forEach(file => {
-                if (file.status === 0 && file.tempFileURL) {
-                  fileUrlMap[file.fileID] = file.tempFileURL;
-                }
-              });
-            }
+            tempUrlRes.fileList.forEach(file => {
+              if (file.status === 0 && file.tempFileURL) {
+                fileUrlMap[file.fileID] = file.tempFileURL;
+              }
+            });
           } catch (err) {
             console.warn('获取云文件临时链接失败:', err);
           }
@@ -338,7 +246,7 @@ Page({
     } = this.gameState;
     
     // 使用预加载后的游戏图片
-    const images = this.gameImages || GAME_IMAGES;
+    const images = GAME_IMAGES;
     
     let data = [];
     for (let i = 0; i < totalPairs; i++) data.push(i % images.length, i % images.length);
@@ -578,7 +486,7 @@ Page({
     types.sort(() => Math.random() - 0.5);
 
     // 使用预加载后的游戏图片
-    const images = this.gameImages || GAME_IMAGES;
+    const images = GAME_IMAGES;
 
     availableTiles.forEach((t, i) => {
       this.gameState.logicBoard[t.r][t.c] = types[i];

@@ -19,13 +19,7 @@
   </view>
 
   <view class="menu-screen" wx:if="{{!isGameActive}}">
-    <!-- 图片加载提示 -->
-    <view class="preload-tip" wx:if="{{!imagesReady}}">
-      <text class="preload-icon">⏳</text>
-      <text class="preload-text">游戏资源加载中...</text>
-    </view>
-
-    <view class="difficulty-card {{item.class}} {{!imagesReady ? 'loading' : ''}}" wx:for="{{diffConfig}}" wx:key="id" bindtap="startGame" data-diff="{{item.id}}">
+    <view class="difficulty-card {{item.class}}" wx:for="{{diffConfig}}" wx:key="id" bindtap="startGame" data-diff="{{item.id}}">
       <view class="diff-info">
         <view class="diff-header">
           <text class="diff-title">{{item.title}}</text>
