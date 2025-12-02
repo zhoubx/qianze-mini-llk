@@ -1,7 +1,6 @@
 <view class="container">
   <view class="header">
-    <text class="title">芊泽养生 SPA</text>
-    <text class="slogan">凭实力赢优惠券，身心愉悦两不误！</text>
+    <image class="header-banner" src="/images/header-banner.png" mode="widthFix"></image>
   </view>
 
   <!-- 音乐控制组件 -->
@@ -13,6 +12,7 @@
   <view class="top-actions" wx:if="{{!isGameActive}}">
     <navigator url="/pages/rules/rules" class="action-link">📖 游戏规则</navigator>
     <navigator url="/pages/prizes/prizes" class="action-link">🎁 我的奖品</navigator>
+    <view bindtap="visitStore" class="action-link">🛍️ 进店看看</view>
   </view>
 
   <view class="menu-screen" wx:if="{{!isGameActive}}">

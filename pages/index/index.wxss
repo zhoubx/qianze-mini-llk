@@ -10,31 +10,90 @@ page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
   box-sizing: border-box; /* 确保 padding 不会撑大宽度 */
 }
 
-/* --- Bug修复：头部压缩 --- */
-.header { width: 100%; text-align: center; margin-bottom: 10rpx; position: relative; padding-top: 0; }
-.title { color: #4a7c59; font-size: 36rpx; font-weight: bold; display: block; margin-bottom: 4rpx; }
-.slogan { font-size: 22rpx; color: #666; display: block; }
+/* --- 头部横幅图片 --- */
+.header { width: 100%; text-align: center; margin-bottom: 10rpx; position: relative; padding-top: 0; margin-left: -15rpx; margin-right: -15rpx; width: calc(100% + 30rpx); }
+.header-banner { width: 100%; display: block; }
 .music-btn { position: absolute; top: 0; right: 10rpx; width: 50rpx; height: 50rpx; background: #eee; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 26rpx; z-index: 99; }
 .music-btn.playing { background: #4a7c59; color: white; animation: rotate 4s linear infinite; }
 
 /* 顶部功能按钮栏 */
-.top-actions { width: 100%; display: flex; justify-content: space-between; margin-bottom: 40rpx; padding: 0 10rpx; gap: 20rpx; }
+.top-actions { 
+  width: 100%; 
+  display: flex; 
+  justify-content: space-between; 
+  margin-bottom: 30rpx; 
+  margin-top: 30rpx; /* 增加与顶部 banner 的距离 */
+  padding: 10rpx, 10rpx; 
+  gap: 15rpx; 
+}
 .action-link {
-  font-size: 28rpx;
-  color: #4a7c59;
-  text-decoration: underline;
-  padding: 12rpx 20rpx;
-  background: rgba(74, 124, 89, 0.1);
-  border-radius: 12rpx;
-  border: 1rpx solid rgba(74, 124, 89, 0.3);
   flex: 1;
-  text-align: center;
-  transition: all 0.2s;
+  height: 64rpx; /* 高度改小 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 25rpx;
+  font-size: 28rpx;
+  font-weight: bold;
+  text-decoration: none;
+  position: relative;
+  box-shadow: 0 2rpx 6rpx rgba(0,0,0,0.08);
 }
-.action-link:active {
-  background: rgba(74, 124, 89, 0.2);
-  transform: scale(0.98);
+
+/* 次级按钮（浅色）- 规则 & 奖品 */
+.action-link:nth-child(1),
+.action-link:nth-child(2) {
+  background: linear-gradient(180deg, #f9fbf9 0%, #ebf5ee 100%);
+  border: 2rpx solid #a5d6a7;
+  color: #2e7d55;
 }
+
+/* 点击态：加深底色 */
+.action-link:nth-child(1):active,
+.action-link:nth-child(2):active {
+  background: #c8e6c9; /* 更深的淡绿色 */
+  border-color: #81c784;
+  color: #1b5e20;
+}
+
+/* 进店看看按钮（醒目色 - 暖橙色系） */
+.action-link:nth-child(3) {
+  background: linear-gradient(180deg, #fff8e1 0%, #ffecb3 100%);
+  border: 2rpx solid #ffd54f;
+  color: #d84315; /* 深橙红色文字 */
+}
+
+.action-link:nth-child(3):active {
+  background: #ffe082;
+}
+
+/* 模拟左右两侧的金色装饰纹路 */
+.action-link::before, .action-link::after {
+  content: '';
+  position: absolute;
+  width: 6rpx;
+  height: 6rpx;
+  border-radius: 50%;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.6;
+}
+
+/* 规则 & 奖品 的装饰点 */
+.action-link:nth-child(1)::before, .action-link:nth-child(1)::after,
+.action-link:nth-child(2)::before, .action-link:nth-child(2)::after {
+  border: 2rpx solid #a5d6a7;
+  background: #e8f5e9;
+}
+
+/* 进店看看 的装饰点 */
+.action-link:nth-child(3)::before, .action-link:nth-child(3)::after {
+  border: 2rpx solid #ffd54f;
+  background: #fff9c4;
+}
+
+.action-link::before { left: 12rpx; }
+.action-link::after { right: 12rpx; }
 
 /* 菜单与游戏区 */
 .game-screen { width: 100%; display: flex; flex-direction: column; align-items: center; }
