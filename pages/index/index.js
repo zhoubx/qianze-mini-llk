@@ -227,7 +227,7 @@ Page({
       });
     }, 1000);
 
-    let size = conf.rows >= 8 ? '80rpx' : '100rpx';
+    let size = conf.clos > 6 ? '80rpx' : '100rpx';
     this.setData({
       isGameActive: true,
       cols: conf.cols,
