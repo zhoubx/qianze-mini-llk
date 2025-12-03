@@ -54,7 +54,8 @@
 }
 
 .tip-text {
-  flex: 1;
+  margin-top: 2px; 
+  margin-right: -40rpx;
 }
 
 .tip-highlight .tip-dot {
@@ -64,6 +65,36 @@
 .tip-highlight .tip-text {
   color: #f57c00;
   font-weight: 500;
+}
+
+/* 立刻邀请按钮 */
+.invite-btn {
+  display: inline-flex;
+  max-width: 140rpx;
+  height: 42rpx;
+  letter-spacing: 1rpx;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #e9a15a 0%, #ff9800 10%);
+  color: white;
+  font-size: 22rpx;
+  font-weight: bold;
+  padding: 8rpx 20rpx;
+  border-radius: 24rpx;
+  margin-left: 16rpx;
+  border: none;
+  /* box-shadow: 0 4rpx 12rpx rgba(245, 124, 0, 0.3); */
+  flex-shrink: 0;
+  line-height: 1.4;
+}
+
+.invite-btn::after {
+  border: none;
+}
+
+.invite-btn:active {
+  background: linear-gradient(135deg, #e65100 0%, #f57c00 100%);
+  transform: scale(0.96);
 }
 
 /* ==================== 大包裹容器 ==================== */
@@ -274,6 +305,9 @@
   color: #4a7c59;
   font-weight: bold;
   text-decoration: underline;
+  padding-left: 4rpx;
+  padding-right: 4rpx;
+  letter-spacing: 1px;
 }
 
 .card {

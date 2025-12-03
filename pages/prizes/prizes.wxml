@@ -54,7 +54,8 @@
       </view>
       <view class="tip-item tip-highlight">
         <text class="tip-dot">•</text>
-        <text class="tip-text">邀请好友一起玩游戏，还可获得额外奖励！</text>
+        <text class="tip-text" style="">邀请好友一起玩游戏，还可获得额外奖励！</text>
+        <button class="invite-btn" open-type="share">立刻邀请</button>
       </view>
     </view>
   </view>
