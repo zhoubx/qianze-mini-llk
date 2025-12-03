@@ -9,8 +9,11 @@
 
 /* ==================== 页面标题（最外层） ==================== */
 .page-header {
-  padding: 24rpx 30rpx 20rpx;
-  margin: 0 10rpx 20rpx;
+  padding: 30rpx 24rpx 30rpx 30rpx;
+  margin: -20rpx -20rpx -15rpx -20rpx;
+  /* padding-top: 44rpx; */
+  background: linear-gradient(180deg, #e9f5ec 0%, #c8e6c9 90%);
+  border-radius: 60rpx 60rpx 0 0 ;
 }
 
 .header-main {
@@ -66,7 +69,7 @@
 /* ==================== 大包裹容器 ==================== */
 .main-wrapper {
   background: #fff;
-  border-radius: 24rpx;
+  border-radius: 64rpx;
   padding: 24rpx;
   margin: 0 10rpx;
   box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.08);
@@ -82,11 +85,13 @@
 /* ==================== 个人信息模块 ==================== */
 .profile-section {
   background: linear-gradient(135deg, #f8faf9 0%, #e8f5e9 100%);
-  border-radius: 16rpx;
-  padding: 16rpx 20rpx;
-  border: 1rpx solid #d4e5d8;
-  width: 100%;
+  border-radius: 6rpx;
+  padding: 26rpx 50rpx 10rpx 30rpx;
+  margin-left: 15rpx;
+  /* border: 0rpx solid #d4e5d8; */
+  width: 96%;
   box-sizing: border-box;
+  height: 95px;
 }
 
 /* 展示模式 */
@@ -96,10 +101,10 @@
 }
 
 .profile-avatar {
-  width: 64rpx;
-  height: 64rpx;
+  width: 100rpx;
+  height: 100rpx;
   border-radius: 50%;
-  border: 2rpx solid #4a7c59;
+  border: 3rpx solid #4a7c59;
   flex-shrink: 0;
 }
 
@@ -109,28 +114,25 @@
 }
 
 .profile-name {
-  font-size: 28rpx;
+  font-size: 36rpx;
   font-weight: bold;
   color: #4a7c59;
   display: block;
 }
 
 .profile-hint {
-  font-size: 20rpx;
+  font-size: 23rpx;
   color: #888;
 }
 
 .profile-edit-btn {
-  background: #4a7c59;
-  color: white;
-  font-size: 22rpx;
-  padding: 8rpx 20rpx;
-  border-radius: 16rpx;
-  line-height: 1.5;
-  margin: 0;
   max-width: 150rpx;
-  height: 60rpx;
-  flex-shrink: 0;
+  height: 64rpx;
+  background: #3b7a4e;
+  color: white;
+  font-size: 26rpx;
+  border-radius: 30rpx;
+  letter-spacing: 2px;
 }
 
 .profile-edit-btn:active {
@@ -140,6 +142,7 @@
 /* 编辑模式 */
 .profile-edit {
   padding: 0;
+  height: 95px;
 }
 
 .edit-row {
@@ -150,6 +153,8 @@
 }
 
 .avatar-btn {
+  height: 100rpx;
+  width: 100rpx;
   display: flex;
   align-items: center;
   background: transparent;
@@ -165,16 +170,17 @@
 }
 
 .avatar-preview {
-  width: 64rpx;
-  height: 64rpx;
+  width: 100rpx;
+  height: 100rpx;
   border-radius: 50%;
   border: 2rpx solid #4a7c59;
 }
 
 .avatar-tip {
-  font-size: 20rpx;
+  font-size: 30rpx;
   color: #4a7c59;
   margin-left: 10rpx;
+  letter-spacing: 1px;
 }
 
 .field-input {
@@ -306,6 +312,7 @@
   font-weight: bold;
   color: #333;
   margin-bottom: 8rpx;
+  letter-spacing: 1px;
 }
 
 /* 数据详情行 */
@@ -314,13 +321,14 @@
   align-items: center;
   font-size: 24rpx;
   color: #666;
-  margin-bottom: 8rpx;
+  margin-bottom: 4rpx;
+  padding-top: 8rpx;
 }
 .tag { color: #555; }
 .divider { margin: 0 8rpx; color: #ddd; font-size: 20rpx;}
-.score { font-weight: bold; color: #4a7c59; }
 
 .row-time {
+  padding-top: 8rpx;
   font-size: 22rpx;
   color: #999;
 }
@@ -342,16 +350,31 @@
   padding-right: 20rpx;
 }
 
+/* -  padding: 8rpx 20rpx;
+-  line-height: 1.5;
+-  margin: 0;
+-  flex-shrink: 0; */
+
+.profile-edit-btn {
+  max-width: 150rpx;
+  height: 64rpx;
+  background: #3b7a4e;
+  color: white;
+  font-size: 26rpx;
+  border-radius: 30rpx;
+  letter-spacing: 1px;
+  padding: 15rpx;
+}
+
 .use-btn {
+  max-width: 150rpx;
+  height: 64rpx;
   background: #df6e81;
   color: white;
-  font-size: 35rpx;
-  padding: 5rpx 1rpx;
+  font-size: 26rpx;
   border-radius: 30rpx;
-  margin: 0;
-  line-height: 1.5;
-  max-width: 150rpx;
-  height: 60rpx;
+  letter-spacing: 1px;
+  padding: 15rpx;
 }
 
 .redemption-time {
@@ -404,6 +427,7 @@
   border-radius: 20rpx;
   margin-left: 12rpx;
   font-weight: normal;
+  letter-spacing: 1px;
 }
 
 .share-use-btn {
@@ -448,10 +472,6 @@
 
 .game-card.expired::before {
   background: #ccc !important;
-}
-
-.game-card .score {
-  color: #e91e63;
 }
 
 /* 游戏奖品核销按钮（深粉色） */

@@ -2,6 +2,45 @@
   <!-- 音乐控制组件 -->
   <music-control id="musicControl"></music-control>
 
+    <!-- 个人信息模块 -->
+    <view class="profile-section">
+      <!-- 展示模式 -->
+      <view class="profile-display" wx:if="{{!isEditingProfile}}">
+        <image class="profile-avatar" src="{{userInfo.avatarUrl || defaultAvatarUrl}}" mode="aspectFill"></image>
+        <view class="profile-details">
+          <text class="profile-name">{{userInfo.nickName || '未设置昵称'}}</text>
+          <text class="profile-hint">修改将同步到排行榜</text>
+        </view>
+        <button class="profile-edit-btn" bindtap="startEditProfile">修改</button>
+      </view>
+
+      <!-- 编辑模式 -->
+      <view class="profile-edit" wx:if="{{isEditingProfile}}">
+        <view class="edit-row">
+          <button class="avatar-btn" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
+            <image class="avatar-preview" src="{{editingAvatarUrl || defaultAvatarUrl}}" mode="aspectFill"></image>
+            <text class="avatar-tip">👈点击换头像</text>
+          </button>
+          <input 
+            type="nickname" 
+            class="field-input" 
+            placeholder="请输入昵称" 
+            value="{{editingNickName}}"
+            bindinput="onNickNameInput"
+            maxlength="20"
+          />
+        </view>
+        <view class="edit-actions">
+          <button class="btn-cancel" bindtap="cancelEditProfile">取消</button>
+          <button class="btn-save" bindtap="saveUserInfo">保存</button>
+        </view>
+      </view>
+    </view>
+
+    
+  <!-- 大卡片容器：包裹个人信息和奖品列表 -->
+  <view class="main-wrapper">
+
   <!-- 页面标题栏（最外层） -->
   <view class="page-header">
     <view class="header-main">
@@ -20,46 +59,9 @@
     </view>
   </view>
 
-  <!-- 大卡片容器：包裹个人信息和奖品列表 -->
-  <view class="main-wrapper">
-    <!-- 个人信息模块 -->
-    <view class="profile-section">
-      <!-- 展示模式 -->
-      <view class="profile-display" wx:if="{{!isEditingProfile}}">
-        <image class="profile-avatar" src="{{userInfo.avatarUrl || defaultAvatarUrl}}" mode="aspectFill"></image>
-        <view class="profile-details">
-          <text class="profile-name">{{userInfo.nickName || '未设置昵称'}}</text>
-          <text class="profile-hint">修改将同步到排行榜</text>
-        </view>
-        <button class="profile-edit-btn" bindtap="startEditProfile">修改</button>
-      </view>
-
-      <!-- 编辑模式 -->
-      <view class="profile-edit" wx:if="{{isEditingProfile}}">
-        <view class="edit-row">
-          <button class="avatar-btn" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
-            <image class="avatar-preview" src="{{editingAvatarUrl || defaultAvatarUrl}}" mode="aspectFill"></image>
-            <text class="avatar-tip">点击换头像</text>
-          </button>
-          <input 
-            type="nickname" 
-            class="field-input" 
-            placeholder="请输入昵称" 
-            value="{{editingNickName}}"
-            bindinput="onNickNameInput"
-            maxlength="20"
-          />
-        </view>
-        <view class="edit-actions">
-          <button class="btn-cancel" bindtap="cancelEditProfile">取消</button>
-          <button class="btn-save" bindtap="saveUserInfo">保存</button>
-        </view>
-      </view>
-    </view>
-
     <!-- 分割线 -->
     <view class="section-divider"></view>
-
+    
     <!-- 分享代金券列表 -->
     <view class="section-header" wx:if="{{shareCoupons.length > 0}}">
       <text class="section-icon">🎉</text>
@@ -73,7 +75,6 @@
             <text class="prize-name share-prize-name">{{item.amount}}元代金券</text>
             <text class="share-badge">分享奖励</text>
           </view>
-          
           <view class="row-time">
             <text>获得时间：{{item.createTimeStr}}</text>
           </view>
