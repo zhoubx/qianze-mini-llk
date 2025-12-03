@@ -2,7 +2,7 @@
   <!-- 音乐控制组件 -->
   <music-control id="musicControl"></music-control>
 
-  <!-- 页面标题栏 -->
+  <!-- 页面标题栏（最外层） -->
   <view class="page-header">
     <view class="header-main">
       <text class="header-icon">🎁</text>
@@ -20,123 +20,129 @@
     </view>
   </view>
 
-  <!-- 个人信息模块 -->
-  <view class="profile-section">
-    <!-- 展示模式 -->
-    <view class="profile-display" wx:if="{{!isEditingProfile}}">
-      <image class="profile-avatar" src="{{userInfo.avatarUrl || defaultAvatarUrl}}" mode="aspectFill"></image>
-      <view class="profile-details">
-        <text class="profile-name">{{userInfo.nickName || '未设置昵称'}}</text>
-        <text class="profile-hint">修改将同步到排行榜</text>
-      </view>
-      <button class="profile-edit-btn" bindtap="startEditProfile">修改</button>
-    </view>
-
-    <!-- 编辑模式 -->
-    <view class="profile-edit" wx:if="{{isEditingProfile}}">
-      <view class="edit-row">
-        <button class="avatar-btn" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
-          <image class="avatar-preview" src="{{editingAvatarUrl || defaultAvatarUrl}}" mode="aspectFill"></image>
-          <text class="avatar-tip">点击换头像</text>
-        </button>
-        <input 
-          type="nickname" 
-          class="field-input" 
-          placeholder="请输入昵称" 
-          value="{{editingNickName}}"
-          bindinput="onNickNameInput"
-          maxlength="20"
-        />
-      </view>
-      <view class="edit-actions">
-        <button class="btn-cancel" bindtap="cancelEditProfile">取消</button>
-        <button class="btn-save" bindtap="saveUserInfo">保存</button>
-      </view>
-    </view>
-  </view>
-
-  <!-- 分享代金券列表 -->
-  <view class="section-header" wx:if="{{shareCoupons.length > 0}}">
-    <text class="section-icon">🎉</text>
-    <text class="section-title">分享奖励</text>
-    <text class="section-subtitle">邀请好友获得</text>
-  </view>
-  <view class="list share-list" wx:if="{{shareCoupons.length > 0}}">
-    <view class="card share-card {{item.status}}" wx:for="{{shareCoupons}}" wx:key="_id">
-      <view class="card-left">
-        <view class="row-top">
-          <text class="prize-name share-prize-name">{{item.amount}}元代金券</text>
-          <text class="share-badge">分享奖励</text>
+  <!-- 大卡片容器：包裹个人信息和奖品列表 -->
+  <view class="main-wrapper">
+    <!-- 个人信息模块 -->
+    <view class="profile-section">
+      <!-- 展示模式 -->
+      <view class="profile-display" wx:if="{{!isEditingProfile}}">
+        <image class="profile-avatar" src="{{userInfo.avatarUrl || defaultAvatarUrl}}" mode="aspectFill"></image>
+        <view class="profile-details">
+          <text class="profile-name">{{userInfo.nickName || '未设置昵称'}}</text>
+          <text class="profile-hint">修改将同步到排行榜</text>
         </view>
-        
-        <view class="row-time">
-          <text>获得时间：{{item.createTimeStr}}</text>
+        <button class="profile-edit-btn" bindtap="startEditProfile">修改</button>
+      </view>
+
+      <!-- 编辑模式 -->
+      <view class="profile-edit" wx:if="{{isEditingProfile}}">
+        <view class="edit-row">
+          <button class="avatar-btn" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
+            <image class="avatar-preview" src="{{editingAvatarUrl || defaultAvatarUrl}}" mode="aspectFill"></image>
+            <text class="avatar-tip">点击换头像</text>
+          </button>
+          <input 
+            type="nickname" 
+            class="field-input" 
+            placeholder="请输入昵称" 
+            value="{{editingNickName}}"
+            bindinput="onNickNameInput"
+            maxlength="20"
+          />
+        </view>
+        <view class="edit-actions">
+          <button class="btn-cancel" bindtap="cancelEditProfile">取消</button>
+          <button class="btn-save" bindtap="saveUserInfo">保存</button>
         </view>
       </view>
+    </view>
 
-      <view class="card-right">
-        <block wx:if="{{item.status === 'pending'}}">
-           <button class="use-btn share-use-btn" bindtap="useShareCoupon" data-id="{{item._id}}">核销</button>
-        </block>
-        <block wx:else>
-           <view class="status-info">
-             <text class="status-text">{{item.statusText}}</text>
-             <view wx:if="{{item.status === 'used'}}" class="redemption-time">
-               {{item.redeemedTime ? item.redeemedTimeStr : '暂无时间记录'}}
+    <!-- 分割线 -->
+    <view class="section-divider"></view>
+
+    <!-- 分享代金券列表 -->
+    <view class="section-header" wx:if="{{shareCoupons.length > 0}}">
+      <text class="section-icon">🎉</text>
+      <text class="section-title">分享奖励</text>
+      <text class="section-subtitle">邀请好友获得</text>
+    </view>
+    <view class="list share-list" wx:if="{{shareCoupons.length > 0}}">
+      <view class="card share-card {{item.status}}" wx:for="{{shareCoupons}}" wx:key="_id">
+        <view class="card-left">
+          <view class="row-top">
+            <text class="prize-name share-prize-name">{{item.amount}}元代金券</text>
+            <text class="share-badge">分享奖励</text>
+          </view>
+          
+          <view class="row-time">
+            <text>获得时间：{{item.createTimeStr}}</text>
+          </view>
+        </view>
+
+        <view class="card-right">
+          <block wx:if="{{item.status === 'pending'}}">
+             <button class="use-btn share-use-btn" bindtap="useShareCoupon" data-id="{{item._id}}">核销</button>
+          </block>
+          <block wx:else>
+             <view class="status-info">
+               <text class="status-text">{{item.statusText}}</text>
+               <view wx:if="{{item.status === 'used'}}" class="redemption-time">
+                 {{item.redeemedTime ? item.redeemedTimeStr : '暂无时间记录'}}
+               </view>
              </view>
-           </view>
-        </block>
+          </block>
+        </view>
       </view>
     </view>
-  </view>
 
-  <!-- 游戏奖品列表 -->
-  <view class="section-header" wx:if="{{prizes.length > 0}}">
-    <text class="section-icon">🏆</text>
-    <text class="section-title">游戏奖励</text>
-    <text class="section-subtitle">挑战获得</text>
-  </view>
+    <!-- 游戏奖品列表 -->
+    <view class="section-header" wx:if="{{prizes.length > 0}}">
+      <text class="section-icon">🏆</text>
+      <text class="section-title">游戏奖励</text>
+      <text class="section-subtitle">挑战获得</text>
+    </view>
 
-  <view wx:if="{{prizes.length===0 && !loading}}" class="empty">
-    <text>暂无奖品记录，快去</text>
-    <navigator url="/pages/index/index" open-type="redirect" class="empty-link">玩游戏赢取</navigator>
-    <text>吧！</text>
-  </view>
+    <view wx:if="{{prizes.length===0 && !loading}}" class="empty">
+      <text>暂无奖品记录，快去</text>
+      <navigator url="/pages/index/index" open-type="redirect" class="empty-link">玩游戏赢取</navigator>
+      <text>吧！</text>
+    </view>
 
-  <view class="list">
-    <view class="card {{item.status}}" wx:for="{{prizes}}" wx:key="_id">
-      <view class="card-left">
-        <view class="row-top">
-          <text class="prize-name">{{item.prizeName}}</text>
+    <view class="list game-list">
+      <view class="card game-card {{item.status}}" wx:for="{{prizes}}" wx:key="_id">
+        <view class="card-left">
+          <view class="row-top">
+            <text class="prize-name">{{item.prizeName}}</text>
+          </view>
+          
+          <view class="row-detail">
+            <text class="tag">{{item.diffText}}</text>
+            <text class="divider">|</text>
+            <text class="tag">{{item.timeCost}}s</text>
+            <text class="divider">|</text>
+            <text class="tag">{{item.rankText}}</text>
+            <text class="divider">|</text>
+            <text class="score">{{item.score}}分</text>
+          </view>
+
+          <view class="row-time">
+            <text>过关时间：{{item.createTimeStr}}</text>
+          </view>
         </view>
-        
-        <view class="row-detail">
-          <text class="tag">{{item.diffText}}</text>
-          <text class="divider">|</text>
-          <text class="tag">{{item.timeCost}}s</text>
-          <text class="divider">|</text>
-          <text class="tag">{{item.rankText}}</text>
-          <text class="divider">|</text>
-          <text class="score">{{item.score}}分</text>
-        </view>
 
-        <view class="row-time">
-          <text>过关时间：{{item.createTimeStr}}</text>
-        </view>
-      </view>
-
-      <view class="card-right">
-        <block wx:if="{{item.status === 'pending'}}" >
-           <button class="use-btn" bindtap="usePrize" data-id="{{item._id}}">核销</button>
-        </block>
-        <block wx:else>
-           <view class="status-info">
-             <text class="status-text">{{item.statusText}}</text>
-             <view wx:if="{{item.status === 'used'}}" class="redemption-time">
-               {{item.redeemedTime ? item.redeemedTimeStr : '暂无时间记录'}}
+        <view class="card-right">
+          <block wx:if="{{item.status === 'pending'}}" >
+             <button class="use-btn game-use-btn" bindtap="usePrize" data-id="{{item._id}}">核销</button>
+          </block>
+          <block wx:else>
+             <view class="status-info">
+               <text class="status-text">{{item.statusText}}</text>
+               <view wx:if="{{item.status === 'used'}}" class="redemption-time">
+                 {{item.redeemedTime ? item.redeemedTimeStr : '暂无时间记录'}}
+               </view>
              </view>
-           </view>
-        </block>
+          </block>
+        </view>
       </view>
     </view>
   </view>
