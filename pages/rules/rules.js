@@ -1,7 +1,7 @@
 
 // pages/rules/rules.js
 const config = require('../../config/index.js');
-const { PRIZE_CONFIG, DIFFICULTY_CONFIG } = config;
+const { PRIZE_CONFIG, DIFFICULTY_CONFIG, SHARE_COUPON_CONFIG } = config;
 const app = getApp();
 
 // 从配置计算各难度的消除对数
@@ -61,7 +61,10 @@ Page({
       hard: baseScoreHard
     },
     // 详细规则是否展开
-    showScoreDetail: false
+    showScoreDetail: false,
+    // 分享代金券配置
+    shareCouponAmount: SHARE_COUPON_CONFIG.AMOUNT,
+    shareCouponMaxCount: SHARE_COUPON_CONFIG.MAX_COUNT
   },
 
   // 切换分数计算详情的展开/折叠状态
