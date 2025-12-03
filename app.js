@@ -14,10 +14,11 @@ let isMusicPlaying = false;
 App({
   globalData: {
     openid: null,
-    needRefreshLeaderboard: false
+    needRefreshLeaderboard: false,
+    inviteFrom: null  // 分享邀请来源（分享人的openid）
   },
 
-  onLaunch: function () {
+  onLaunch: function (options) {
     // 初始化云开发
     if (!wx.cloud) {
       console.error('请使用 2.2.3 或以上的基础库以使用云能力');
@@ -28,8 +29,25 @@ App({
       });
     }
 
+    // 解析启动参数中的邀请来源
+    if (options && options.query && options.query.inviteFrom) {
+      this.globalData.inviteFrom = options.query.inviteFrom;
+      console.log('检测到邀请来源:', options.query.inviteFrom);
+    }
+
     this.getOpenId();
     this.initGlobalMusic();
+  },
+
+  onShow: function (options) {
+    // 从场景值或query参数中解析邀请来源（处理热启动场景）
+    if (options && options.query && options.query.inviteFrom) {
+      // 只有当前没有邀请来源时才设置（避免覆盖）
+      if (!this.globalData.inviteFrom) {
+        this.globalData.inviteFrom = options.query.inviteFrom;
+        console.log('热启动检测到邀请来源:', options.query.inviteFrom);
+      }
+    }
   },
 
   async getOpenId() {

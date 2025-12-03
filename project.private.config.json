@@ -10,5 +10,18 @@
     "autoAudits": false,
     "showShadowRootInWxmlPanel": true,
     "compileHotReLoad": true
+  },
+  "condition": {
+    "miniprogram": {
+      "list": [
+        {
+          "name": "分享调试",
+          "pathName": "pages/index/index",
+          "query": "inviteFrom=oEDcS0SYtKG7Toku-TBR82-XpjyE",
+          "scene": 1007,
+          "launchMode": "default"
+        }
+      ]
+    }
   }
 }

@@ -33,7 +33,7 @@
 
     <view class="leaderboard-box">
       <view class="lb-header">
-        <text class="lb-title">👑 全服风云榜 (72小时擂台赛)</text>
+        <text class="lb-title" bindtap="debugClearData">👑 全服风云榜 (72小时擂台赛)</text>
         <view class="lb-refresh-wrapper">
           <text class="lb-timer" bindtap="fetchLeaderboard">🔄 刷新</text>
           <text class="lb-loading-icon {{isRefreshing ? 'rotating' : ''}}" wx:if="{{isRefreshing}}">⏳</text>
@@ -153,6 +153,29 @@
       </view>
 
       <button class="close-btn" bindtap="closePostSubmitModal">关闭</button>
+    </view>
+  </view>
+
+  <!-- 分享奖励通知弹窗 -->
+  <view class="modal-overlay" wx:if="{{showShareRewardModal}}">
+    <view class="modal share-reward-modal">
+      <view class="share-reward-header">
+        <text class="share-reward-emoji">🎉</text>
+        <text class="share-reward-title">恭喜获得分享奖励!</text>
+      </view>
+      <view class="share-reward-content">
+        <view class="share-reward-amount">
+          <text class="amount-number">{{newShareCouponAmount}}</text>
+          <text class="amount-unit">元</text>
+        </view>
+        <view class="share-reward-desc">
+          您邀请的好友完成了游戏，您获得了 {{newShareCouponCount}} 张代金券！
+        </view>
+      </view>
+      <view class="share-reward-actions">
+        <button class="share-reward-btn view-btn" bindtap="goToPrizesFromShareReward">查看奖品</button>
+        <button class="share-reward-btn close-btn-secondary" bindtap="closeShareRewardModal">知道了</button>
+      </view>
     </view>
   </view>
   

@@ -55,11 +55,56 @@
     </view>
   </view>
 
-  <!-- 奖品列表 -->
+  <!-- 分享代金券列表 -->
+  <view class="section-header" wx:if="{{shareCoupons.length > 0}}">
+    <text class="section-icon">🎉</text>
+    <text class="section-title">分享奖励</text>
+    <text class="section-subtitle">邀请好友获得</text>
+  </view>
+  <view class="list share-list" wx:if="{{shareCoupons.length > 0}}">
+    <view class="card share-card {{item.status}}" wx:for="{{shareCoupons}}" wx:key="_id">
+      <view class="card-left">
+        <view class="row-top">
+          <text class="prize-name share-prize-name">{{item.amount}}元代金券</text>
+          <text class="share-badge">分享奖励</text>
+        </view>
+        
+        <view class="row-time">
+          <text>获得时间：{{item.createTimeStr}}</text>
+        </view>
+      </view>
+
+      <view class="card-right">
+        <block wx:if="{{item.status === 'pending'}}">
+           <button class="use-btn share-use-btn" bindtap="useShareCoupon" data-id="{{item._id}}">核销</button>
+        </block>
+        <block wx:else>
+           <view class="status-info">
+             <text class="status-text">{{item.statusText}}</text>
+             <view wx:if="{{item.status === 'used'}}" class="redemption-time">
+               {{item.redeemedTime ? item.redeemedTimeStr : '暂无时间记录'}}
+             </view>
+           </view>
+        </block>
+      </view>
+    </view>
+  </view>
+
+  <!-- 游戏奖品列表 -->
+  <view class="section-header" wx:if="{{prizes.length > 0}}">
+    <text class="section-icon">🏆</text>
+    <text class="section-title">游戏奖励</text>
+    <text class="section-subtitle">挑战获得</text>
+  </view>
+
+  <view wx:if="{{prizes.length===0 && !loading}}" class="empty">
+    <text>暂无奖品记录，快去</text>
+    <navigator url="/pages/index/index" open-type="redirect" class="empty-link">玩游戏赢取</navigator>
+    <text>吧！</text>
+  </view>
+
   <view class="list">
-    <view wx:if="{{prizes.length===0 && !loading}}" class="empty">暂无奖品记录，快去玩游戏赢取吧！</view>
-    
-    <view class="card {{item.status}}" wx:for="{{prizes}}" wx:key="objectId">
+    <view class="card {{item.status}}" wx:for="{{prizes}}" wx:key="_id">
       <view class="card-left">
         <view class="row-top">
           <text class="prize-name">{{item.prizeName}}</text>
@@ -82,7 +127,7 @@
 
       <view class="card-right">
         <block wx:if="{{item.status === 'pending'}}" >
-           <button class="use-btn" bindtap="usePrize" data-id="{{item.objectId}}">核销</button>
+           <button class="use-btn" bindtap="usePrize" data-id="{{item._id}}">核销</button>
         </block>
         <block wx:else>
            <view class="status-info">

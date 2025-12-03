@@ -123,6 +123,12 @@ const PRIZE_CONFIG = {
   }
 };
 
+// ==================== 分享代金券配置 ====================
+const SHARE_COUPON_CONFIG = {
+  AMOUNT: 5,           // 代金券金额（元）
+  MAX_COUNT: 5         // 每人最多获得数量
+};
+
 // ==================== 默认头像配置 ====================
 const AVATAR_CONFIG = {
   DEFAULT: `${CLOUD_BASE_URL}/images/avatar_default.png`
@@ -146,6 +152,7 @@ module.exports = {
   LEADERBOARD_CONFIG,
   DIFFICULTY_CONFIG,
   PRIZE_CONFIG,
+  SHARE_COUPON_CONFIG,
   AVATAR_CONFIG,
   SHARE_IMAGE: '/images/share-landing.png',
   getRandomAvatar,

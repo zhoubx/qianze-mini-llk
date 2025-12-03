@@ -846,3 +846,106 @@ page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
   color: #81c784;
   font-weight: bold;
 }
+
+/* ==================== 分享奖励通知弹窗样式 ==================== */
+.share-reward-modal {
+  max-width: 560rpx;
+  width: 80%;
+  padding: 50rpx 40rpx;
+  background: linear-gradient(135deg, #fff9e6 0%, #fff3cd 100%);
+  border: 4rpx solid #f5a623;
+}
+
+.share-reward-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 30rpx;
+}
+
+.share-reward-emoji {
+  font-size: 80rpx;
+  margin-bottom: 16rpx;
+  animation: celebrateBounce 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes celebrateBounce {
+  0% { transform: scale(1) rotate(-5deg); }
+  100% { transform: scale(1.1) rotate(5deg); }
+}
+
+.share-reward-title {
+  font-size: 38rpx;
+  font-weight: bold;
+  color: #d4760a;
+  letter-spacing: 2rpx;
+}
+
+.share-reward-content {
+  text-align: center;
+  margin-bottom: 30rpx;
+}
+
+.share-reward-amount {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  margin-bottom: 16rpx;
+}
+
+.amount-number {
+  font-size: 80rpx;
+  font-weight: bold;
+  color: #f5a623;
+  text-shadow: 0 4rpx 8rpx rgba(245, 166, 35, 0.3);
+}
+
+.amount-unit {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #d4760a;
+  margin-left: 8rpx;
+}
+
+.share-reward-desc {
+  font-size: 26rpx;
+  color: #8b6914;
+  line-height: 1.6;
+}
+
+.share-reward-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.share-reward-btn {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 24rpx 0;
+  font-size: 30rpx;
+  font-weight: bold;
+  border-radius: 50rpx;
+  border: none;
+  letter-spacing: 2rpx;
+}
+
+.share-reward-btn.view-btn {
+  background: linear-gradient(135deg, #f5a623 0%, #d4760a 100%);
+  color: white;
+  box-shadow: 0 8rpx 20rpx rgba(245, 166, 35, 0.4);
+}
+
+.share-reward-btn.view-btn:active {
+  transform: scale(0.98);
+}
+
+.share-reward-btn.close-btn-secondary {
+  background: white;
+  color: #8b6914;
+  border: 2rpx solid #f5d96a;
+}
+
+.share-reward-btn.close-btn-secondary:active {
+  background: #fff9e6;
+}

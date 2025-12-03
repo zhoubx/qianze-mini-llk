@@ -12,6 +12,7 @@ const {
   LEADERBOARD_CONFIG, 
   DIFFICULTY_CONFIG, 
   PRIZE_CONFIG, 
+  SHARE_COUPON_CONFIG,
   AVATAR_CONFIG, 
   AUDIO_CONFIG,
   getRandomAvatar 
@@ -48,10 +49,19 @@ Page({
     isRefreshing: false,
     submitting: false,
     shuffleToastText: '',
-    shuffleToastVisible: false
+    shuffleToastVisible: false,
+    // 分享代金券通知
+    showShareRewardModal: false,
+    newShareCouponCount: 0,
+    newShareCouponAmount: 0
   },
 
-  onLoad: function () {
+  onLoad: function (options) {
+    // 解析邀请来源参数
+    if (options && options.inviteFrom) {
+      app.globalData.inviteFrom = options.inviteFrom;
+      console.log('页面参数检测到邀请来源:', options.inviteFrom);
+    }
     this.fetchLeaderboard();
   },
 
@@ -65,6 +75,9 @@ Page({
     if (musicControl) {
       musicControl.syncMusicStatus();
     }
+
+    // 检查是否有新的分享代金券
+    this.checkNewShareCoupons();
   },
 
 
@@ -711,6 +724,152 @@ Page({
     }
   },
 
+  // 检查并为分享人发放代金券
+  async checkAndGrantShareCoupon() {
+    try {
+      const inviteFrom = app.globalData.inviteFrom;
+      const currentOpenid = app.globalData.openid;
+
+      // 1. 检查是否有邀请来源
+      if (!inviteFrom || !currentOpenid) {
+        console.log('无邀请来源或当前用户openid未获取');
+        return;
+      }
+
+      // 2. 不能自己邀请自己
+      if (inviteFrom === currentOpenid) {
+        console.log('不能自己邀请自己');
+        return;
+      }
+
+      // 3. 检查是否已经有分享记录（防止重复奖励）
+      const shareRecordRes = await db.collection('ShareRecords')
+        .where({
+          sharerOpenid: inviteFrom,
+          inviteeOpenid: currentOpenid
+        })
+        .get();
+
+      if (shareRecordRes.data.length > 0) {
+        console.log('该邀请关系已存在记录，不重复发放');
+        return;
+      }
+
+      // 4. 检查当前用户是否为新用户（首次提交成绩）
+      // 查询该用户在本次之前是否有其他成绩记录
+      const userScoresRes = await db.collection('GameScore')
+        .where({ _openid: currentOpenid })
+        .limit(2)
+        .get();
+
+      // 如果有超过1条记录，说明不是首次提交（刚提交的那条已存在）
+      if (userScoresRes.data.length > 1) {
+        console.log('非新用户，不发放代金券');
+        return;
+      }
+
+      // 5. 检查分享人已获得的代金券数量是否达到上限
+      const sharerCouponsRes = await db.collection('ShareCoupons')
+        .where({ _openid: inviteFrom })
+        .get();
+
+      if (sharerCouponsRes.data.length >= SHARE_COUPON_CONFIG.MAX_COUNT) {
+        console.log('分享人代金券数量已达上限:', SHARE_COUPON_CONFIG.MAX_COUNT);
+        return;
+      }
+
+      // 6. 所有条件满足，创建代金券和分享记录
+      // 创建分享记录
+      await db.collection('ShareRecords').add({
+        data: {
+          sharerOpenid: inviteFrom,
+          inviteeOpenid: currentOpenid,
+          createdAt: db.serverDate()
+        }
+      });
+
+      // 为分享人创建代金券（注意：这里需要用云函数来设置指定的 _openid）
+      // 由于客户端无法直接设置其他用户的 _openid，我们使用 sharerOpenid 字段
+      await db.collection('ShareCoupons').add({
+        data: {
+          sharerOpenid: inviteFrom,  // 代金券所有者
+          amount: SHARE_COUPON_CONFIG.AMOUNT,
+          status: 'pending',
+          inviteeOpenid: currentOpenid,
+          createdAt: db.serverDate()
+        }
+      });
+
+      console.log('成功为分享人发放代金券:', inviteFrom);
+
+      // 清除邀请来源，避免重复触发
+      app.globalData.inviteFrom = null;
+
+    } catch (err) {
+      console.error('检查/发放分享代金券失败:', err);
+    }
+  },
+
+  // 检查是否有新的分享代金券（用于通知分享人）
+  async checkNewShareCoupons() {
+    try {
+      const openid = app.globalData.openid;
+      if (!openid) {
+        // openid 还没获取到，等待后重试
+        setTimeout(() => {
+          if (app.globalData.openid) this.checkNewShareCoupons();
+        }, 1000);
+        return;
+      }
+
+      // 获取上次检查时间
+      const lastCheckTime = wx.getStorageSync('lastShareCouponCheckTime') || 0;
+      const lastCheckDate = lastCheckTime ? new Date(lastCheckTime) : new Date(0);
+
+      // 查询自上次检查以来新获得的代金券
+      const res = await db.collection('ShareCoupons')
+        .where({
+          sharerOpenid: openid,
+          createdAt: _.gt(lastCheckDate)
+        })
+        .get();
+
+      if (res.data.length > 0) {
+        // 计算总金额
+        const totalAmount = res.data.reduce((sum, item) => sum + (item.amount || 0), 0);
+        
+        // 更新检查时间
+        wx.setStorageSync('lastShareCouponCheckTime', Date.now());
+
+        // 显示恭喜弹窗
+        this.setData({
+          showShareRewardModal: true,
+          newShareCouponCount: res.data.length,
+          newShareCouponAmount: totalAmount
+        });
+      }
+    } catch (err) {
+      console.error('检查新分享代金券失败:', err);
+    }
+  },
+
+  // 关闭分享奖励弹窗
+  closeShareRewardModal() {
+    this.setData({
+      showShareRewardModal: false
+    });
+  },
+
+  // 从分享奖励弹窗前往我的奖品
+  goToPrizesFromShareReward() {
+    this.setData({
+      showShareRewardModal: false
+    });
+    wx.navigateTo({
+      url: '/pages/prizes/prizes'
+    });
+  },
+
   // 主要修改 submitScore 函数 (云数据库版本)
   // [需求1] 提交成绩：同级别奖品按分数高低PK
   async submitScore() {
@@ -841,6 +1000,9 @@ Page({
       // _openid 会由云数据库自动添加，无需手动设置
       await db.collection('GameScore').add({ data: gameScoreData });
 
+      // 检查是否需要为分享人发放代金券
+      await this.checkAndGrantShareCoupon();
+
       // 本地同步 bestScore，便于下一次挑战使用
       const prevBestScore = typeof this.data.bestScore === 'number' ? this.data.bestScore : null;
       if (prevBestScore === null || currentScore > prevBestScore) {
@@ -964,6 +1126,12 @@ Page({
     let title = '快来挑战芊泽风云榜，赢取大奖！';
     let path = '/pages/index/index';
     
+    // 携带邀请来源参数（分享人的openid）
+    const openid = app.globalData.openid;
+    if (openid) {
+      path = `/pages/index/index?inviteFrom=${openid}`;
+    }
+    
     // 如果是在挑战成功弹窗中分享，带上战绩信息
     if (this.data.showModal && this.data.tempScore) {
       title = `我以 ${this.data.tempScore} 分赢得了【${this.data.finalPrizeName}】，排名第 ${this.data.myRank}！不服来战！`;
@@ -982,9 +1150,51 @@ Page({
     if (this.data.showModal && this.data.tempScore) {
       title = `我以 ${this.data.tempScore} 分赢得了【${this.data.finalPrizeName}】，排名第 ${this.data.myRank}！`;
     }
+    
+    // 携带邀请来源参数（分享人的openid）
+    let query = '';
+    const openid = app.globalData.openid;
+    if (openid) {
+      query = `inviteFrom=${openid}`;
+    }
+    
     return {
       title: title,
+      query: query,
       imageUrl: config.SHARE_IMAGE
     };
+  },
+
+
+  // 在 index.js 中添加（正式上线前删除）
+  debugClearData() {
+    wx.showModal({
+      title: '警告',
+      content: '确定要清空分享相关数据吗？',
+      success: async (res) => {
+        if (res.confirm) {
+          await wx.cloud.callFunction({
+            name: 'clearCollection',
+            data: { collection: 'GameScore' }
+          })
+          await wx.cloud.callFunction({
+            name: 'clearCollection',
+            data: { collection: 'UserInfo' }
+          })
+          await wx.cloud.callFunction({
+            name: 'clearCollection',
+            data: { collection: 'ShareCoupons' }
+          })
+          await wx.cloud.callFunction({
+            name: 'clearCollection',
+            data: { collection: 'ShareRecords' }
+          })
+          // 清除本地检查时间
+          wx.removeStorageSync('lastShareCouponCheckTime')
+          wx.showToast({ title: '已清空' })
+        }
+      }
+    })
   }
+
 });

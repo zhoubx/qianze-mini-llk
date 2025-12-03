@@ -11,11 +11,12 @@ const _ = db.command;
 
 // 从配置文件获取配置项
 const DIFF_MAP = config.DIFFICULTY_CONFIG.TEXT_MAP;
-const { GAME_IMAGES, AVATAR_CONFIG } = config;
+const { GAME_IMAGES, AVATAR_CONFIG, SHARE_COUPON_CONFIG } = config;
 
 Page({
   data: {
     prizes: [],
+    shareCoupons: [],  // 分享获得的代金券
     loading: true,
     // 用户信息
     userInfo: {
@@ -33,6 +34,7 @@ Page({
   onShow() {
     this.fetchUserInfo(); // 获取用户信息
     this.fetchMyPrizes();
+    this.fetchShareCoupons(); // 获取分享代金券
 
     // 同步音乐状态，确保页面显示时音乐组件状态正确
     const musicControl = this.selectComponent('#musicControl');
@@ -399,13 +401,131 @@ Page({
     });
   },
 
+  // 获取分享代金券列表 (云数据库版本)
+  async fetchShareCoupons() {
+    const openid = app.globalData.openid;
+    if (!openid) {
+      setTimeout(() => {
+        if (app.globalData.openid) this.fetchShareCoupons();
+      }, 1000);
+      return;
+    }
+
+    try {
+      // 查询当前用户的分享代金券（使用 sharerOpenid 字段）
+      const res = await db.collection('ShareCoupons')
+        .where({ sharerOpenid: openid })
+        .orderBy('createdAt', 'desc')
+        .get();
+
+      let list = res.data.map(item => {
+        // 格式化创建时间
+        item.createTimeStr = dateFormat.formatDate(item.createdAt);
+
+        // 状态文案
+        if (item.status === 'pending') item.statusText = '待使用';
+        else if (item.status === 'used') item.statusText = '已使用';
+        else item.statusText = '已失效';
+
+        // 处理核销时间显示
+        if (item.redeemedTime) {
+          try {
+            let redeemedDate;
+            if (typeof item.redeemedTime === 'string') {
+              redeemedDate = new Date(item.redeemedTime);
+            } else if (item.redeemedTime instanceof Date) {
+              redeemedDate = item.redeemedTime;
+            } else if (item.redeemedTime && typeof item.redeemedTime === 'object') {
+              redeemedDate = new Date(item.redeemedTime);
+            } else {
+              redeemedDate = new Date(item.redeemedTime);
+            }
+
+            if (!isNaN(redeemedDate.getTime())) {
+              const month = (redeemedDate.getMonth() + 1).toString().padStart(2, '0');
+              const day = redeemedDate.getDate().toString().padStart(2, '0');
+              const hours = redeemedDate.getHours().toString().padStart(2, '0');
+              const minutes = redeemedDate.getMinutes().toString().padStart(2, '0');
+              const seconds = redeemedDate.getSeconds().toString().padStart(2, '0');
+              item.redeemedTimeStr = `${month}-${day} ${hours}:${minutes}:${seconds}`;
+            } else {
+              item.redeemedTimeStr = '时间格式错误';
+            }
+          } catch (error) {
+            console.warn('核销时间格式化失败:', error);
+            item.redeemedTimeStr = '时间格式错误';
+          }
+        } else {
+          item.redeemedTimeStr = '暂无时间记录';
+        }
+
+        return item;
+      });
+
+      // 排序优化: 待使用(0) > 已使用(1) > 已失效(2)
+      const statusWeight = { 'pending': 0, 'used': 1, 'expired': 2 };
+      
+      list.sort((a, b) => {
+        let wa = statusWeight[a.status] !== undefined ? statusWeight[a.status] : 3;
+        let wb = statusWeight[b.status] !== undefined ? statusWeight[b.status] : 3;
+        
+        if (wa !== wb) {
+          return wa - wb;
+        } else {
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        }
+      });
+
+      this.setData({ shareCoupons: list });
+    } catch (err) {
+      console.error('获取分享代金券列表失败:', err);
+    }
+  },
+
+  // 核销分享代金券 (云数据库版本)
+  useShareCoupon(e) {
+    let id = e.currentTarget.dataset.id;
+    wx.showModal({
+      title: '确认核销',
+      content: '请确认为店员操作，核销后将无法撤销',
+      success: async (res) => {
+        if (res.confirm) {
+          try {
+            await db.collection('ShareCoupons').doc(id).update({
+              data: {
+                status: 'used',
+                redeemedTime: db.serverDate()
+              }
+            });
+            wx.showToast({ title: '核销成功' });
+            this.fetchShareCoupons(); // 刷新列表
+          } catch (err) {
+            console.error('核销失败:', err);
+            wx.showToast({
+              title: '核销失败，请重试',
+              icon: 'none'
+            });
+          }
+        }
+      }
+    });
+  },
+
   /**
    * 用户点击右上角分享
    */
   onShareAppMessage() {
+    let path = '/pages/index/index';
+    
+    // 携带邀请来源参数（分享人的openid）
+    const openid = app.globalData.openid;
+    if (openid) {
+      path = `/pages/index/index?inviteFrom=${openid}`;
+    }
+    
     return {
       title: '快来挑战芊泽风云榜，赢取大奖！',
-      path: '/pages/index/index',
+      path: path,
       imageUrl: config.SHARE_IMAGE
     };
   },

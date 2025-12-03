@@ -2,6 +2,7 @@
 // pages/rules/rules.js
 const config = require('../../config/index.js');
 const { PRIZE_CONFIG, DIFFICULTY_CONFIG } = config;
+const app = getApp();
 
 // 从配置计算各难度的消除对数
 const BOARD = DIFFICULTY_CONFIG.BOARD;
@@ -127,17 +128,33 @@ Page({
    * 用户点击右上角分享
    */
   onShareAppMessage() {
+    let path = '/pages/index/index';
+    
+    // 携带邀请来源参数（分享人的openid）
+    const openid = app.globalData.openid;
+    if (openid) {
+      path = `/pages/index/index?inviteFrom=${openid}`;
+    }
+    
     return {
       title: '快来挑战芊泽风云榜，赢取大奖！',
-      path: '/pages/index/index',
+      path: path,
       imageUrl: config.SHARE_IMAGE
     };
   },
 
   // 分享到朋友圈
   onShareTimeline() {
+    // 携带邀请来源参数（分享人的openid）
+    let query = '';
+    const openid = app.globalData.openid;
+    if (openid) {
+      query = `inviteFrom=${openid}`;
+    }
+    
     return {
-      title:  '快来挑战芊泽风云榜，赢取大奖！',
+      title: '快来挑战芊泽风云榜，赢取大奖！',
+      query: query,
       imageUrl: config.SHARE_IMAGE
     };
   },
