@@ -124,6 +124,7 @@
           </view>
         </view>
       </button>
+      <text class="btn-share-prize-text">邀请好友一起玩可得更多奖券</text>
     </view>
   </view>
 

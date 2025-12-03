@@ -444,9 +444,20 @@ page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
   width: 0; height: 0; background: #ff5252; opacity: 0; transition: all 0.2s; border-radius: 50%; z-index: 5;
 }
 .tile.path-highlight::after { width: 60%; height: 60%; opacity: 0.8; box-shadow: 0 0 15rpx #ff5252; }
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
 
-.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 999; }
-.modal { 
+.modal {
   background: white; 
   width: 600rpx; 
   padding: 40rpx; 
@@ -571,9 +582,11 @@ page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
   font-weight: bold;
   margin-bottom: 20rpx;
   letter-spacing: 1px;
+  width: 370rpx !important;
 }
+
 .btn-share-win {
-  width: 100%;
+  width: 370rpx !important; 
   margin-top: 16rpx;
   border: none;
   /* 升级为更具质感的金色渐变，带有金属光泽 */
@@ -581,7 +594,7 @@ page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
   background-size: 200% auto;
   color: #92400E; /* 深褐色文字，提升可读性与质感 */
   border-radius: 999rpx;
-  padding: 12rpx 30rpx;
+  padding: 14rpx 30rpx;
   letter-spacing: 2rpx;
   position: relative;
   overflow: hidden; /* 限制扫光范围 */
@@ -617,14 +630,15 @@ page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
 .btn-share-content {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: left;
+  padding-left: 50rpx;
   gap: 16rpx;
   position: relative;
   z-index: 2; /* 确保文字在扫光之上 */
 }
 
 .btn-share-icon {
-  font-size: 40rpx;
+  font-size: 35rpx;
   /* 移除阴影让图标更扁平化适配金色背景 */
 }
 
@@ -636,6 +650,14 @@ page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
 
 .btn-share-label {
   font-size: 32rpx;
+  font-weight: 800;
+  /* 文字描边增强对比度 */
+  text-shadow: 0 2rpx 0px rgba(255, 255, 255, 0.4);
+}
+
+.btn-share-prize-text {
+  color: rgba(77, 61, 68, 0.76);
+  font-size: 24rpx;
   font-weight: 800;
   /* 文字描边增强对比度 */
   text-shadow: 0 2rpx 0px rgba(255, 255, 255, 0.4);

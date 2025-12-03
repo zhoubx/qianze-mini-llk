@@ -81,7 +81,7 @@
 
         <view class="card-right">
           <block wx:if="{{item.status === 'pending'}}">
-             <button class="use-btn share-use-btn" bindtap="useShareCoupon" data-id="{{item._id}}">核销</button>
+             <button class="use-btn share-use-btn" bindtap="useShareCoupon" data-id="{{item._id}}">使用</button>
           </block>
           <block wx:else>
              <view class="status-info">
@@ -132,7 +132,7 @@
 
         <view class="card-right">
           <block wx:if="{{item.status === 'pending'}}" >
-             <button class="use-btn game-use-btn" bindtap="usePrize" data-id="{{item._id}}">核销</button>
+             <button class="use-btn game-use-btn" bindtap="usePrize" data-id="{{item._id}}">使用</button>
           </block>
           <block wx:else>
              <view class="status-info">
