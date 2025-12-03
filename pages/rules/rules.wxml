@@ -5,7 +5,7 @@
   <text class="title">游戏与奖品规则</text>
   <view class="section">
     <text class="h2">1. 积分与排名</text>
-    <text class="p">• 榜单采取 <text class="highlight">72小时滚动制</text>，只会保留最近3天的挑战成绩，让每位顾客都有机会霸榜。</text>
+    <text class="p">• 榜单采取 <text class="highlight">72小时滚动制</text>，只会保留最近72小时的挑战成绩，让每位顾客都有机会霸榜。</text>
     <text class="p">• 积分计算公式：<text class="highlight">基础分数 + 洗牌加分</text></text>
     
     <!-- 展开/收起按钮 -->
@@ -70,7 +70,7 @@
     <text class="h2">2. 奖品兑换</text>
     <text class="p">• 所有获得的优惠券/精油时长仅限 <text class="highlight">下次到店消费时使用</text>。</text>
     <text class="p">• 凭"我的奖品"页面中的记录向店员核销。</text>
-    <text class="p">• 每个项目可使用 <text class="highlight">一张优惠券</text>，不能叠加使用。</text>
+    <text class="p">• 顾客到店消费时，每个项目最多可以使用 <text class="highlight">1 张游戏优惠券 + 1 张分享优惠券</text>，不能同时使用两张游戏优惠券或两张分享优惠券，即：同类型的券不能叠加使用。</text>
   </view>
   <view class="section">
     <text class="h2">3. 最好成绩原则</text>
@@ -82,6 +82,7 @@
   <view class="section">
     <text class="h2">4. 分享得优惠券</text>
     <text class="p">• 将小程序分享给好友，好友<text class="highlight">首次完成游戏</text>后，您将获得 <text class="highlight">{{shareCouponAmount}}元代金券</text> 奖励！</text>
+    <text class="p">• 通过分享得到的优惠券可以与游戏中得到的优惠券<text class="highlight">叠加使用</text>！</text>
     <text class="p">• 每位用户最多可获得 <text class="highlight">{{shareCouponMaxCount}} 张</text>分享代金券。</text>
     <text class="p">• 分享代金券可在"我的奖品"页面中查看和使用。</text>
     <text class="p tip">💡 小贴士：邀请好友一起来挑战，边玩游戏边赚优惠券！</text>

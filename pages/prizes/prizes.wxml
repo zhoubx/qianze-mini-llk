@@ -54,7 +54,7 @@
       </view>
       <view class="tip-item tip-highlight">
         <text class="tip-dot">•</text>
-        <text class="tip-text">邀请好友一起玩游戏，还可额外获得奖励！</text>
+        <text class="tip-text">邀请好友一起玩游戏，还可获得额外奖励！</text>
       </view>
     </view>
   </view>
@@ -68,6 +68,7 @@
       <text class="section-title">分享奖励</text>
       <text class="section-subtitle">邀请好友获得</text>
     </view>
+
     <view class="list share-list" wx:if="{{shareCoupons.length > 0}}">
       <view class="card share-card {{item.status}}" wx:for="{{shareCoupons}}" wx:key="_id">
         <view class="card-left">

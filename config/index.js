@@ -94,7 +94,7 @@ const DIFFICULTY_CONFIG = {
     }
   ],
   BOARD: {
-    easy: { rows: 2, cols: 2 },
+    easy: { rows: 6, cols: 4 },
     medium: { rows: 6, cols: 6 },
     hard: { rows: 8, cols: 6 }
   },

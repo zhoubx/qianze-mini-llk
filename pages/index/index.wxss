@@ -582,11 +582,11 @@ page { background: #f4f7f6; font-family: "Microsoft YaHei"; }
   font-weight: bold;
   margin-bottom: 20rpx;
   letter-spacing: 1px;
-  width: 370rpx !important;
+  width: 400rpx !important;
 }
 
 .btn-share-win {
-  width: 370rpx !important; 
+  width: 400rpx !important; 
   margin-top: 16rpx;
   border: none;
   /* 升级为更具质感的金色渐变，带有金属光泽 */
