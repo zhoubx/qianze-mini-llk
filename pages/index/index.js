@@ -1167,34 +1167,36 @@ Page({
 
 
   // 在 index.js 中添加（正式上线前删除）
-  // debugClearData() {
-  //   wx.showModal({
-  //     title: '警告',
-  //     content: '确定要清空分享相关数据吗？',
-  //     success: async (res) => {
-  //       if (res.confirm) {
-  //         await wx.cloud.callFunction({
-  //           name: 'clearCollection',
-  //           data: { collection: 'GameScore' }
-  //         })
-  //         await wx.cloud.callFunction({
-  //           name: 'clearCollection',
-  //           data: { collection: 'UserInfo' }
-  //         })
-  //         await wx.cloud.callFunction({
-  //           name: 'clearCollection',
-  //           data: { collection: 'ShareCoupons' }
-  //         })
-  //         await wx.cloud.callFunction({
-  //           name: 'clearCollection',
-  //           data: { collection: 'ShareRecords' }
-  //         })
-  //         // 清除本地检查时间
-  //         wx.removeStorageSync('lastShareCouponCheckTime')
-  //         wx.showToast({ title: '已清空' })
-  //       }
-  //     }
-  //   })
-  // }
+  debugClearData() {
+    console.log("调用ClearData函数");
+    return;
+    wx.showModal({
+      title: '警告',
+      content: '确定要清空分享相关数据吗？',
+      success: async (res) => {
+        if (res.confirm) {
+          await wx.cloud.callFunction({
+            name: 'clearCollection',
+            data: { collection: 'GameScore' }
+          })
+          await wx.cloud.callFunction({
+            name: 'clearCollection',
+            data: { collection: 'UserInfo' }
+          })
+          await wx.cloud.callFunction({
+            name: 'clearCollection',
+            data: { collection: 'ShareCoupons' }
+          })
+          await wx.cloud.callFunction({
+            name: 'clearCollection',
+            data: { collection: 'ShareRecords' }
+          })
+          // 清除本地检查时间
+          wx.removeStorageSync('lastShareCouponCheckTime')
+          wx.showToast({ title: '已清空' })
+        }
+      }
+    })
+  }
 
 });

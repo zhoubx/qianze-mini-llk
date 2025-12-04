@@ -482,7 +482,7 @@ Page({
     }
   },
 
-  // 核销分享代金券 (云数据库版本)
+  // 核销分享代金券 (通过云函数，解决权限问题)
   useShareCoupon(e) {
     let id = e.currentTarget.dataset.id;
     wx.showModal({
@@ -491,14 +491,21 @@ Page({
       success: async (res) => {
         if (res.confirm) {
           try {
-            await db.collection('ShareCoupons').doc(id).update({
-              data: {
-                status: 'used',
-                redeemedTime: db.serverDate()
-              }
+            // 调用云函数核销代金券（解决 _openid 权限问题）
+            const result = await wx.cloud.callFunction({
+              name: 'redeemShareCoupon',
+              data: { couponId: id }
             });
-            wx.showToast({ title: '核销成功' });
-            this.fetchShareCoupons(); // 刷新列表
+
+            if (result.result && result.result.success) {
+              wx.showToast({ title: '核销成功' });
+              this.fetchShareCoupons(); // 刷新列表
+            } else {
+              wx.showToast({
+                title: result.result?.message || '核销失败',
+                icon: 'none'
+              });
+            }
           } catch (err) {
             console.error('核销失败:', err);
             wx.showToast({
