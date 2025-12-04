@@ -1184,7 +1184,7 @@ Page({
   // 在 index.js 中添加（正式上线前删除）
   debugClearData() {
     console.log("调用ClearData函数");
-    // return;
+    return; // 已禁用：正式上线前应删除此函数
     wx.showModal({
       title: '警告',
       content: '确定要清空分享相关数据吗？',
