@@ -19,17 +19,7 @@
 .header-main {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   margin-bottom: 16rpx;
-  flex-wrap: wrap;
-  gap: 16rpx;
-}
-
-.header-title-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 12rpx;
-  flex: 1;
 }
 
 .header-icon {
@@ -41,32 +31,6 @@
   font-size: 40rpx;
   font-weight: bold;
   color: #4a7c59;
-}
-
-.refresh-btn {
-  height: 58rpx;
-  line-height: 58rpx;
-  padding: 0 32rpx;
-  border-radius: 40rpx;
-  background: #4a7c59;
-  color: #fff;
-  font-size: 26rpx;
-  border: none;
-  flex-shrink: 0;
-  letter-spacing: 2rpx;
-  transition: opacity 0.2s;
-}
-
-.refresh-btn::after {
-  border: none;
-}
-
-.refresh-btn:active {
-  background: #3a6346;
-}
-
-.refresh-btn:disabled {
-  opacity: 0.6;
 }
 
 .header-tips {
@@ -142,11 +106,35 @@
   box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.08);
 }
 
-/* ==================== 分割线 ==================== */
+/* ==================== 分割线与下拉刷新提示 ==================== */
 .section-divider {
-  height: 1rpx;
-  background: linear-gradient(to right, transparent, #e0e0e0, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin: 20rpx 0 24rpx;
+  position: relative;
+}
+
+.section-divider::before,
+.section-divider::after {
+  content: '';
+  flex: 1;
+  height: 1rpx;
+  background: linear-gradient(to right, transparent, #e0e0e0);
+}
+
+.section-divider::after {
+  background: linear-gradient(to left, transparent, #e0e0e0);
+}
+
+.pull-hint {
+  padding: 0 24rpx;
+}
+
+.pull-hint-text {
+  font-size: 22rpx;
+  color: #bbb;
+  letter-spacing: 1rpx;
 }
 
 /* ==================== 个人信息模块 ==================== */
@@ -301,6 +289,7 @@
   border: 2rpx solid #d4e5d8;
   border-radius: 12rpx;
   padding: 14rpx 16rpx;
+  margin-left: -20px;
   font-size: 28rpx;
   color: #333;
 }

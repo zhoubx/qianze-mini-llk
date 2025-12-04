@@ -54,13 +54,8 @@
   <!-- 页面标题栏（最外层） -->
   <view class="page-header">
     <view class="header-main">
-      <view class="header-title-wrapper">
-        <text class="header-icon">🎁</text>
-        <text class="header-title">我的奖品</text>
-      </view>
-      <button class="refresh-btn" bindtap="onRefreshTap" disabled="{{isRefreshing}}">
-        {{isRefreshing ? '刷新中...' : '刷新'}}
-      </button>
+      <text class="header-icon">🎁</text>
+      <text class="header-title">我的奖品</text>
     </view>
     <view class="header-tips">
       <view class="tip-item">
@@ -75,8 +70,12 @@
     </view>
   </view>
 
-    <!-- 分割线 -->
-    <view class="section-divider"></view>
+    <!-- 分割线与下拉刷新提示 -->
+    <view class="section-divider">
+      <view class="pull-hint">
+        <text class="pull-hint-text">↓ 下拉刷新列表</text>
+      </view>
+    </view>
     
     <!-- 分享代金券列表 -->
     <view class="section-header" wx:if="{{shareCoupons.length > 0}}">
