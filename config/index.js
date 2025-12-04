@@ -5,11 +5,11 @@
 
 // ==================== 云开发配置 ====================
 const CLOUD_CONFIG = {
-  ENV_ID: 'cloud1-5gcovdng3cfbf3ee'
+  ENV_ID: 'cloud1-3g1qbw94a0df5dad'
 };
 
 // 云存储基础路径
-const CLOUD_BASE_URL = 'cloud://cloud1-5gcovdng3cfbf3ee.636c-cloud1-5gcovdng3cfbf3ee-1390068510';
+const CLOUD_BASE_URL = 'cloud://cloud1-3g1qbw94a0df5dad.636c-cloud1-3g1qbw94a0df5dad-1390421959';
 
 // ==================== 游戏图片配置 ====================
 const GAME_IMAGES = [
