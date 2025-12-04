@@ -160,8 +160,9 @@
 }
 
 .camera-icon {
-  font-size: 40rpx;
-  opacity: 0.35;
+  width: 100rpx;
+  height: 100rpx;
+  opacity: 0.18;
 }
 
 .profile-details {

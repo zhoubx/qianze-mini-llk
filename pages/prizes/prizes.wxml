@@ -9,7 +9,7 @@
         <view class="profile-avatar-container">
           <image wx:if="{{userInfo.avatarUrl}}" class="profile-avatar" src="{{userInfo.avatarUrl}}" mode="aspectFill"></image>
           <view wx:else class="profile-avatar-placeholder">
-            <text class="camera-icon">📷</text>
+            <image class="camera-icon" src="/images/camera-icon.png" mode="aspectFit"></image>
           </view>
         </view>
         <view class="profile-details">
@@ -26,7 +26,7 @@
             <view class="avatar-preview-container">
               <image wx:if="{{editingAvatarUrl}}" class="avatar-preview" src="{{editingAvatarUrl}}" mode="aspectFill"></image>
               <view wx:else class="avatar-preview-placeholder">
-                <text class="camera-icon">📷</text>
+                <image class="camera-icon" src="/images/camera-icon.png" mode="aspectFit"></image>
               </view>
             </view>
             <text class="avatar-tip">👈点击换头像</text>
