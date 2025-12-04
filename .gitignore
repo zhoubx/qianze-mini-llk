@@ -1,0 +1,16 @@
+# macOS
+.DS_Store
+
+# 微信开发者工具私有配置
+project.private.config.json
+
+# 依赖目录
+node_modules/
+miniprogram_npm/
+
+# 日志文件
+*.log
+
+# IDE 配置
+.vscode/
+.idea/
