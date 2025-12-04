@@ -121,7 +121,7 @@
 
     <view wx:if="{{prizes.length===0 && !loading}}" class="empty">
       <text>暂无奖品记录，快去</text>
-      <navigator url="/pages/index/index" open-type="redirect" class="empty-link">玩游戏赢取</navigator>
+      <navigator url="/pages/index/index" open-type="redirect" class="empty-link">玩游戏赢奖品</navigator>
       <text>吧！</text>
     </view>
 
