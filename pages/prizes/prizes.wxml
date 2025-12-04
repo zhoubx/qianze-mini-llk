@@ -54,8 +54,13 @@
   <!-- 页面标题栏（最外层） -->
   <view class="page-header">
     <view class="header-main">
-      <text class="header-icon">🎁</text>
-      <text class="header-title">我的奖品</text>
+      <view class="header-title-wrapper">
+        <text class="header-icon">🎁</text>
+        <text class="header-title">我的奖品</text>
+      </view>
+      <button class="refresh-btn" bindtap="onRefreshTap" disabled="{{isRefreshing}}">
+        {{isRefreshing ? '刷新中...' : '刷新'}}
+      </button>
     </view>
     <view class="header-tips">
       <view class="tip-item">

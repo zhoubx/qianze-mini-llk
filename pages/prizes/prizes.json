@@ -1,5 +1,7 @@
 {
   "usingComponents": {
     "music-control": "../../components/music-control/music-control"
-  }
+  },
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark"
 }

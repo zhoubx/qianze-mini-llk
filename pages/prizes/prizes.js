@@ -28,7 +28,8 @@ Page({
     editingAvatarUrl: '',
     editingNickName: '',
     defaultAvatarUrl: AVATAR_CONFIG.DEFAULT,
-    isEditingProfile: false // 是否正在编辑用户信息
+    isEditingProfile: false, // 是否正在编辑用户信息
+    isRefreshing: false
   },
   
   onShow() {
@@ -270,16 +271,19 @@ Page({
   },
   
   // 获取我的奖品列表 (云数据库版本)
-  async fetchMyPrizes() {
+  async fetchMyPrizes(options = {}) {
+    const { showLoading = true } = options;
     const openid = app.globalData.openid;
     if (!openid) {
       setTimeout(() => {
-        if (app.globalData.openid) this.fetchMyPrizes();
+        if (app.globalData.openid) this.fetchMyPrizes(options);
       }, 1000);
-      return;
+      return false;
     }
 
-    wx.showLoading({ title: '加载中' });
+    if (showLoading) {
+      wx.showLoading({ title: '加载中' });
+    }
     
     try {
       const res = await db.collection('GameScore')
@@ -360,15 +364,19 @@ Page({
       });
 
       this.setData({ prizes: list, loading: false });
-      wx.hideLoading();
+      return true;
     } catch (err) {
       console.error('获取奖品列表失败:', err);
-      wx.hideLoading();
       wx.showToast({
         title: '获取奖品列表失败',
         icon: 'none'
       });
       this.setData({ loading: false });
+      return false;
+    } finally {
+      if (showLoading) {
+        wx.hideLoading();
+      }
     }
   },
 
@@ -408,7 +416,7 @@ Page({
       setTimeout(() => {
         if (app.globalData.openid) this.fetchShareCoupons();
       }, 1000);
-      return;
+      return false;
     }
 
     try {
@@ -477,9 +485,50 @@ Page({
       });
 
       this.setData({ shareCoupons: list });
+      return true;
     } catch (err) {
       console.error('获取分享代金券列表失败:', err);
+      return false;
     }
+  },
+
+  async refreshPrizeLists(source = 'button') {
+    if (this.data.isRefreshing) return;
+
+    this.setData({ isRefreshing: true });
+    wx.showNavigationBarLoading();
+
+    try {
+      const [prizeOk, couponOk] = await Promise.all([
+        this.fetchMyPrizes({ showLoading: false }),
+        this.fetchShareCoupons()
+      ]);
+
+      if (prizeOk && couponOk) {
+        if (source === 'button') {
+          wx.showToast({ title: '已刷新', icon: 'success' });
+        }
+      } else {
+        wx.showToast({ title: '刷新失败，请稍后重试', icon: 'none' });
+      }
+    } catch (err) {
+      console.error('刷新奖品列表失败:', err);
+      wx.showToast({ title: '刷新失败，请稍后重试', icon: 'none' });
+    } finally {
+      this.setData({ isRefreshing: false });
+      wx.hideNavigationBarLoading();
+      if (source === 'pull') {
+        wx.stopPullDownRefresh();
+      }
+    }
+  },
+
+  onPullDownRefresh() {
+    this.refreshPrizeLists('pull');
+  },
+
+  onRefreshTap() {
+    this.refreshPrizeLists('button');
   },
 
   // 核销分享代金券 (通过云函数，解决权限问题)

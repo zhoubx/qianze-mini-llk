@@ -19,7 +19,17 @@
 .header-main {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   margin-bottom: 16rpx;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.header-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  flex: 1;
 }
 
 .header-icon {
@@ -31,6 +41,32 @@
   font-size: 40rpx;
   font-weight: bold;
   color: #4a7c59;
+}
+
+.refresh-btn {
+  height: 58rpx;
+  line-height: 58rpx;
+  padding: 0 32rpx;
+  border-radius: 40rpx;
+  background: #4a7c59;
+  color: #fff;
+  font-size: 26rpx;
+  border: none;
+  flex-shrink: 0;
+  letter-spacing: 2rpx;
+  transition: opacity 0.2s;
+}
+
+.refresh-btn::after {
+  border: none;
+}
+
+.refresh-btn:active {
+  background: #3a6346;
+}
+
+.refresh-btn:disabled {
+  opacity: 0.6;
 }
 
 .header-tips {
