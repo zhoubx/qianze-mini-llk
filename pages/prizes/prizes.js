@@ -63,16 +63,16 @@ Page({
         const userInfo = res.data[0];
         this.setData({
           userInfo: {
-            avatarUrl: userInfo.avatarUrl || '',
+            avatarUrl: userInfo.avatarUrl || '',  // 如果没有头像则为空字符串（显示占位符）
             nickName: userInfo.nickName || '',
             objectId: userInfo._id // 云数据库使用 _id
           }
         });
       } else {
-        // 用户没有保存过信息，使用随机头像
+        // 用户没有保存过信息，头像为空（显示占位符）
         this.setData({
           userInfo: {
-            avatarUrl: GAME_IMAGES[Math.floor(Math.random() * GAME_IMAGES.length)],
+            avatarUrl: '',  // 不再使用随机头像，而是显示占位符
             nickName: '',
             objectId: ''
           }

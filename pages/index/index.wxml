@@ -100,7 +100,12 @@
       <view style="display:flex; align-items:center; justify-content:center; margin-bottom: 20rpx;">
         <!-- 头像选择 -->
         <button class="avatar-wrapper" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar" style="margin-bottom:0; margin-right:20rpx;">
-          <image class="avatar" src="{{avatarUrl}}"></image>
+          <view class="avatar-container">
+            <image wx:if="{{hasCustomAvatar && avatarUrl}}" class="avatar" src="{{avatarUrl}}"></image>
+            <view wx:else class="avatar-placeholder">
+              <image class="camera-icon" src="/images/camera-icon.png" mode="aspectFit"></image>
+            </view>
+          </view>
         </button>
         <!-- 昵称输入 -->
         <view class="nickname-section" style="flex:1;">

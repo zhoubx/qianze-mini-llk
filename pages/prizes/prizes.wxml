@@ -6,7 +6,12 @@
     <view class="profile-section">
       <!-- 展示模式 -->
       <view class="profile-display" wx:if="{{!isEditingProfile}}">
-        <image class="profile-avatar" src="{{userInfo.avatarUrl || defaultAvatarUrl}}" mode="aspectFill"></image>
+        <view class="profile-avatar-container">
+          <image wx:if="{{userInfo.avatarUrl}}" class="profile-avatar" src="{{userInfo.avatarUrl}}" mode="aspectFill"></image>
+          <view wx:else class="profile-avatar-placeholder">
+            <text class="camera-icon">📷</text>
+          </view>
+        </view>
         <view class="profile-details">
           <text class="profile-name">{{userInfo.nickName || '未设置昵称'}}</text>
           <text class="profile-hint">修改将同步到排行榜</text>
@@ -18,7 +23,12 @@
       <view class="profile-edit" wx:if="{{isEditingProfile}}">
         <view class="edit-row">
           <button class="avatar-btn" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
-            <image class="avatar-preview" src="{{editingAvatarUrl || defaultAvatarUrl}}" mode="aspectFill"></image>
+            <view class="avatar-preview-container">
+              <image wx:if="{{editingAvatarUrl}}" class="avatar-preview" src="{{editingAvatarUrl}}" mode="aspectFill"></image>
+              <view wx:else class="avatar-preview-placeholder">
+                <text class="camera-icon">📷</text>
+              </view>
+            </view>
             <text class="avatar-tip">👈点击换头像</text>
           </button>
           <input 

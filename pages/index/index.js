@@ -28,7 +28,8 @@ Page({
     isGameActive: false,
     showModal: false,
     showPostSubmitModal: false,
-    avatarUrl: getRandomAvatar(),
+    avatarUrl: '',
+    hasCustomAvatar: false,  // 标记用户是否有自定义头像
     diffConfig: DIFFICULTY_CONFIG.OPTIONS,
     config: DIFFICULTY_CONFIG.BOARD,
     prizeTiers: PRIZE_CONFIG.TIERS,
@@ -607,6 +608,9 @@ Page({
         scoreBreakthrough = '🎉 打破个人最好成绩！';
       }
 
+      // 判断用户是否有自定义头像
+      const hasAvatar = !!userInfo.avatarUrl;
+
       this.setData({
         isGameActive: false,
         showModal: true,
@@ -617,8 +621,9 @@ Page({
         finalPrizeLevel: level,
         scoreBreakthrough: scoreBreakthrough,
         bestScore: storedBestScore,
-        // 优先使用已保存的用户信息，否则使用随机头像
-        avatarUrl: userInfo.avatarUrl || getRandomAvatar(),
+        // 如果有保存的头像则使用，否则设为空（显示占位符）
+        avatarUrl: userInfo.avatarUrl || '',
+        hasCustomAvatar: hasAvatar,
         inputName: userInfo.nickName || ''
       });
     });
@@ -643,7 +648,8 @@ Page({
     const { avatarUrl } = e.detail;
     if (avatarUrl) {
       this.setData({
-        avatarUrl: avatarUrl
+        avatarUrl: avatarUrl,
+        hasCustomAvatar: true  // 用户选择了头像
       });
     }
   },
@@ -888,10 +894,19 @@ Page({
     this.setData({ submitting: true });
 
     try {
-      // 0. 上传头像获取永久 URL
+      // 0. 如果用户没有选择头像，自动分配一个随机头像
       let finalAvatarUrl = this.data.avatarUrl;
+      if (!this.data.hasCustomAvatar || !finalAvatarUrl) {
+        finalAvatarUrl = getRandomAvatar();
+        this.setData({ 
+          avatarUrl: finalAvatarUrl,
+          hasCustomAvatar: true 
+        });
+      }
+
+      // 1. 上传头像获取永久 URL
       try {
-        finalAvatarUrl = await uploadAvatarIfNeeded(this.data.avatarUrl);
+        finalAvatarUrl = await uploadAvatarIfNeeded(finalAvatarUrl);
         // 如果上传成功且 URL 变了，更新 data
         if (finalAvatarUrl !== this.data.avatarUrl) {
           this.setData({ avatarUrl: finalAvatarUrl });
@@ -1169,7 +1184,7 @@ Page({
   // 在 index.js 中添加（正式上线前删除）
   debugClearData() {
     console.log("调用ClearData函数");
-    return;
+    // return;
     wx.showModal({
       title: '警告',
       content: '确定要清空分享相关数据吗？',
