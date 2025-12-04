@@ -9,7 +9,7 @@ const CLOUD_CONFIG = {
 };
 
 // 云存储基础路径
-const CLOUD_BASE_URL = 'cloud://cloud1-3g1qbw94a0df5dad.636c-cloud1-3g1qbw94a0df5dad-1390421959';
+const CLOUD_BASE_URL = 'https://636c-cloud1-3g1qbw94a0df5dad-1390421959.tcb.qcloud.la';
 
 // ==================== 游戏图片配置 ====================
 const GAME_IMAGES = [
@@ -117,7 +117,7 @@ const PRIZE_CONFIG = {
   ],
   INVALID_LEVEL: 999,
   SHUFFLE_BONUS: {
-    easy: 0,
+    easy: 20,
     medium: 50,
     hard: 100
   }
