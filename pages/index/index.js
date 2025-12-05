@@ -1163,7 +1163,7 @@ Page({
   onShareTimeline() {
     let title = '快来挑战芊泽风云榜，赢取大奖！';
     if (this.data.showModal && this.data.tempScore) {
-      title = `我以 ${this.data.tempScore} 分赢得了【${this.data.finalPrizeName}】，排名第 ${this.data.myRank}！`;
+      title = `我以 ${this.data.tempScore} 分赢得了【${this.data.finalPrizeName}】，排名第 ${this.data.myRank}！不服来战！`;
     }
     
     // 携带邀请来源参数（分享人的openid）
