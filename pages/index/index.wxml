@@ -33,7 +33,7 @@
 
     <view class="leaderboard-box">
       <view class="lb-header">
-        <text class="lb-title" bind:tap="debugClearData">👑 全服风云榜 (72小时擂台赛)</text>
+        <text class="lb-title">👑 全服风云榜 (72小时擂台赛)</text>
         <view class="lb-refresh-wrapper">
           <text class="lb-timer" bindtap="fetchLeaderboard">🔄 刷新</text>
           <text class="lb-loading-icon {{isRefreshing ? 'rotating' : ''}}" wx:if="{{isRefreshing}}">⏳</text>
