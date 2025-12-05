@@ -204,6 +204,14 @@ Page({
   },
 
   startGame(e) {
+    if (app.globalData.isSinglePage) {
+      wx.showToast({
+        title: '请点击底部“前往小程序”开始游戏',
+        icon: 'none',
+        duration: 3000
+      });
+      return;
+    }
     let diff;
     if (typeof e === 'string') {
       diff = e;
@@ -213,7 +221,6 @@ Page({
     let conf = this.data.config[diff];
 
     // 切换难度背景音乐
-    const app = getApp();
     app.switchDifficultyMusic(diff);
 
     // 播放开始游戏音效
@@ -877,14 +884,6 @@ Page({
     this.setData({
       showShareRewardModal: false
     });
-    
-    if (app.globalData.isSinglePage) {
-      wx.showToast({
-        title: '请点击底部“打开小程序”查看',
-        icon: 'none'
-      });
-      return;
-    }
 
     wx.navigateTo({
       url: '/pages/prizes/prizes'
@@ -1093,15 +1092,8 @@ Page({
     }
   },
 
-  // 我的奖品
+  // 挑战成功弹窗中的“我的奖品”按钮
   viewPrizes() {
-    if (app.globalData.isSinglePage) {
-      wx.showToast({
-        title: '请点击底部“打开小程序”查看',
-        icon: 'none'
-      });
-      return;
-    }
 
     this.setData({
       showPostSubmitModal: false
@@ -1115,8 +1107,9 @@ Page({
   visitStore() {
     if (app.globalData.isSinglePage) {
       wx.showToast({
-        title: '请点击底部“打开小程序”进店',
-        icon: 'none'
+        title: '请点击底部“前往小程序”进店',
+        icon: 'none',
+        duration: 3000
       });
       return;
     }

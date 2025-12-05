@@ -15,11 +15,18 @@
     "miniprogram": {
       "list": [
         {
+          "name": "朋友圈打开单页模式",
+          "pathName": "pages/index/index",
+          "query": "",
+          "scene": 1154,
+          "launchMode": "default"
+        },
+        {
           "name": "分享调试",
           "pathName": "pages/index/index",
           "query": "inviteFrom=oEDcS0SYtKG7Toku-TBR82-XpjyE",
-          "scene": 1007,
-          "launchMode": "default"
+          "launchMode": "default",
+          "scene": 1007
         }
       ]
     }
