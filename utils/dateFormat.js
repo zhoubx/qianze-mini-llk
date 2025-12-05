@@ -22,9 +22,15 @@ function formatDate(dateInput) {
     // 已经是 Date 对象
     d = dateInput;
   } else if (typeof dateInput === 'string') {
-    // 字符串格式 - [核心修复] iOS 必须将 '-' 替换为 '/'
-    let timeStr = dateInput.replace(/-/g, '/');
-    d = new Date(timeStr);
+    // 字符串格式
+    // 1. 如果是 ISO 格式（包含 T），直接解析，避免破坏格式
+    if (dateInput.includes('T')) {
+      d = new Date(dateInput);
+    } else {
+      // 2. 普通格式 - [核心修复] iOS 必须将 '-' 替换为 '/'
+      let timeStr = dateInput.replace(/-/g, '/');
+      d = new Date(timeStr);
+    }
   } else if (typeof dateInput === 'object') {
     // 云数据库返回的时间对象（可能包含 $date 或其他格式）
     if (dateInput.$date) {
@@ -66,8 +72,12 @@ function formatDateFull(dateInput) {
   if (dateInput instanceof Date) {
     d = dateInput;
   } else if (typeof dateInput === 'string') {
-    let timeStr = dateInput.replace(/-/g, '/');
-    d = new Date(timeStr);
+    if (dateInput.includes('T')) {
+      d = new Date(dateInput);
+    } else {
+      let timeStr = dateInput.replace(/-/g, '/');
+      d = new Date(timeStr);
+    }
   } else if (typeof dateInput === 'object') {
     if (dateInput.$date) {
       d = new Date(dateInput.$date);
