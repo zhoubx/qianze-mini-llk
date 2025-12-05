@@ -56,6 +56,33 @@ exports.main = async (event, context) => {
     // 5. 限制返回数量
     pipeline = pipeline.limit(limit)
 
+    // 6. 联表查询 UserInfo 获取头像昵称
+    pipeline = pipeline.lookup({
+      from: 'UserInfo',
+      localField: '_openid',
+      foreignField: '_openid',
+      as: 'userInfo'
+    })
+
+    // 7. 展开用户信息并保留未匹配的记录
+    pipeline = pipeline.unwind({
+      path: '$userInfo',
+      preserveNullAndEmptyArrays: true
+    })
+
+    // 8. 整理输出字段
+    pipeline = pipeline.project({
+      _id: 1,
+      score: 1,
+      timeCost: 1,
+      difficulty: 1,
+      createdAt: 1,
+      prizeName: 1,
+      _openid: 1,
+      nickName: '$userInfo.nickName',
+      avatarUrl: '$userInfo.avatarUrl'
+    })
+
     // 执行查询
     const result = await pipeline.end()
 

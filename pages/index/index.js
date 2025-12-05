@@ -108,57 +108,14 @@ Page({
       console.log('云函数返回记录数:', res.result.data.length);
       const gameScores = res.result.data;
 
-      // 2. 提取 openid 列表（用于查询头像昵称）
-      let openidSet = new Set();
-      let uniqueList = []; // 已经排好序且去重的列表
-
-      gameScores.forEach(item => {
-        let key = item._id; // 聚合分组后 _id 就是 openid
-        if (!key) return;
-        
-        openidSet.add(key);
-        
-        // 构造前端需要的数据结构
-        uniqueList.push({
-          ...item,
-          _openid: key,
-          createTimeStr: dateFormat.formatDate(item.createdAt),
-          diffText: DIFFICULTY_CONFIG.TEXT_MAP[item.difficulty] || '未知'
-        });
-      });
-
-      // 3. 批量查询 UserInfo 表获取用户信息
-      const openidList = Array.from(openidSet);
-      let userInfoMap = {};
-
-      if (openidList.length > 0) {
-        // 云数据库的 in 查询 (使用 _openid 字段)
-        const userInfosRes = await db.collection('UserInfo')
-          .where({
-            _openid: _.in(openidList)
-          })
-          .limit(500)
-          .get();
-
-        // 直接使用数据库中存储的头像链接（现在统一存为 https 了）
-        userInfosRes.data.forEach(info => {
-          userInfoMap[info._openid] = {
-            nickName: info.nickName || '匿名玩家',
-            avatarUrl: info.avatarUrl || ''
-          };
-        });
-      }
-
-      // 4. 合并数据：将用户信息添加到排行榜数据中
-      // 注意：此时 uniqueList 已经是去重且排好序的
-      uniqueList.forEach(item => {
-        const userInfo = userInfoMap[item._openid] || {};
-        item.playerName = userInfo.nickName || '匿名玩家';
-        item.avatarUrl = userInfo.avatarUrl || '';
-      });
-
-      // 5. 再次排序（理论上云函数已经排好了，这里保险起见再排一次）
-      uniqueList.sort((a, b) => b.score - a.score);
+      // 2. 格式化数据 (云函数已包含 nickName 和 avatarUrl)
+      const uniqueList = gameScores.map(item => ({
+        ...item,
+        playerName: item.nickName || '匿名玩家',
+        avatarUrl: item.avatarUrl || '',
+        createTimeStr: dateFormat.formatDate(item.createdAt),
+        diffText: DIFFICULTY_CONFIG.TEXT_MAP[item.difficulty] || '未知'
+      }));
 
       this.setData({
         rankList: uniqueList,
