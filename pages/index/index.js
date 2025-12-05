@@ -693,50 +693,27 @@ Page({
     }
   },
 
-  // 保存用户信息到 UserInfo 表，并根据需要刷新 bestScore (云数据库版本)
+  // 保存用户信息到 UserInfo 表 (改为调用云函数，解决权限问题)
   async saveUserInfo(nickName, avatarUrl, bestScoreCandidate = null) {
     try {
-      const openid = app.globalData.openid;
-      if (!openid) return;
-
-      // 先查找是否已存在记录 (使用 _openid 字段)
-      const res = await db.collection('UserInfo')
-        .where({ _openid: openid })
-        .get();
-
-      if (res.data.length > 0) {
-        // 更新现有记录
-        const record = res.data[0];
-        const updateData = {
+      console.log('开始调用云函数保存用户信息...');
+      
+      const res = await wx.cloud.callFunction({
+        name: 'saveUserInfo',
+        data: {
           nickName: nickName,
           avatarUrl: avatarUrl,
-          updatedAt: db.serverDate()
-        };
-
-        if (bestScoreCandidate !== null && bestScoreCandidate !== undefined) {
-          const serverBestScore = typeof record.bestScore === 'number' ? record.bestScore : null;
-          if (serverBestScore === null || bestScoreCandidate > serverBestScore) {
-            updateData.bestScore = bestScoreCandidate;
-          }
+          bestScoreCandidate: bestScoreCandidate
         }
+      });
 
-        await db.collection('UserInfo').doc(record._id).update({
-          data: updateData
-        });
+      if (res.result && res.result.success) {
+        console.log('用户信息保存成功:', res.result.type);
       } else {
-        // 创建新记录 (_openid 会由云数据库自动添加)
-        const newData = {
-          nickName: nickName,
-          avatarUrl: avatarUrl,
-          createdAt: db.serverDate()
-        };
-        if (bestScoreCandidate !== null && bestScoreCandidate !== undefined) {
-          newData.bestScore = bestScoreCandidate;
-        }
-        await db.collection('UserInfo').add({ data: newData });
+        console.error('用户信息保存失败:', res.result);
       }
     } catch (err) {
-      console.error('保存用户信息失败:', err);
+      console.error('调用 saveUserInfo 云函数出错:', err);
     }
   },
 
