@@ -150,36 +150,24 @@ Page({
         return;
       }
 
-      const res = await db.collection('UserInfo')
-        .where({ _openid: openid })
-        .get();
+      // 改为调用云函数保存用户信息
+      const res = await wx.cloud.callFunction({
+        name: 'saveUserInfo',
+        data: {
+          nickName: this.data.userInfo.nickName || '',
+          avatarUrl: finalAvatarUrl
+        }
+      });
 
-      if (res.data.length > 0) {
-        // 更新现有记录
-        await db.collection('UserInfo').doc(res.data[0]._id).update({
-          data: {
-            avatarUrl: finalAvatarUrl,
-            updatedAt: db.serverDate()
-          }
-        });
+      if (res.result && res.result.success) {
         wx.hideLoading();
         wx.showToast({ title: '头像已更新', icon: 'success' });
         // 设置标志位，通知首页刷新排行榜
         app.globalData.needRefreshLeaderboard = true;
       } else {
-        // 如果没有记录，创建新记录 (_openid 会由云数据库自动添加)
-        await db.collection('UserInfo').add({
-          data: {
-            avatarUrl: finalAvatarUrl,
-            nickName: this.data.userInfo.nickName || '',
-            createdAt: db.serverDate()
-          }
-        });
-        wx.hideLoading();
-        wx.showToast({ title: '头像已更新', icon: 'success' });
-        // 设置标志位，通知首页刷新排行榜
-        app.globalData.needRefreshLeaderboard = true;
+        throw new Error(res.result ? res.result.error : '调用云函数失败');
       }
+
     } catch (err) {
       console.error('保存头像失败:', err);
       wx.hideLoading();
@@ -225,29 +213,22 @@ Page({
         // 即使上传失败也继续流程
       }
 
-      if (userInfo.objectId) {
-        // 更新现有记录
-        await db.collection('UserInfo').doc(userInfo.objectId).update({
-          data: {
-            nickName: editingNickName,
-            avatarUrl: finalAvatarUrl,
-            updatedAt: db.serverDate()
-          }
-        });
-      } else {
-        // 创建新记录 (_openid 会由云数据库自动添加)
-        const result = await db.collection('UserInfo').add({
-          data: {
-            nickName: editingNickName,
-            avatarUrl: finalAvatarUrl,
-            createdAt: db.serverDate()
-          }
-        });
-        this.setData({
-          'userInfo.objectId': result._id
-        });
+      // 改为调用云函数保存用户信息
+      const res = await wx.cloud.callFunction({
+        name: 'saveUserInfo',
+        data: {
+          nickName: editingNickName,
+          avatarUrl: finalAvatarUrl
+        }
+      });
+
+      if (!res.result || !res.result.success) {
+        throw new Error(res.result ? res.result.error : '调用云函数失败');
       }
 
+      // 如果是新创建的记录，云函数可能没有返回 _id，这里尝试重新获取或直接更新本地状态
+      // 由于云函数已经成功，我们可以放心地更新本地 UI
+      
       wx.hideLoading();
       wx.showToast({ title: '保存成功', icon: 'success' });
       
@@ -262,6 +243,11 @@ Page({
         editingAvatarUrl: '',
         editingNickName: ''
       });
+
+      // 如果需要 objectId，可以重新拉取一次用户信息（或者让云函数返回 _id）
+      if (!userInfo.objectId) {
+        this.fetchUserInfo();
+      }
 
     } catch (err) {
       console.error('保存用户信息失败:', err);
