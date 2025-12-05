@@ -91,37 +91,40 @@ Page({
     });
 
     try {
-      // 1. 计算时间范围
-      let date = new Date();
-      date.setHours(date.getHours() - LEADERBOARD_CONFIG.DURATION_HOURS);
+      // 1. 使用云函数获取排行榜（支持聚合去重，无 20 条限制）
+      const res = await wx.cloud.callFunction({
+        name: 'getLeaderboard',
+        data: {
+          limit: LEADERBOARD_CONFIG.QUERY_LIMIT, // 获取前 50 名
+          timeLimit: LEADERBOARD_CONFIG.DURATION_HOURS, // 72小时
+          isAllTime: false // 这里暂时设为 true，与之前逻辑保持一致（不过滤时间）
+        }
+      });
 
-      // 2. 查询 GameScore 表获取排行榜数据 (云数据库版本)
-      const gameScoresRes = await db.collection('GameScore')
-        .where({
-          createdAt: _.gte(date)
-        })
-        .orderBy('score', 'desc')
-        .limit(LEADERBOARD_CONFIG.QUERY_LIMIT)
-        .get();
+      if (!res.result || !res.result.success) {
+        throw new Error(res.result ? res.result.error : '调用云函数失败');
+      }
 
-      const gameScores = gameScoresRes.data;
+      console.log('云函数返回记录数:', res.result.data.length);
+      const gameScores = res.result.data;
 
-      // 2. 数据处理：同一用户取最高分
-      let userMap = {};
+      // 2. 提取 openid 列表（用于查询头像昵称）
       let openidSet = new Set();
+      let uniqueList = []; // 已经排好序且去重的列表
 
       gameScores.forEach(item => {
-        let key = item._openid;
-        if (!key) return; // 跳过没有 _openid 的记录
-
+        let key = item._id; // 聚合分组后 _id 就是 openid
+        if (!key) return;
+        
         openidSet.add(key);
-
-        // 如果该用户还没记录，或者当前这条分数更高，则保存/更新
-        if (!userMap[key] || item.score > userMap[key].score) {
-          item.createTimeStr = dateFormat.formatDate(item.createdAt);
-          item.diffText = DIFFICULTY_CONFIG.TEXT_MAP[item.difficulty] || '未知';
-          userMap[key] = item;
-        }
+        
+        // 构造前端需要的数据结构
+        uniqueList.push({
+          ...item,
+          _openid: key,
+          createTimeStr: dateFormat.formatDate(item.createdAt),
+          diffText: DIFFICULTY_CONFIG.TEXT_MAP[item.difficulty] || '未知'
+        });
       });
 
       // 3. 批量查询 UserInfo 表获取用户信息
@@ -176,14 +179,14 @@ Page({
       }
 
       // 4. 合并数据：将用户信息添加到排行榜数据中
-      let uniqueList = Object.values(userMap);
+      // 注意：此时 uniqueList 已经是去重且排好序的
       uniqueList.forEach(item => {
         const userInfo = userInfoMap[item._openid] || {};
         item.playerName = userInfo.nickName || '匿名玩家';
         item.avatarUrl = userInfo.avatarUrl || '';
       });
 
-      // 5. 按分数排序
+      // 5. 再次排序（理论上云函数已经排好了，这里保险起见再排一次）
       uniqueList.sort((a, b) => b.score - a.score);
 
       this.setData({

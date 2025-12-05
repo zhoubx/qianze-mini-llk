@@ -56,7 +56,7 @@ const AUDIO_CONFIG = {
 // ==================== 排行榜配置 ====================
 const LEADERBOARD_CONFIG = {
   DURATION_HOURS: 72,
-  QUERY_LIMIT: 500
+  QUERY_LIMIT: 50
 };
 
 // ==================== 难度配置 ====================
