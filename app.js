@@ -19,6 +19,11 @@ App({
   },
 
   onLaunch: function (options) {
+    // 获取启动场景值
+    const launchOptions = wx.getLaunchOptionsSync();
+    const scene = launchOptions.scene;
+    this.globalData.isSinglePage = (scene === 1154); // 1154 是朋友圈单页模式
+
     // 初始化云开发
     if (!wx.cloud) {
       console.error('请使用 2.2.3 或以上的基础库以使用云能力');
@@ -35,7 +40,13 @@ App({
       console.log('检测到邀请来源:', options.query.inviteFrom);
     }
 
-    this.getOpenId();
+    // 单页模式下无法获取登录态，跳过登录
+    if (!this.globalData.isSinglePage) {
+      this.getOpenId();
+    } else {
+      console.log('处于朋友圈单页模式，跳过登录流程');
+    }
+
     this.initGlobalMusic();
   },
 

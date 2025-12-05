@@ -818,12 +818,18 @@ Page({
 
   // 检查是否有新的分享代金券（用于通知分享人）
   async checkNewShareCoupons() {
+    // 单页模式下不检查代金券
+    if (app.globalData.isSinglePage) return;
+
     try {
       const openid = app.globalData.openid;
       if (!openid) {
         // openid 还没获取到，等待后重试
         setTimeout(() => {
-          if (app.globalData.openid) this.checkNewShareCoupons();
+          // 再次检查是否单页模式（防止异步状态变化）
+          if (!app.globalData.isSinglePage && app.globalData.openid) {
+            this.checkNewShareCoupons();
+          }
         }, 1000);
         return;
       }
@@ -871,6 +877,15 @@ Page({
     this.setData({
       showShareRewardModal: false
     });
+    
+    if (app.globalData.isSinglePage) {
+      wx.showToast({
+        title: '请点击底部“打开小程序”查看',
+        icon: 'none'
+      });
+      return;
+    }
+
     wx.navigateTo({
       url: '/pages/prizes/prizes'
     });
@@ -1080,6 +1095,14 @@ Page({
 
   // 我的奖品
   viewPrizes() {
+    if (app.globalData.isSinglePage) {
+      wx.showToast({
+        title: '请点击底部“打开小程序”查看',
+        icon: 'none'
+      });
+      return;
+    }
+
     this.setData({
       showPostSubmitModal: false
     });
@@ -1090,6 +1113,14 @@ Page({
 
   // 进店看看
   visitStore() {
+    if (app.globalData.isSinglePage) {
+      wx.showToast({
+        title: '请点击底部“打开小程序”进店',
+        icon: 'none'
+      });
+      return;
+    }
+
     this.setData({
       showPostSubmitModal: false
     });
