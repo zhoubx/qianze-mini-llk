@@ -112,78 +112,10 @@ Page({
   onChooseAvatar(e) {
     const { avatarUrl } = e.detail;
     if (avatarUrl) {
-      if (this.data.isEditingProfile) {
-        // 编辑模式：只更新编辑状态变量
-        this.setData({
-          editingAvatarUrl: avatarUrl
-        });
-      } else {
-        // 非编辑模式：直接保存头像
-        this.setData({
-          'userInfo.avatarUrl': avatarUrl
-        });
-        this.saveAvatarOnly(avatarUrl);
-      }
-    }
-  },
-
-  // 仅保存头像 (云数据库版本)
-  async saveAvatarOnly(avatarUrl) {
-    try {
-      const openid = app.globalData.openid;
-      if (!openid) return;
-
-      wx.showLoading({ title: '上传中' });
-
-      // 先上传头像到云存储获取永久 URL
-      let finalAvatarUrl = avatarUrl;
-      try {
-        finalAvatarUrl = await uploadAvatarIfNeeded(avatarUrl);
-        
-        // 双重保障：如果返回的仍然是 cloud:// 开头，尝试在页面端再转换一次
-        if (finalAvatarUrl && finalAvatarUrl.startsWith('cloud://')) {
-          console.log('saveAvatarOnly: 检测到 cloud:// 路径，尝试二次转换为 https');
-          const tempRes = await wx.cloud.getTempFileURL({
-            fileList: [finalAvatarUrl]
-          });
-          if (tempRes.fileList && tempRes.fileList[0] && tempRes.fileList[0].tempFileURL) {
-            finalAvatarUrl = tempRes.fileList[0].tempFileURL;
-          }
-        }
-
-        // 更新页面显示
-        if (finalAvatarUrl !== avatarUrl) {
-          this.setData({ 'userInfo.avatarUrl': finalAvatarUrl });
-        }
-      } catch (uploadErr) {
-        console.error('头像上传失败:', uploadErr);
-        wx.hideLoading();
-        wx.showToast({ title: '上传失败', icon: 'none' });
-        return;
-      }
-
-      // 改为调用云函数保存用户信息
-      const res = await wx.cloud.callFunction({
-        name: 'saveUserInfo',
-        data: {
-          nickName: this.data.userInfo.nickName || '',
-          avatarUrl: finalAvatarUrl
-        }
+      // 编辑模式：只更新编辑状态变量
+      this.setData({
+        editingAvatarUrl: avatarUrl
       });
-
-      if (res.result && res.result.success) {
-        wx.hideLoading();
-        wx.showToast({ title: '头像已更新', icon: 'success' });
-        // 设置标志位，通知首页刷新排行榜
-        app.globalData.needRefreshLeaderboard = true;
-      } else {
-        throw new Error(res.result ? res.result.error : '调用云函数失败');
-      }
-
-    } catch (err) {
-      console.error('保存头像失败:', err);
-      wx.hideLoading();
-      wx.showToast({ title: '保存失败', icon: 'none' });
     }
   },
 
