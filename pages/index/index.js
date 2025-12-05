@@ -140,40 +140,11 @@ Page({
           .limit(500)
           .get();
 
-        // 收集需要转换的云文件 ID
-        const cloudFileIds = [];
+        // 直接使用数据库中存储的头像链接（现在统一存为 https 了）
         userInfosRes.data.forEach(info => {
-          if (info.avatarUrl && info.avatarUrl.startsWith('cloud://')) {
-            cloudFileIds.push(info.avatarUrl);
-          }
-        });
-
-        // 直接使用客户端API获取临时链接（云存储已设置为所有用户可读）
-        let fileUrlMap = {};
-        if (cloudFileIds.length > 0) {
-          try {
-            const tempUrlRes = await wx.cloud.getTempFileURL({
-              fileList: cloudFileIds
-            });
-            tempUrlRes.fileList.forEach(file => {
-              if (file.status === 0 && file.tempFileURL) {
-                fileUrlMap[file.fileID] = file.tempFileURL;
-              }
-            });
-          } catch (err) {
-            console.warn('获取云文件临时链接失败:', err);
-          }
-        }
-
-        userInfosRes.data.forEach(info => {
-          let avatarUrl = info.avatarUrl || '';
-          // 如果是云文件 ID，使用转换后的临时链接
-          if (avatarUrl.startsWith('cloud://') && fileUrlMap[avatarUrl]) {
-            avatarUrl = fileUrlMap[avatarUrl];
-          }
           userInfoMap[info._openid] = {
             nickName: info.nickName || '匿名玩家',
-            avatarUrl: avatarUrl
+            avatarUrl: info.avatarUrl || ''
           };
         });
       }

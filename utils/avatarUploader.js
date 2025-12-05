@@ -27,57 +27,76 @@ function isTempAvatarUrl(url) {
 async function uploadAvatarIfNeeded(avatarUrl) {
   if (!avatarUrl) return '';
   
-  // 如果不是临时路径（已经是 http/https 的远程路径，或者是 cloud:// 开头的云文件），直接返回
-  if (!isTempAvatarUrl(avatarUrl)) {
-    return avatarUrl;
-  }
+  let targetId = avatarUrl;
 
-  const uploadTask = async () => {
-    try {
-      console.log('开始上传头像到云存储:', avatarUrl);
-      
-      // 1. 获取文件扩展名
-      let ext = 'jpg';
-      const match = avatarUrl.match(/\.([a-zA-Z0-9]+)$/);
-      if (match) {
-        ext = match[1];
+  // 1. 如果是临时路径，先执行上传
+  if (isTempAvatarUrl(avatarUrl)) {
+    const uploadTask = async () => {
+      try {
+        console.log('开始上传头像到云存储:', avatarUrl);
+        
+        // 获取文件扩展名
+        let ext = 'jpg';
+        const match = avatarUrl.match(/\.([a-zA-Z0-9]+)$/);
+        if (match) {
+          ext = match[1];
+        }
+        
+        // 生成云存储路径
+        const cloudPath = `avatars/avatar_${Date.now()}_${Math.floor(Math.random() * 1000)}.${ext}`;
+        
+        // 使用云存储上传
+        const res = await wx.cloud.uploadFile({
+          cloudPath: cloudPath,
+          filePath: avatarUrl
+        });
+
+        console.log('头像上传成功:', res.fileID);
+        return res.fileID;
+
+      } catch (err) {
+        console.error('上传逻辑出错:', err);
+        throw err;
       }
-      
-      // 2. 生成云存储路径
-      const cloudPath = `avatars/avatar_${Date.now()}_${Math.floor(Math.random() * 1000)}.${ext}`;
-      
-      // 3. 使用云存储上传
-      const res = await wx.cloud.uploadFile({
-        cloudPath: cloudPath,
-        filePath: avatarUrl
-      });
+    };
 
-      console.log('头像上传成功:', res.fileID);
-      
-      // 返回云文件 ID (可直接用于 <image> 组件展示)
-      return res.fileID;
+    // 增加超时控制 (5秒)
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('Upload timeout'));
+      }, 5000);
+    });
 
+    try {
+      targetId = await Promise.race([uploadTask(), timeoutPromise]);
     } catch (err) {
-      console.error('上传逻辑出错:', err);
-      throw err;
+      console.error('头像上传失败或超时，降级使用临时路径:', err);
+      return avatarUrl;
     }
-  };
-
-  // 增加超时控制 (5秒)
-  // 防止上传卡死导致用户无法提交
-  const timeoutPromise = new Promise((_, reject) => {
-    setTimeout(() => {
-      reject(new Error('Upload timeout'));
-    }, 5000);
-  });
-
-  try {
-    return await Promise.race([uploadTask(), timeoutPromise]);
-  } catch (err) {
-    console.error('头像上传失败或超时，降级使用临时路径:', err);
-    // 即使失败，也返回原路径，保证流程能走下去
-    return avatarUrl;
   }
+
+  // 2. 此时 targetId 可能是 cloud:// (刚上传或传入的) 或 https:// (已有)
+  // 统一尝试将 cloud:// 转换为 https://
+  if (targetId && typeof targetId === 'string' && targetId.startsWith('cloud://')) {
+    try {
+      console.log('正在将 cloudID 转换为 https 链接:', targetId);
+      const tempRes = await wx.cloud.getTempFileURL({
+        fileList: [targetId]
+      });
+      
+      if (tempRes.fileList && tempRes.fileList.length > 0) {
+        const fileInfo = tempRes.fileList[0];
+        if (fileInfo.status === 0 && fileInfo.tempFileURL) {
+          console.log('转换成功:', fileInfo.tempFileURL);
+          return fileInfo.tempFileURL;
+        }
+      }
+    } catch (err) {
+      console.warn('转换 https 链接失败，保留 cloudID:', err);
+    }
+  }
+
+  return targetId;
 }
 
 module.exports = {

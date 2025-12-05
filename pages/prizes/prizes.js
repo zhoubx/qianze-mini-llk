@@ -139,6 +139,18 @@ Page({
       let finalAvatarUrl = avatarUrl;
       try {
         finalAvatarUrl = await uploadAvatarIfNeeded(avatarUrl);
+        
+        // 双重保障：如果返回的仍然是 cloud:// 开头，尝试在页面端再转换一次
+        if (finalAvatarUrl && finalAvatarUrl.startsWith('cloud://')) {
+          console.log('saveAvatarOnly: 检测到 cloud:// 路径，尝试二次转换为 https');
+          const tempRes = await wx.cloud.getTempFileURL({
+            fileList: [finalAvatarUrl]
+          });
+          if (tempRes.fileList && tempRes.fileList[0] && tempRes.fileList[0].tempFileURL) {
+            finalAvatarUrl = tempRes.fileList[0].tempFileURL;
+          }
+        }
+
         // 更新页面显示
         if (finalAvatarUrl !== avatarUrl) {
           this.setData({ 'userInfo.avatarUrl': finalAvatarUrl });
@@ -208,6 +220,17 @@ Page({
       let finalAvatarUrl = editingAvatarUrl;
       try {
         finalAvatarUrl = await uploadAvatarIfNeeded(editingAvatarUrl);
+        
+        // 双重保障：如果返回的仍然是 cloud:// 开头，尝试在页面端再转换一次
+        if (finalAvatarUrl && finalAvatarUrl.startsWith('cloud://')) {
+          console.log('saveUserInfo: 检测到 cloud:// 路径，尝试二次转换为 https');
+          const tempRes = await wx.cloud.getTempFileURL({
+            fileList: [finalAvatarUrl]
+          });
+          if (tempRes.fileList && tempRes.fileList[0] && tempRes.fileList[0].tempFileURL) {
+            finalAvatarUrl = tempRes.fileList[0].tempFileURL;
+          }
+        }
       } catch (uploadErr) {
         console.error('头像上传失败，将使用原路径继续:', uploadErr);
         // 即使上传失败也继续流程
