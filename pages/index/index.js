@@ -97,7 +97,7 @@ Page({
         data: {
           limit: LEADERBOARD_CONFIG.QUERY_LIMIT, // 获取前 50 名
           timeLimit: LEADERBOARD_CONFIG.DURATION_HOURS, // 72小时
-          isAllTime: false // 这里暂时设为 true，与之前逻辑保持一致（不过滤时间）
+          isAllTime: false // false表示按时间过滤，取最近72小时的
         }
       });
 
