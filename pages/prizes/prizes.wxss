@@ -578,6 +578,32 @@
   background: #ccc !important;
 }
 
+/* ==================== 更多过期记录按钮 ==================== */
+.more-btn-container {
+  display: flex;
+  justify-content: center;
+  padding: 10rpx 0 30rpx;
+}
+
+.btn-show-more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+  color: #999;
+  font-size: 24rpx;
+  padding: 12rpx 32rpx;
+  border-radius: 30rpx;
+  border: 1rpx solid #e0e0e0;
+  line-height: 1.4;
+  width: auto;
+  min-width: 200rpx;
+}
+
+.btn-show-more:active {
+  background: #eeeeee;
+}
+
 /* 游戏奖品核销按钮（深粉色） */
 .game-use-btn {
   background: #e91e63;
@@ -586,3 +612,4 @@
 .game-use-btn:active {
   background: #c2185b;
 }
+

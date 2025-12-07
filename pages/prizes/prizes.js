@@ -412,6 +412,36 @@ Page({
     this.handleRedeem(id, 'ShareCoupons');
   },
 
+  async refreshPrizeLists(source = 'button') {
+    if (this.data.isRefreshing) return;
+
+    this.setData({ isRefreshing: true });
+    wx.showNavigationBarLoading();
+
+    try {
+      // fetchAllPrizes 已经合并了获取所有奖品的逻辑，只需调用一次
+      const success = await this.fetchAllPrizes({ showLoading: false });
+
+      if (success) {
+        if (source === 'button') {
+          wx.showToast({ title: '已刷新', icon: 'success' });
+        }
+      } else {
+        wx.showToast({ title: '刷新失败，请稍后重试', icon: 'none' });
+      }
+    } catch (err) {
+      console.error('刷新奖品列表失败:', err);
+      wx.showToast({ title: '刷新失败，请稍后重试', icon: 'none' });
+    } finally {
+      this.setData({ isRefreshing: false });
+      wx.hideNavigationBarLoading();
+      if (source === 'pull') {
+        wx.stopPullDownRefresh();
+      }
+    }
+  },
+
+
   onPullDownRefresh() {
     this.refreshPrizeLists('pull');
   },
@@ -420,40 +450,10 @@ Page({
     this.refreshPrizeLists('button');
   },
 
-  // 核销分享代金券 (通过云函数，解决权限问题)
+  // 分享代金券核销
   useShareCoupon(e) {
     let id = e.currentTarget.dataset.id;
-    wx.showModal({
-      title: '确认核销',
-      content: '请确认为店员操作，核销后将无法撤销',
-      success: async (res) => {
-        if (res.confirm) {
-          try {
-            // 调用云函数核销代金券（解决 _openid 权限问题）
-            const result = await wx.cloud.callFunction({
-              name: 'redeemShareCoupon',
-              data: { couponId: id }
-            });
-
-            if (result.result && result.result.success) {
-              wx.showToast({ title: '核销成功' });
-              this.fetchShareCoupons(); // 刷新列表
-            } else {
-              wx.showToast({
-                title: result.result?.message || '核销失败',
-                icon: 'none'
-              });
-            }
-          } catch (err) {
-            console.error('核销失败:', err);
-            wx.showToast({
-              title: '核销失败，请重试',
-              icon: 'none'
-            });
-          }
-        }
-      }
-    });
+    this.handleRedeem(id, 'ShareCoupons');
   },
 
   /**

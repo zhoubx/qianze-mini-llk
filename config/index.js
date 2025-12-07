@@ -5,7 +5,8 @@
 
 // ==================== 云开发配置 ====================
 const CLOUD_CONFIG = {
-  ENV_ID: 'cloud1-3g1qbw94a0df5dad'
+  ENV_ID: 'cloud1-3g1qbw94a0df5dad' // 芊泽惠
+  // ENV_ID: 'cloud1-5gcovdng3cfbf3ee' // 芊泽惠test （芊泽商家端）
 };
 
 // 云存储基础路径

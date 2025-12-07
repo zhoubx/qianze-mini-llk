@@ -78,7 +78,7 @@
     </view>
     
     <!-- 分享代金券列表 -->
-    <view class="section-header" wx:if="{{validShareCoupons.length > 0 || visibleExpiredShareCoupons.length > 0}}">
+    <view class="section-header" wx:if="{{validShareCoupons.length > 0}}">
       <text class="section-icon">🎉</text>
       <text class="section-title">分享奖励</text>
       <text class="section-subtitle">邀请好友获得</text>
@@ -111,32 +111,6 @@
           </block>
         </view>
       </view>
-    </view>
-
-    <!-- 分享代金券：过期列表 -->
-    <view class="list share-list expired-list" wx:if="{{visibleExpiredShareCoupons.length > 0}}">
-      <view class="card share-card {{item.status}}" wx:for="{{visibleExpiredShareCoupons}}" wx:key="_id">
-        <view class="card-left">
-          <view class="row-top">
-            <text class="prize-name share-prize-name">{{item.amount}}元代金券</text>
-            <text class="share-badge">分享奖励</text>
-          </view>
-          <view class="row-time">
-            <text>获得时间：{{item.createTimeStr}}</text>
-          </view>
-        </view>
-
-        <view class="card-right">
-             <view class="status-info">
-               <text class="status-text">{{item.statusText}}</text>
-             </view>
-        </view>
-      </view>
-    </view>
-    
-    <!-- 分享代金券：更多过期记录按钮 -->
-    <view class="more-btn-container" wx:if="{{hasMoreShareExpired && !showAllShareExpired}}">
-      <button class="btn-show-more" bindtap="showAllShareExpired">查看更多过期记录 ▼</button>
     </view>
 
 
