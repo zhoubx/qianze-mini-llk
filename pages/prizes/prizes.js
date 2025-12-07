@@ -34,8 +34,7 @@ Page({
   
   onShow() {
     this.fetchUserInfo(); // 获取用户信息
-    this.fetchMyPrizes();
-    this.fetchShareCoupons(); // 获取分享代金券
+    this.fetchAllPrizes(); // 获取所有奖品（合并请求）
 
     // 同步音乐状态，确保页面显示时音乐组件状态正确
     const musicControl = this.selectComponent('#musicControl');
@@ -44,180 +43,13 @@ Page({
     }
   },
 
-  // 获取用户信息 (云数据库版本)
-  async fetchUserInfo() {
-    try {
-      const openid = app.globalData.openid;
-      if (!openid) {
-        // 等待 openid 获取
-        setTimeout(() => {
-          if (app.globalData.openid) this.fetchUserInfo();
-        }, 1000);
-        return;
-      }
-
-      const res = await db.collection('UserInfo')
-        .where({ _openid: openid })
-        .get();
-
-      if (res.data.length > 0) {
-        const userInfo = res.data[0];
-        this.setData({
-          userInfo: {
-            avatarUrl: userInfo.avatarUrl || '',  // 如果没有头像则为空字符串（显示占位符）
-            nickName: userInfo.nickName || '',
-            objectId: userInfo._id // 云数据库使用 _id
-          }
-        });
-      } else {
-        // 用户没有保存过信息，头像为空（显示占位符）
-        this.setData({
-          userInfo: {
-            avatarUrl: '',  // 不再使用随机头像，而是显示占位符
-            nickName: '',
-            objectId: ''
-          }
-        });
-      }
-    } catch (err) {
-      console.error('获取用户信息失败:', err);
-    }
-  },
-
-  // 开始编辑用户信息
-  startEditProfile() {
-    // 初始化编辑状态为当前用户信息
-    this.setData({
-      isEditingProfile: true,
-      editingAvatarUrl: this.data.userInfo.avatarUrl,
-      editingNickName: this.data.userInfo.nickName
-    });
-  },
-
-  // 取消编辑
-  cancelEditProfile() {
-    this.setData({
-      isEditingProfile: false,
-      editingAvatarUrl: '',
-      editingNickName: ''
-    });
-  },
-
-  // 阻止事件冒泡
-  preventBubble() {
-    // 空函数，仅用于阻止事件冒泡
-  },
-
-  // 处理头像选择
-  onChooseAvatar(e) {
-    const { avatarUrl } = e.detail;
-    if (avatarUrl) {
-      // 编辑模式：只更新编辑状态变量
-      this.setData({
-        editingAvatarUrl: avatarUrl
-      });
-    }
-  },
-
-  // 处理昵称输入（仿照 index 页面的简洁实现）
-  onNickNameInput(e) {
-    this.setData({
-      editingNickName: e.detail.value
-    });
-  },
-
-  // 保存用户信息 (云数据库版本)
-  async saveUserInfo() {
-    const { userInfo, editingNickName, editingAvatarUrl } = this.data;
-    
-    if (!editingNickName.trim()) {
-      wx.showToast({
-        title: '请输入昵称',
-        icon: 'none'
-      });
-      return;
-    }
-
-    try {
-      wx.showLoading({ title: '保存中' });
-      
-      const openid = app.globalData.openid;
-      if (!openid) {
-        wx.hideLoading();
-        wx.showToast({ title: '请先登录', icon: 'none' });
-        return;
-      }
-
-      // 先上传头像到云存储获取永久 URL
-      let finalAvatarUrl = editingAvatarUrl;
-      try {
-        finalAvatarUrl = await uploadAvatarIfNeeded(editingAvatarUrl);
-        
-        // 双重保障：如果返回的仍然是 cloud:// 开头，尝试在页面端再转换一次
-        if (finalAvatarUrl && finalAvatarUrl.startsWith('cloud://')) {
-          console.log('saveUserInfo: 检测到 cloud:// 路径，尝试二次转换为 https');
-          const tempRes = await wx.cloud.getTempFileURL({
-            fileList: [finalAvatarUrl]
-          });
-          if (tempRes.fileList && tempRes.fileList[0] && tempRes.fileList[0].tempFileURL) {
-            finalAvatarUrl = tempRes.fileList[0].tempFileURL;
-          }
-        }
-      } catch (uploadErr) {
-        console.error('头像上传失败，将使用原路径继续:', uploadErr);
-        // 即使上传失败也继续流程
-      }
-
-      // 改为调用云函数保存用户信息
-      const res = await wx.cloud.callFunction({
-        name: 'saveUserInfo',
-        data: {
-          nickName: editingNickName,
-          avatarUrl: finalAvatarUrl
-        }
-      });
-
-      if (!res.result || !res.result.success) {
-        throw new Error(res.result ? res.result.error : '调用云函数失败');
-      }
-
-      // 如果是新创建的记录，云函数可能没有返回 _id，这里尝试重新获取或直接更新本地状态
-      // 由于云函数已经成功，我们可以放心地更新本地 UI
-      
-      wx.hideLoading();
-      wx.showToast({ title: '保存成功', icon: 'success' });
-      
-      // 设置标志位，通知首页刷新排行榜
-      app.globalData.needRefreshLeaderboard = true;
-      
-      // 保存成功后，更新 userInfo 并清除编辑状态
-      this.setData({
-        'userInfo.avatarUrl': finalAvatarUrl,
-        'userInfo.nickName': editingNickName,
-        isEditingProfile: false,
-        editingAvatarUrl: '',
-        editingNickName: ''
-      });
-
-      // 如果需要 objectId，可以重新拉取一次用户信息（或者让云函数返回 _id）
-      if (!userInfo.objectId) {
-        this.fetchUserInfo();
-      }
-
-    } catch (err) {
-      console.error('保存用户信息失败:', err);
-      wx.hideLoading();
-      wx.showToast({ title: '保存失败', icon: 'none' });
-    }
-  },
-  
-  // 获取我的奖品列表 (云数据库版本)
-  async fetchMyPrizes(options = {}) {
+  // 获取所有奖品（调用云函数 getUserPrizes）
+  async fetchAllPrizes(options = {}) {
     const { showLoading = true } = options;
     const openid = app.globalData.openid;
     if (!openid) {
       setTimeout(() => {
-        if (app.globalData.openid) this.fetchMyPrizes(options);
+        if (app.globalData.openid) this.fetchAllPrizes(options);
       }, 1000);
       return false;
     }
@@ -225,87 +57,54 @@ Page({
     if (showLoading) {
       wx.showLoading({ title: '加载中' });
     }
-    
+
     try {
-      const res = await db.collection('GameScore')
-        .where({ _openid: openid })
-        .orderBy('createdAt', 'desc')
-        .get();
-
-      let list = res.data.map(item => {
-        // 使用统一的日期格式化工具函数
-        item.createTimeStr = dateFormat.formatDate(item.createdAt);
-
-        // 状态文案
-        if (item.status === 'pending') item.statusText = '待使用';
-        else if (item.status === 'used') item.statusText = '已使用';
-        else item.statusText = '已失效';
-
-        // [需求] 难度文案映射
-        item.diffText = DIFF_MAP[item.difficulty] || '未知';
-        
-        // [需求] 处理排名 (旧数据可能没有 rankSnapshot)
-        item.rankText = item.rankSnapshot ? `第${item.rankSnapshot}名` : '未记录';
-
-        // 处理核销时间显示
-        if (item.redeemedTime) {
-          try {
-            // 处理不同格式的时间数据
-            let redeemedDate;
-
-            // 云数据库可能返回不同的时间格式，尝试多种处理方式
-            if (typeof item.redeemedTime === 'string') {
-              // 如果是字符串，可能是ISO格式或普通格式
-              redeemedDate = new Date(item.redeemedTime);
-            } else if (item.redeemedTime instanceof Date) {
-              // 如果已经是Date对象
-              redeemedDate = item.redeemedTime;
-            } else if (item.redeemedTime && typeof item.redeemedTime === 'object') {
-              // 云数据库返回的时间对象
-              redeemedDate = new Date(item.redeemedTime);
-            } else {
-              // 其他情况，尝试直接构造
-              redeemedDate = new Date(item.redeemedTime);
-            }
-
-            if (!isNaN(redeemedDate.getTime())) {
-              const month = (redeemedDate.getMonth() + 1).toString().padStart(2, '0');
-              const day = redeemedDate.getDate().toString().padStart(2, '0');
-              const hours = redeemedDate.getHours().toString().padStart(2, '0');
-              const minutes = redeemedDate.getMinutes().toString().padStart(2, '0');
-              const seconds = redeemedDate.getSeconds().toString().padStart(2, '0');
-              item.redeemedTimeStr = `${month}-${day} ${hours}:${minutes}:${seconds}`;
-            } else {
-              item.redeemedTimeStr = '时间格式错误';
-            }
-          } catch (error) {
-            console.warn('核销时间格式化失败:', error);
-            item.redeemedTimeStr = '时间格式错误';
-          }
-        } else {
-          item.redeemedTimeStr = '暂无时间记录';
-        }
-
-        return item;
+      const res = await wx.cloud.callFunction({
+        name: 'getUserPrizes'
       });
 
-      // [需求] 排序优化: 待使用(0) > 已使用(1) > 已失效(2)
-      const statusWeight = { 'pending': 0, 'used': 1, 'expired': 2 };
+      if (!res.result || !res.result.success) {
+        throw new Error(res.result ? res.result.error : '云函数调用失败');
+      }
+
+      const { gamePrizes, shareCoupons } = res.result;
+
+      // === 处理游戏奖品 ===
+      let processedGamePrizes = this.processPrizes(gamePrizes, true);
       
-      list.sort((a, b) => {
-        let wa = statusWeight[a.status] !== undefined ? statusWeight[a.status] : 3;
-        let wb = statusWeight[b.status] !== undefined ? statusWeight[b.status] : 3;
-        
-        if (wa !== wb) {
-          return wa - wb; // 权重小的在前
-        } else {
-          // 权重相同，按时间倒序
-          return new Date(b.createdAt) - new Date(a.createdAt);
-        }
+      // 分离有效和过期奖品
+      let validGamePrizes = processedGamePrizes.filter(p => p.status !== 'expired');
+      let expiredGamePrizes = processedGamePrizes.filter(p => p.status === 'expired');
+
+      // === 处理分享代金券 ===
+      let processedShareCoupons = this.processPrizes(shareCoupons, false);
+
+      // 分离有效和过期代金券
+      let validShareCoupons = processedShareCoupons.filter(p => p.status !== 'expired');
+      let expiredShareCoupons = processedShareCoupons.filter(p => p.status === 'expired');
+
+      this.setData({ 
+        // 游戏奖品数据
+        validGamePrizes,
+        allExpiredGamePrizes: expiredGamePrizes,
+        // 初始只显示前10条过期记录
+        visibleExpiredGamePrizes: expiredGamePrizes.slice(0, 10),
+        hasMoreGameExpired: expiredGamePrizes.length > 10,
+        showAllGameExpired: false,
+
+        // 分享代金券数据
+        validShareCoupons,
+        allExpiredShareCoupons: expiredShareCoupons,
+        // 初始只显示前10条过期记录
+        visibleExpiredShareCoupons: expiredShareCoupons.slice(0, 10),
+        hasMoreShareExpired: expiredShareCoupons.length > 10,
+        showAllShareExpired: false,
+
+        loading: false 
       });
 
-      this.setData({ prizes: list, loading: false });
       return true;
+
     } catch (err) {
       console.error('获取奖品列表失败:', err);
       wx.showToast({
@@ -321,147 +120,296 @@ Page({
     }
   },
 
-  // 核销奖品 (云数据库版本)
-  usePrize(e) {
-    let id = e.currentTarget.dataset.id;
+  // 统一处理奖品数据格式和排序
+  processPrizes(list, isGamePrize) {
+    let processedList = list.map(item => {
+      item.createTimeStr = dateFormat.formatDate(item.createdAt);
+      
+      if (item.status === 'pending') item.statusText = '待使用';
+      else if (item.status === 'used') item.statusText = '已使用';
+      else item.statusText = '已失效';
+
+      item.redeemedTimeStr = this.formatRedeemedTime(item.redeemedTime);
+
+      if (isGamePrize) {
+        item.diffText = DIFF_MAP[item.difficulty] || '未知';
+        item.rankText = item.rankSnapshot ? `第${item.rankSnapshot}名` : '未记录';
+      }
+
+      return item;
+    });
+
+    // 排序: 待使用 > 已使用 > 已失效，同状态按时间倒序
+    const statusWeight = { 'pending': 0, 'used': 1, 'expired': 2 };
+    processedList.sort((a, b) => {
+      let wa = statusWeight[a.status] !== undefined ? statusWeight[a.status] : 3;
+      let wb = statusWeight[b.status] !== undefined ? statusWeight[b.status] : 3;
+      
+      if (wa !== wb) {
+        return wa - wb;
+      } else {
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      }
+    });
+
+    return processedList;
+  },
+
+  // 展示所有过期游戏奖品
+  showAllGameExpired() {
+    this.setData({
+      visibleExpiredGamePrizes: this.data.allExpiredGamePrizes,
+      showAllGameExpired: true
+    });
+  },
+
+  // 展示所有过期分享代金券
+  showAllShareExpired() {
+    this.setData({
+      visibleExpiredShareCoupons: this.data.allExpiredShareCoupons,
+      showAllShareExpired: true
+    });
+  },
+
+  // 辅助函数：格式化核销时间
+  formatRedeemedTime(timeVal) {
+    if (!timeVal) return '暂无时间记录';
+    
+    try {
+      let redeemedDate;
+      if (typeof timeVal === 'string') {
+        redeemedDate = new Date(timeVal);
+      } else if (timeVal instanceof Date) {
+        redeemedDate = timeVal;
+      } else if (timeVal && typeof timeVal === 'object') {
+        redeemedDate = new Date(timeVal);
+      } else {
+        redeemedDate = new Date(timeVal);
+      }
+
+      if (!isNaN(redeemedDate.getTime())) {
+        const month = (redeemedDate.getMonth() + 1).toString().padStart(2, '0');
+        const day = redeemedDate.getDate().toString().padStart(2, '0');
+        const hours = redeemedDate.getHours().toString().padStart(2, '0');
+        const minutes = redeemedDate.getMinutes().toString().padStart(2, '0');
+        const seconds = redeemedDate.getSeconds().toString().padStart(2, '0');
+        return `${month}-${day} ${hours}:${minutes}:${seconds}`;
+      } else {
+        return '时间格式错误';
+      }
+    } catch (error) {
+      console.warn('核销时间格式化失败:', error);
+      return '时间格式错误';
+    }
+  },
+
+  // 辅助函数：列表排序 (已整合到 processPrizes，保留空壳防止报错)
+  sortPrizes(list) {
+    // Deprecated
+  },
+
+  // 兼容旧方法名
+  fetchMyPrizes(options) {
+    return this.fetchAllPrizes(options);
+  },
+  
+  fetchShareCoupons() {
+    return Promise.resolve();
+  },
+
+  // 恢复丢失的用户信息相关方法
+  // 获取用户信息 (云函数版本)
+  async fetchUserInfo() {
+    try {
+      const openid = app.globalData.openid;
+      if (!openid) {
+        setTimeout(() => {
+          if (app.globalData.openid) this.fetchUserInfo();
+        }, 1000);
+        return;
+      }
+
+      const res = await wx.cloud.callFunction({
+        name: 'getUserInfo'
+      });
+
+      if (res.result && res.result.success && res.result.data) {
+        const userInfo = res.result.data;
+        this.setData({
+          userInfo: {
+            avatarUrl: userInfo.avatarUrl || '',
+            nickName: userInfo.nickName || '',
+            objectId: userInfo._id
+          }
+        });
+      } else {
+        // 无数据
+        this.setData({
+          userInfo: {
+            avatarUrl: '',
+            nickName: '',
+            objectId: ''
+          }
+        });
+      }
+    } catch (err) {
+      console.error('获取用户信息失败:', err);
+    }
+  },
+
+  startEditProfile() {
+    this.setData({
+      isEditingProfile: true,
+      editingAvatarUrl: this.data.userInfo.avatarUrl,
+      editingNickName: this.data.userInfo.nickName
+    });
+  },
+
+  cancelEditProfile() {
+    this.setData({
+      isEditingProfile: false,
+      editingAvatarUrl: '',
+      editingNickName: ''
+    });
+  },
+
+  onChooseAvatar(e) {
+    const { avatarUrl } = e.detail;
+    if (avatarUrl) {
+      this.setData({
+        editingAvatarUrl: avatarUrl
+      });
+    }
+  },
+
+  onNickNameInput(e) {
+    this.setData({
+      editingNickName: e.detail.value
+    });
+  },
+
+  async saveUserInfo() {
+    const { userInfo, editingNickName, editingAvatarUrl } = this.data;
+    
+    if (!editingNickName.trim()) {
+      wx.showToast({
+        title: '请输入昵称',
+        icon: 'none'
+      });
+      return;
+    }
+
+    try {
+      wx.showLoading({ title: '保存中' });
+      
+      let finalAvatarUrl = editingAvatarUrl;
+      try {
+        finalAvatarUrl = await uploadAvatarIfNeeded(editingAvatarUrl);
+        if (finalAvatarUrl && finalAvatarUrl.startsWith('cloud://')) {
+          const tempRes = await wx.cloud.getTempFileURL({
+            fileList: [finalAvatarUrl]
+          });
+          if (tempRes.fileList && tempRes.fileList[0] && tempRes.fileList[0].tempFileURL) {
+            finalAvatarUrl = tempRes.fileList[0].tempFileURL;
+          }
+        }
+      } catch (uploadErr) {
+        console.error('头像上传失败:', uploadErr);
+      }
+
+      const res = await wx.cloud.callFunction({
+        name: 'saveUserInfo',
+        data: {
+          nickName: editingNickName,
+          avatarUrl: finalAvatarUrl
+        }
+      });
+
+      if (!res.result || !res.result.success) {
+        throw new Error(res.result ? res.result.error : '调用云函数失败');
+      }
+
+      wx.hideLoading();
+      wx.showToast({ title: '保存成功', icon: 'success' });
+      app.globalData.needRefreshLeaderboard = true;
+      
+      this.setData({
+        'userInfo.avatarUrl': finalAvatarUrl,
+        'userInfo.nickName': editingNickName,
+        isEditingProfile: false,
+        editingAvatarUrl: '',
+        editingNickName: ''
+      });
+
+      if (!userInfo.objectId) {
+        this.fetchUserInfo();
+      }
+
+    } catch (err) {
+      console.error('保存用户信息失败:', err);
+      wx.hideLoading();
+      wx.showToast({ title: '保存失败', icon: 'none' });
+    }
+  },
+
+  // 统一核销逻辑 (带密码验证)
+  async handleRedeem(id, collection) {
     wx.showModal({
-      title: '确认核销',
-      content: '请确认为店员操作，核销后将无法撤销',
+      title: '店员核销',
+      content: '', // 必须为空才能显示输入框 placeholder
+      editable: true,
+      placeholderText: '请输入店员核销密码',
       success: async (res) => {
         if (res.confirm) {
+          const password = res.content;
+          if (!password) {
+             wx.showToast({ title: '请输入密码', icon: 'none' });
+             return;
+          }
+
+          wx.showLoading({ title: '核销中' });
           try {
-            await db.collection('GameScore').doc(id).update({
+            const cloudRes = await wx.cloud.callFunction({
+              name: 'redeemPrize',
               data: {
-                status: 'used',
-                redeemedTime: db.serverDate()
+                id,
+                collection,
+                password
               }
             });
-            wx.showToast({ title: '核销成功' });
-            this.fetchMyPrizes(); // 刷新列表
+
+            wx.hideLoading();
+
+            if (cloudRes.result && cloudRes.result.success) {
+              wx.showToast({ title: '核销成功', icon: 'success' });
+              // 刷新列表
+              this.fetchAllPrizes({ showLoading: false });
+            } else {
+              wx.showToast({ 
+                title: cloudRes.result?.message || '核销失败', 
+                icon: 'none' 
+              });
+            }
           } catch (err) {
-            console.error('核销失败:', err);
-            wx.showToast({
-              title: '核销失败，请重试',
-              icon: 'none'
-            });
+            wx.hideLoading();
+            console.error('核销调用失败:', err);
+            wx.showToast({ title: '系统错误', icon: 'none' });
           }
         }
       }
     });
   },
 
-  // 获取分享代金券列表 (云数据库版本)
-  async fetchShareCoupons() {
-    const openid = app.globalData.openid;
-    if (!openid) {
-      setTimeout(() => {
-        if (app.globalData.openid) this.fetchShareCoupons();
-      }, 1000);
-      return false;
-    }
-
-    try {
-      // 查询当前用户的分享代金券（使用 sharerOpenid 字段）
-      const res = await db.collection('ShareCoupons')
-        .where({ sharerOpenid: openid })
-        .orderBy('createdAt', 'desc')
-        .get();
-
-      let list = res.data.map(item => {
-        // 格式化创建时间
-        item.createTimeStr = dateFormat.formatDate(item.createdAt);
-
-        // 状态文案
-        if (item.status === 'pending') item.statusText = '待使用';
-        else if (item.status === 'used') item.statusText = '已使用';
-        else item.statusText = '已失效';
-
-        // 处理核销时间显示
-        if (item.redeemedTime) {
-          try {
-            let redeemedDate;
-            if (typeof item.redeemedTime === 'string') {
-              redeemedDate = new Date(item.redeemedTime);
-            } else if (item.redeemedTime instanceof Date) {
-              redeemedDate = item.redeemedTime;
-            } else if (item.redeemedTime && typeof item.redeemedTime === 'object') {
-              redeemedDate = new Date(item.redeemedTime);
-            } else {
-              redeemedDate = new Date(item.redeemedTime);
-            }
-
-            if (!isNaN(redeemedDate.getTime())) {
-              const month = (redeemedDate.getMonth() + 1).toString().padStart(2, '0');
-              const day = redeemedDate.getDate().toString().padStart(2, '0');
-              const hours = redeemedDate.getHours().toString().padStart(2, '0');
-              const minutes = redeemedDate.getMinutes().toString().padStart(2, '0');
-              const seconds = redeemedDate.getSeconds().toString().padStart(2, '0');
-              item.redeemedTimeStr = `${month}-${day} ${hours}:${minutes}:${seconds}`;
-            } else {
-              item.redeemedTimeStr = '时间格式错误';
-            }
-          } catch (error) {
-            console.warn('核销时间格式化失败:', error);
-            item.redeemedTimeStr = '时间格式错误';
-          }
-        } else {
-          item.redeemedTimeStr = '暂无时间记录';
-        }
-
-        return item;
-      });
-
-      // 排序优化: 待使用(0) > 已使用(1) > 已失效(2)
-      const statusWeight = { 'pending': 0, 'used': 1, 'expired': 2 };
-      
-      list.sort((a, b) => {
-        let wa = statusWeight[a.status] !== undefined ? statusWeight[a.status] : 3;
-        let wb = statusWeight[b.status] !== undefined ? statusWeight[b.status] : 3;
-        
-        if (wa !== wb) {
-          return wa - wb;
-        } else {
-          return new Date(b.createdAt) - new Date(a.createdAt);
-        }
-      });
-
-      this.setData({ shareCoupons: list });
-      return true;
-    } catch (err) {
-      console.error('获取分享代金券列表失败:', err);
-      return false;
-    }
+  // 游戏奖品核销
+  usePrize(e) {
+    let id = e.currentTarget.dataset.id;
+    this.handleRedeem(id, 'GameScore');
   },
 
-  async refreshPrizeLists(source = 'button') {
-    if (this.data.isRefreshing) return;
-
-    this.setData({ isRefreshing: true });
-    wx.showNavigationBarLoading();
-
-    try {
-      const [prizeOk, couponOk] = await Promise.all([
-        this.fetchMyPrizes({ showLoading: false }),
-        this.fetchShareCoupons()
-      ]);
-
-      if (prizeOk && couponOk) {
-        if (source === 'button') {
-          wx.showToast({ title: '已刷新', icon: 'success' });
-        }
-      } else {
-        wx.showToast({ title: '刷新失败，请稍后重试', icon: 'none' });
-      }
-    } catch (err) {
-      console.error('刷新奖品列表失败:', err);
-      wx.showToast({ title: '刷新失败，请稍后重试', icon: 'none' });
-    } finally {
-      this.setData({ isRefreshing: false });
-      wx.hideNavigationBarLoading();
-      if (source === 'pull') {
-        wx.stopPullDownRefresh();
-      }
-    }
+  // 分享代金券核销
+  useShareCoupon(e) {
+    let id = e.currentTarget.dataset.id;
+    this.handleRedeem(id, 'ShareCoupons');
   },
 
   onPullDownRefresh() {

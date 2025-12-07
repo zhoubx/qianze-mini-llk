@@ -78,14 +78,15 @@
     </view>
     
     <!-- 分享代金券列表 -->
-    <view class="section-header" wx:if="{{shareCoupons.length > 0}}">
+    <view class="section-header" wx:if="{{validShareCoupons.length > 0 || visibleExpiredShareCoupons.length > 0}}">
       <text class="section-icon">🎉</text>
       <text class="section-title">分享奖励</text>
       <text class="section-subtitle">邀请好友获得</text>
     </view>
 
-    <view class="list share-list" wx:if="{{shareCoupons.length > 0}}">
-      <view class="card share-card {{item.status}}" wx:for="{{shareCoupons}}" wx:key="_id">
+    <!-- 分享代金券：有效列表 -->
+    <view class="list share-list" wx:if="{{validShareCoupons.length > 0}}">
+      <view class="card share-card {{item.status}}" wx:for="{{validShareCoupons}}" wx:key="_id">
         <view class="card-left">
           <view class="row-top">
             <text class="prize-name share-prize-name">{{item.amount}}元代金券</text>
@@ -112,21 +113,49 @@
       </view>
     </view>
 
+    <!-- 分享代金券：过期列表 -->
+    <view class="list share-list expired-list" wx:if="{{visibleExpiredShareCoupons.length > 0}}">
+      <view class="card share-card {{item.status}}" wx:for="{{visibleExpiredShareCoupons}}" wx:key="_id">
+        <view class="card-left">
+          <view class="row-top">
+            <text class="prize-name share-prize-name">{{item.amount}}元代金券</text>
+            <text class="share-badge">分享奖励</text>
+          </view>
+          <view class="row-time">
+            <text>获得时间：{{item.createTimeStr}}</text>
+          </view>
+        </view>
+
+        <view class="card-right">
+             <view class="status-info">
+               <text class="status-text">{{item.statusText}}</text>
+             </view>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 分享代金券：更多过期记录按钮 -->
+    <view class="more-btn-container" wx:if="{{hasMoreShareExpired && !showAllShareExpired}}">
+      <button class="btn-show-more" bindtap="showAllShareExpired">查看更多过期记录 ▼</button>
+    </view>
+
+
     <!-- 游戏奖品列表 -->
-    <view class="section-header" wx:if="{{prizes.length > 0}}">
+    <view class="section-header" wx:if="{{validGamePrizes.length > 0 || visibleExpiredGamePrizes.length > 0}}">
       <text class="section-icon">🏆</text>
       <text class="section-title">游戏奖励</text>
       <text class="section-subtitle">挑战获得</text>
     </view>
 
-    <view wx:if="{{prizes.length===0 && !loading}}" class="empty">
+    <view wx:if="{{validGamePrizes.length===0 && visibleExpiredGamePrizes.length===0 && !loading}}" class="empty">
       <text>暂无奖品记录，快去</text>
       <navigator url="/pages/index/index" open-type="redirect" class="empty-link">玩游戏赢奖品</navigator>
       <text>吧！</text>
     </view>
 
-    <view class="list game-list">
-      <view class="card game-card {{item.status}}" wx:for="{{prizes}}" wx:key="_id">
+    <!-- 游戏奖品：有效列表 -->
+    <view class="list game-list" wx:if="{{validGamePrizes.length > 0}}">
+      <view class="card game-card {{item.status}}" wx:for="{{validGamePrizes}}" wx:key="_id">
         <view class="card-left">
           <view class="row-top">
             <text class="prize-name">{{item.prizeName}}</text>
@@ -161,6 +190,42 @@
           </block>
         </view>
       </view>
+    </view>
+
+    <!-- 游戏奖品：过期列表 -->
+    <view class="list game-list expired-list" wx:if="{{visibleExpiredGamePrizes.length > 0}}">
+      <view class="card game-card {{item.status}}" wx:for="{{visibleExpiredGamePrizes}}" wx:key="_id">
+        <view class="card-left">
+          <view class="row-top">
+            <text class="prize-name">{{item.prizeName}}</text>
+          </view>
+          
+          <view class="row-detail">
+            <text class="tag">{{item.diffText}}</text>
+            <text class="divider">|</text>
+            <text class="tag">{{item.timeCost}}s</text>
+            <text class="divider">|</text>
+            <text class="tag">{{item.rankText}}</text>
+            <text class="divider">|</text>
+            <text class="score">{{item.score}}分</text>
+          </view>
+
+          <view class="row-time">
+            <text>过关时间：{{item.createTimeStr}}</text>
+          </view>
+        </view>
+
+        <view class="card-right">
+             <view class="status-info">
+               <text class="status-text">{{item.statusText}}</text>
+             </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 游戏奖品：更多过期记录按钮 -->
+    <view class="more-btn-container" wx:if="{{hasMoreGameExpired && !showAllGameExpired}}">
+      <button class="btn-show-more" bindtap="showAllGameExpired">查看更多过期记录 ▼</button>
     </view>
   </view>
 </view>

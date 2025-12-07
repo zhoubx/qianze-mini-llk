@@ -839,108 +839,32 @@ Page({
       }
 
       const app = getApp();
-      const openid = app.globalData.openid;
-
-      // 1. 查找旧的待使用奖品 (云数据库版本)
-      let oldRecordsQuery = db.collection('GameScore')
-        .where({
-          status: 'pending'
-        });
       
-      if (openid) {
-        oldRecordsQuery = db.collection('GameScore')
-          .where({
-            _openid: openid,
-            status: 'pending'
-          });
-      }
-      
-      const oldRecordsRes = await oldRecordsQuery.get();
-      const oldRecords = oldRecordsRes.data;
-
-      let currentLevel = this.data.finalPrizeLevel;
-      let currentScore = this.data.tempScore; // 获取当前分数
-      let shouldSavePrize = true; // 是否保存奖品
-
-      if (oldRecords.length > 0) {
-        // 使用 Promise.all 确保所有异步操作完成，并添加错误处理
-        const updatePromises = [];
-
-        for (let record of oldRecords) {
-          // 情况A: 新奖品等级更高 (数值更小) -> 旧奖品失效
-          if (currentLevel < record.prizeLevel) {
-            const updatePromise = db.collection('GameScore')
-              .doc(record._id)
-              .update({
-                data: { status: 'expired' }
-              })
-              .catch(err => {
-                console.error('更新旧奖品状态失败:', err);
-                // 继续执行，不中断流程
-              });
-            updatePromises.push(updatePromise);
-          }
-          // 情况B: [新需求] 奖品等级相同 -> 比较分数
-          else if (currentLevel === record.prizeLevel) {
-            if (currentScore > record.score) {
-              // 新分数更高 -> 旧奖品失效，保留新奖品
-              const updatePromise = db.collection('GameScore')
-                .doc(record._id)
-                .update({
-                  data: { status: 'expired' }
-                })
-                .catch(err => {
-                  console.error('更新旧奖品状态失败:', err);
-                  // 继续执行，不中断流程
-                });
-              updatePromises.push(updatePromise);
-            } else {
-              // 旧分数更高(或相等) -> 新奖品直接失效（使用配置文件中的常量）
-              currentLevel = PRIZE_CONFIG.INVALID_LEVEL;
-            }
-          }
-          // 情况C: 旧奖品等级更高 -> 新奖品直接失效
-          else {
-            currentLevel = PRIZE_CONFIG.INVALID_LEVEL;
-          }
+      // 2. 调用云函数提交成绩并进行 PK
+      const res = await wx.cloud.callFunction({
+        name: 'submitGameScore',
+        data: {
+          score: this.data.tempScore,
+          timeCost: this.data.tempTime,
+          difficulty: this.gameState.diff,
+          prizeName: this.data.finalPrizeName,
+          prizeLevel: this.data.finalPrizeLevel,
+          rankSnapshot: this.data.myRank,
+          nickName: name,
+          avatarUrl: finalAvatarUrl,
+          inviteFrom: app.globalData.inviteFrom,
+          isSinglePage: app.globalData.isSinglePage
         }
-        
-        // 等待所有更新操作完成（即使有错误也继续）
-        await Promise.allSettled(updatePromises);
+      });
+
+      if (!res.result || !res.result.success) {
+        throw new Error(res.result ? res.result.error : '云函数调用失败');
       }
 
-      // 3. 先保存用户信息到 UserInfo 表，并在需要时刷新 bestScore
-      // 使用上传后的永久 URL
-      await this.saveUserInfo(name, finalAvatarUrl, currentScore);
+      console.log('成绩提交成功，状态:', res.result.status);
 
-      // 4. 保存游戏记录到 GameScore 表（不再保存用户信息，只保留 openid 关联）
-      // 如果 currentLevel 被标记为无效等级，说明PK输了，直接存为 expired
-      // 如果 shouldSavePrize 为 false，说明奖品等级不足，设为 invalid
-      let status = "pending";
-      if (currentLevel === PRIZE_CONFIG.INVALID_LEVEL) {
-        status = "expired";
-      } else if (!shouldSavePrize) {
-        status = "invalid";
-      }
-
-      const gameScoreData = {
-        score: this.data.tempScore,
-        timeCost: this.data.tempTime,
-        difficulty: this.gameState.diff,
-        prizeName: this.data.finalPrizeName,
-        prizeLevel: this.data.finalPrizeLevel,
-        rankSnapshot: this.data.myRank,
-        status: status,
-        createdAt: db.serverDate()
-      };
-
-      // _openid 会由云数据库自动添加，无需手动设置
-      await db.collection('GameScore').add({ data: gameScoreData });
-
-      // 检查是否需要为分享人发放代金券
-      await this.checkAndGrantShareCoupon();
-
-      // 本地同步 bestScore，便于下一次挑战使用
+      // 3. 本地同步 bestScore，便于下一次挑战使用
+      const currentScore = this.data.tempScore;
       const prevBestScore = typeof this.data.bestScore === 'number' ? this.data.bestScore : null;
       if (prevBestScore === null || currentScore > prevBestScore) {
         this.setData({ bestScore: currentScore });
@@ -959,7 +883,7 @@ Page({
       this.fetchLeaderboard();
 
     } catch (err) {
-      console.log(err);
+      console.error('提交失败:', err);
       wx.showToast({
         title: '提交失败',
         icon: 'none'
