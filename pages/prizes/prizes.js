@@ -11,7 +11,7 @@ const _ = db.command;
 
 // 从配置文件获取配置项
 const DIFF_MAP = config.DIFFICULTY_CONFIG.TEXT_MAP;
-const { GAME_IMAGES, AVATAR_CONFIG, SHARE_COUPON_CONFIG } = config;
+const { AVATAR_CONFIG } = config;
 
 Page({
   data: {

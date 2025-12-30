@@ -12,7 +12,6 @@ const {
   LEADERBOARD_CONFIG, 
   DIFFICULTY_CONFIG, 
   PRIZE_CONFIG, 
-  SHARE_COUPON_CONFIG,
   AVATAR_CONFIG, 
   AUDIO_CONFIG,
   getRandomAvatar 
@@ -642,92 +641,6 @@ Page({
       }
     } catch (err) {
       console.error('调用 saveUserInfo 云函数出错:', err);
-    }
-  },
-
-  // 检查并为分享人发放代金券
-  async checkAndGrantShareCoupon() {
-    try {
-      const inviteFrom = app.globalData.inviteFrom;
-      const currentOpenid = app.globalData.openid;
-
-      // 1. 检查是否有邀请来源
-      if (!inviteFrom || !currentOpenid) {
-        console.log('无邀请来源或当前用户openid未获取');
-        return;
-      }
-
-      // 2. 不能自己邀请自己
-      if (inviteFrom === currentOpenid) {
-        console.log('不能自己邀请自己');
-        return;
-      }
-
-      // 3. 检查是否已经有分享记录（防止重复奖励）
-      const shareRecordRes = await db.collection('ShareRecords')
-        .where({
-          sharerOpenid: inviteFrom,
-          inviteeOpenid: currentOpenid
-        })
-        .get();
-
-      if (shareRecordRes.data.length > 0) {
-        console.log('该邀请关系已存在记录，不重复发放');
-        return;
-      }
-
-      // 4. 检查当前用户是否为新用户（首次提交成绩）
-      // 查询该用户在本次之前是否有其他成绩记录
-      const userScoresRes = await db.collection('GameScore')
-        .where({ _openid: currentOpenid })
-        .limit(2)
-        .get();
-
-      // 如果有超过1条记录，说明不是首次提交（刚提交的那条已存在）
-      if (userScoresRes.data.length > 1) {
-        console.log('非新用户，不发放代金券');
-        return;
-      }
-
-      // 5. 检查分享人已获得的代金券数量是否达到上限
-      const sharerCouponsRes = await db.collection('ShareCoupons')
-        .where({ _openid: inviteFrom })
-        .get();
-
-      if (sharerCouponsRes.data.length >= SHARE_COUPON_CONFIG.MAX_COUNT) {
-        console.log('分享人代金券数量已达上限:', SHARE_COUPON_CONFIG.MAX_COUNT);
-        return;
-      }
-
-      // 6. 所有条件满足，创建代金券和分享记录
-      // 创建分享记录
-      await db.collection('ShareRecords').add({
-        data: {
-          sharerOpenid: inviteFrom,
-          inviteeOpenid: currentOpenid,
-          createdAt: db.serverDate()
-        }
-      });
-
-      // 为分享人创建代金券（注意：这里需要用云函数来设置指定的 _openid）
-      // 由于客户端无法直接设置其他用户的 _openid，我们使用 sharerOpenid 字段
-      await db.collection('ShareCoupons').add({
-        data: {
-          sharerOpenid: inviteFrom,  // 代金券所有者
-          amount: SHARE_COUPON_CONFIG.AMOUNT,
-          status: 'pending',
-          inviteeOpenid: currentOpenid,
-          createdAt: db.serverDate()
-        }
-      });
-
-      console.log('成功为分享人发放代金券:', inviteFrom);
-
-      // 清除邀请来源，避免重复触发
-      app.globalData.inviteFrom = null;
-
-    } catch (err) {
-      console.error('检查/发放分享代金券失败:', err);
     }
   },
 

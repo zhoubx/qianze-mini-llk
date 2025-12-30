@@ -253,3 +253,5 @@ async function checkAndGrantShareCouponInternal(db, inviteFrom, currentOpenid) {
   }
 }
 
+
+
