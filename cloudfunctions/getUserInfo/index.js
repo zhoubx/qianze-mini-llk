@@ -1,39 +1,33 @@
-const cloud = require('wx-server-sdk')
-
-cloud.init({
-  env: cloud.DYNAMIC_CURRENT_ENV
-})
-
-const db = cloud.database()
+const { query, cloud } = require('./common/db')
 
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext()
   const openid = wxContext.OPENID
 
   try {
-    const res = await db.collection('UserInfo')
-      .where({ _openid: openid })
-      .get()
+    const rows = await query(
+      `SELECT
+         openid AS _openid,
+         nick_name AS nickName,
+         avatar_url AS avatarUrl,
+         best_score AS bestScore,
+         created_at AS createdAt,
+         updated_at AS updatedAt
+       FROM user_info
+       WHERE openid = ?
+       LIMIT 1`,
+      [openid]
+    )
 
-    if (res.data.length > 0) {
-      return {
-        success: true,
-        data: res.data[0]
-      }
-    } else {
-      return {
-        success: true,
-        data: null
-      }
+    return {
+      success: true,
+      data: rows.length > 0 ? rows[0] : null
     }
   } catch (err) {
     console.error('获取用户信息失败:', err)
     return {
       success: false,
-      error: err
+      error: err.message || err
     }
   }
 }
-
-
-

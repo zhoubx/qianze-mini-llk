@@ -1,16 +1,13 @@
+const { cloud, query, execute } = require('./common/db')
 
-const cloud = require('wx-server-sdk')
-
-cloud.init({
-  env: cloud.DYNAMIC_CURRENT_ENV
-})
-
-const db = cloud.database()
-
+/**
+ * 保存用户信息云函数
+ * 支持创建和更新用户信息
+ */
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext()
   const openid = wxContext.OPENID
-  
+
   const { nickName, avatarUrl, bestScoreCandidate } = event
 
   if (!openid) {
@@ -18,53 +15,52 @@ exports.main = async (event, context) => {
   }
 
   try {
-    // 先查找是否已存在记录
-    const res = await db.collection('UserInfo')
-      .where({ _openid: openid })
-      .get()
+    // 查询是否已存在用户记录
+    const rows = await query(
+      'SELECT openid, best_score FROM user_info WHERE openid = ? LIMIT 1',
+      [openid]
+    )
 
-    if (res.data.length > 0) {
+    if (rows.length > 0) {
       // 更新现有记录
-      const record = res.data[0]
-      const updateData = {
-        nickName: nickName,
-        avatarUrl: avatarUrl,
-        updatedAt: db.serverDate()
-      }
+      const record = rows[0]
+      const serverBestScore = typeof record.best_score === 'number' ? record.best_score : null
 
-      // 比较并更新最高分
+      // 计算新的最高分
+      let newBestScore = serverBestScore
       if (bestScoreCandidate !== null && bestScoreCandidate !== undefined) {
-        const serverBestScore = typeof record.bestScore === 'number' ? record.bestScore : null
         if (serverBestScore === null || bestScoreCandidate > serverBestScore) {
-          updateData.bestScore = bestScoreCandidate
+          newBestScore = bestScoreCandidate
         }
       }
 
-      await db.collection('UserInfo').doc(record._id).update({
-        data: updateData
-      })
-      
+      await execute(
+        `UPDATE user_info 
+         SET nick_name = ?, avatar_url = ?, best_score = ?, updated_at = ?
+         WHERE openid = ?`,
+        [nickName ?? null, avatarUrl ?? null, newBestScore, new Date(), openid]
+      )
+
       return { success: true, type: 'update' }
     } else {
-      // 创建新记录 (云函数端新增数据需要系统自动注入_openid，或者显式指定)
-      // 这里通过 add 操作，云数据库会自动将 _openid 字段设置为当前用户的 openid
-      const newData = {
-        _openid: openid, // 显式指定，确保万无一失
-        nickName: nickName,
-        avatarUrl: avatarUrl,
-        createdAt: db.serverDate()
-      }
-      
-      if (bestScoreCandidate !== null && bestScoreCandidate !== undefined) {
-        newData.bestScore = bestScoreCandidate
-      }
-      
-      await db.collection('UserInfo').add({ data: newData })
-      
+      // 创建新记录
+      await execute(
+        `INSERT INTO user_info (openid, nick_name, avatar_url, best_score, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [
+          openid,
+          nickName ?? null,
+          avatarUrl ?? null,
+          bestScoreCandidate ?? null,
+          new Date(),
+          new Date()
+        ]
+      )
+
       return { success: true, type: 'create' }
     }
   } catch (err) {
-    console.error(err)
-    return { success: false, error: err }
+    console.error('保存用户信息失败:', err)
+    return { success: false, error: err.message || err }
   }
 }

@@ -1,10 +1,4 @@
-const cloud = require('wx-server-sdk')
-
-cloud.init({
-  env: cloud.DYNAMIC_CURRENT_ENV
-})
-
-const db = cloud.database()
+const { cloud, execute } = require('./common/db')
 
 // 店员核销密码
 const STAFF_PASSWORD = '999'
@@ -16,9 +10,8 @@ const STAFF_PASSWORD = '999'
  * @param {string} password - 核销密码
  */
 exports.main = async (event, context) => {
-  const wxContext = cloud.getWXContext()
   const { id, collection, password } = event
-  
+
   // 1. 验证密码
   if (password !== STAFF_PASSWORD) {
     return {
@@ -36,28 +29,32 @@ exports.main = async (event, context) => {
   }
 
   try {
-    // 3. 执行核销更新
-    await db.collection(collection).doc(id).update({
-      data: {
-        status: 'used',
-        redeemedTime: db.serverDate()
-      }
-    })
+    const rowId = Number(id)
+    if (!Number.isFinite(rowId)) {
+      return { success: false, message: 'ID非法' }
+    }
+
+    const table = collection === 'GameScore' ? 'game_score' : 'share_coupons'
+
+    const result = await execute(
+      `UPDATE ${table} SET status = ?, redeemed_time = ? WHERE id = ?`,
+      ['used', new Date(), rowId]
+    )
+
+    if ((result?.affectedRows || 0) === 0) {
+      return { success: false, message: '记录不存在' }
+    }
 
     return {
       success: true,
       message: '核销成功'
     }
-
   } catch (err) {
     console.error('核销失败:', err)
     return {
       success: false,
       message: '核销操作失败',
-      error: err
+      error: err.message || err
     }
   }
 }
-
-
-

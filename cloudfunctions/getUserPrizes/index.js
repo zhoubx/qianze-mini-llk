@@ -1,11 +1,4 @@
-const cloud = require('wx-server-sdk')
-
-cloud.init({
-  env: cloud.DYNAMIC_CURRENT_ENV
-})
-
-const db = cloud.database()
-const _ = db.command
+const { cloud, query } = require('./common/db')
 
 /**
  * 获取用户奖品列表（合并查询）
@@ -25,37 +18,64 @@ exports.main = async (event, context) => {
   const MAX_LIMIT = 1000
 
   try {
-    // 并行查询游戏奖品和分享代金券
-    const [gameRes, shareRes] = await Promise.all([
-      // 1. 查询游戏奖品
-      db.collection('GameScore')
-        .where({ _openid: openid })
-        .orderBy('createdAt', 'desc')
-        .limit(MAX_LIMIT)
-        .get(),
-      
-      // 2. 查询分享代金券
-      db.collection('ShareCoupons')
-        .where({ sharerOpenid: openid })
-        .orderBy('createdAt', 'desc')
-        .limit(MAX_LIMIT)
-        .get()
+    const [gameRows, shareRows] = await Promise.all([
+      query(
+        `SELECT
+           id, openid, score, time_cost, difficulty,
+           prize_name, prize_level, rank_snapshot,
+           status, redeemed_time, created_at
+         FROM game_score
+         WHERE openid = ?
+         ORDER BY created_at DESC
+         LIMIT ?`,
+        [openid, MAX_LIMIT]
+      ),
+      query(
+        `SELECT
+           id, sharer_openid, invitee_openid,
+           amount, status, redeemed_time, created_at
+         FROM share_coupons
+         WHERE sharer_openid = ?
+         ORDER BY created_at DESC
+         LIMIT ?`,
+        [openid, MAX_LIMIT]
+      )
     ])
+
+    const gamePrizes = gameRows.map((r) => ({
+      _id: String(r.id),
+      _openid: r.openid,
+      score: r.score,
+      timeCost: r.time_cost,
+      difficulty: r.difficulty,
+      prizeName: r.prize_name,
+      prizeLevel: r.prize_level,
+      rankSnapshot: r.rank_snapshot,
+      status: r.status,
+      redeemedTime: r.redeemed_time,
+      createdAt: r.created_at
+    }))
+
+    const shareCoupons = shareRows.map((r) => ({
+      _id: String(r.id),
+      sharerOpenid: r.sharer_openid,
+      inviteeOpenid: r.invitee_openid,
+      amount: r.amount,
+      status: r.status,
+      redeemedTime: r.redeemed_time,
+      createdAt: r.created_at
+    }))
 
     return {
       success: true,
-      gamePrizes: gameRes.data,
-      shareCoupons: shareRes.data
+      gamePrizes,
+      shareCoupons
     }
-
   } catch (err) {
     console.error('云函数 getUserPrizes 错误:', err)
     return {
       success: false,
-      error: err
+      error: err.message || err
     }
   }
 }
-
-
-

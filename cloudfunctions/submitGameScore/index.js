@@ -1,11 +1,9 @@
-const cloud = require('wx-server-sdk')
+const { cloud, ...db } = require('./common/db')
 
-cloud.init({
-  env: cloud.DYNAMIC_CURRENT_ENV
-})
-
-const db = cloud.database()
-const _ = db.command
+// cloud.init 在 common/db.js 加载配置时会自动调用，
+// 但如果在 db 操作之前就要用 cloud (比如 getWXContext)，保险起见 common 应该已经保证了 init。
+// 或者我们在这里显式 init 也无妨，cloud.init 是幂等的。
+// 为了简化，我们直接使用 common 导出的 cloud 实例。
 
 // 常量配置
 const CONFIG = {
@@ -44,8 +42,7 @@ exports.main = async (event, context) => {
     rankSnapshot,
     nickName,
     avatarUrl,
-    inviteFrom,
-    isSinglePage
+    inviteFrom
   } = event
 
   // 1. 准备当前记录数据
@@ -62,196 +59,148 @@ exports.main = async (event, context) => {
   }
 
   try {
-    // ==================== 核心逻辑：成绩 PK ====================
-    
-    // 获取该用户所有 pending 状态的旧记录
-    // limit(1000) 确保能获取到所有积压的记录（解决前端 20 条限制导致的 Bug）
-    const oldRecordsRes = await db.collection('GameScore')
-      .where({
-        _openid: openid,
-        status: 'pending'
+    const result = await db.transaction(async (connection) => {
+      const normalizedPrizeLevel = prizeLevel ?? CONFIG.INVALID_LEVEL
+      const normalizedRankSnapshot = rankSnapshot ?? 0
+
+      // 加锁查询当前用户的 pending 记录
+      const [oldRows] = await connection.query(
+        'SELECT id, prize_level, score FROM game_score WHERE openid = ? AND status = ? FOR UPDATE',
+        [openid, 'pending']
+      )
+
+      // 构建候选列表进行 PK
+      const candidates = oldRows.map((r) => ({
+        type: 'old',
+        id: r.id,
+        prizeLevel: r.prize_level ?? CONFIG.INVALID_LEVEL,
+        score: r.score ?? 0
+      }))
+
+      candidates.push({
+        type: 'new',
+        id: null,
+        prizeLevel: normalizedPrizeLevel,
+        score: score ?? 0
       })
-      .limit(1000)
-      .get()
-    
-    const oldRecords = oldRecordsRes.data
-    
-    // 将当前记录临时加入集合进行比较
-    // 给当前记录一个特殊 ID 方便识别
-    const currentRecordWithId = { ...currentRecord, _id: 'CURRENT_NEW' }
-    const allRecords = [...oldRecords, currentRecordWithId]
-    
-    // 排序找出最优记录
-    // 规则：Level 越小越好；Level 相同，Score 越大越好
-    allRecords.sort((a, b) => {
-      if (a.prizeLevel !== b.prizeLevel) {
-        return a.prizeLevel - b.prizeLevel // 升序
-      }
-      return b.score - a.score // 降序
-    })
-    
-    // 最优记录
-    const bestRecord = allRecords[0]
-    
-    // 决定当前记录最终状态
-    let finalStatus = 'pending'
-    if (bestRecord._id !== 'CURRENT_NEW') {
-      // 如果最优的不是当前这条，说明当前这条 PK 输了
-      finalStatus = 'expired'
-    }
-    
-    // 决定哪些旧记录需要过期
-    // 所有不是 bestRecord 的记录都应该 expired
-    // 如果 bestRecord 是 oldRecords 里的某一条，那它保留 pending，其他 oldRecords expired
-    // 如果 bestRecord 是 CURRENT_NEW，那所有 oldRecords expired
-    const idsToExpire = []
-    for (const record of oldRecords) {
-      if (record._id !== bestRecord._id) {
-        idsToExpire.push(record._id)
-      }
-    }
-    
-    // 批量更新过期的旧记录
-    if (idsToExpire.length > 0) {
-      // 分批处理，虽然一般不会超过 1000 条，但为了稳健
-      // where _id in [...]
-      await db.collection('GameScore').where({
-        _id: _.in(idsToExpire)
-      }).update({
-        data: {
-          status: 'expired'
+
+      // 排序：奖品等级优先（小的更好），分数其次（大的更好）
+      candidates.sort((a, b) => {
+        if (a.prizeLevel !== b.prizeLevel) return a.prizeLevel - b.prizeLevel
+        return b.score - a.score
+      })
+
+      const best = candidates[0]
+      const finalStatus = best.type === 'new' ? 'pending' : 'expired'
+
+      // 将非最优的旧记录设为 expired
+      if (oldRows.length > 0) {
+        if (best.type === 'old') {
+          await connection.query(
+            'UPDATE game_score SET status = ? WHERE openid = ? AND status = ? AND id <> ?',
+            ['expired', openid, 'pending', best.id]
+          )
+        } else {
+          await connection.query(
+            'UPDATE game_score SET status = ? WHERE openid = ? AND status = ?',
+            ['expired', openid, 'pending']
+          )
         }
-      })
-    }
-    
-    // 保存当前新记录
-    // 注意：入库时使用 db.serverDate()
-    const dataToSave = {
-      ...currentRecord,
-      status: finalStatus,
-      createdAt: db.serverDate()
-    }
-    
-    await db.collection('GameScore').add({
-      data: dataToSave
+      }
+
+      // 插入新记录
+      await connection.query(
+        'INSERT INTO game_score (openid, score, time_cost, difficulty, prize_name, prize_level, rank_snapshot, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [
+          openid,
+          score ?? 0,
+          timeCost ?? 0,
+          difficulty ?? null,
+          prizeName ?? null,
+          normalizedPrizeLevel,
+          normalizedRankSnapshot,
+          finalStatus,
+          new Date()
+        ]
+      )
+
+      // 保存用户信息
+      await saveUserInfoInternal(connection, openid, nickName, avatarUrl, score ?? 0)
+
+      // 处理分享奖励
+      await checkAndGrantShareCouponInternal(connection, inviteFrom, openid)
+
+      return {
+        success: true,
+        status: finalStatus,
+        pkResult: finalStatus === 'pending' ? 'win' : 'lose'
+      }
     })
 
-    // ==================== 逻辑 2：保存用户信息 ====================
-    await saveUserInfoInternal(openid, nickName, avatarUrl, score)
-    
-    // ==================== 逻辑 3：分享奖励检查 ====================
-    await checkAndGrantShareCouponInternal(db, inviteFrom, openid)
-
-    return {
-      success: true,
-      status: finalStatus,
-      pkResult: finalStatus === 'pending' ? 'win' : 'lose'
-    }
-
+    return result
   } catch (err) {
     console.error('云函数 submitGameScore 错误:', err)
     return {
       success: false,
-      error: err
+      error: err.message || err
     }
   }
 }
 
 // 内部函数：保存用户信息
-async function saveUserInfoInternal(openid, nickName, avatarUrl, currentScore) {
+async function saveUserInfoInternal(connection, openid, nickName, avatarUrl, currentScore) {
   try {
-    const res = await db.collection('UserInfo').where({ _openid: openid }).get()
-    
-    if (res.data.length > 0) {
-      const record = res.data[0]
-      const updateData = {
-        nickName,
-        avatarUrl,
-        updatedAt: db.serverDate()
-      }
-      
-      // 更新最高分
-      if (record.bestScore === undefined || record.bestScore === null || currentScore > record.bestScore) {
-        updateData.bestScore = currentScore
-      }
-      
-      await db.collection('UserInfo').doc(record._id).update({
-        data: updateData
-      })
-    } else {
-      await db.collection('UserInfo').add({
-        data: {
-          _openid: openid, // 显式指定
-          nickName,
-          avatarUrl,
-          bestScore: currentScore,
-          createdAt: db.serverDate()
-        }
-      })
-    }
+    await connection.query(
+      `INSERT INTO user_info (openid, nick_name, avatar_url, best_score, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         nick_name = VALUES(nick_name),
+         avatar_url = VALUES(avatar_url),
+         best_score = GREATEST(COALESCE(best_score, 0), VALUES(best_score)),
+         updated_at = VALUES(updated_at)`,
+      [openid, nickName ?? null, avatarUrl ?? null, currentScore ?? 0, new Date(), new Date()]
+    )
   } catch (e) {
     console.error('保存用户信息失败:', e)
-    // 不阻断主流程
   }
 }
 
 // 内部函数：检查并发放分享奖励
-async function checkAndGrantShareCouponInternal(db, inviteFrom, currentOpenid) {
+async function checkAndGrantShareCouponInternal(connection, inviteFrom, currentOpenid) {
   try {
-    // 基本校验
     if (!inviteFrom || !currentOpenid || inviteFrom === currentOpenid) return
 
-    // 1. 检查是否已存在分享记录
-    const shareRecordRes = await db.collection('ShareRecords').where({
-      sharerOpenid: inviteFrom,
-      inviteeOpenid: currentOpenid
-    }).get()
-    
-    if (shareRecordRes.data.length > 0) return
+    const [existsRows] = await connection.query(
+      'SELECT 1 FROM share_records WHERE sharer_openid = ? AND invitee_openid = ? LIMIT 1',
+      [inviteFrom, currentOpenid]
+    )
 
-    // 2. 检查当前用户是否为新用户
-    // 由于我们刚刚插入了一条 GameScore 记录，所以如果用户是全新的，
-    // GameScore 表里应该只有刚刚插入的那 1 条记录。
-    const userScoresCount = await db.collection('GameScore')
-      .where({ _openid: currentOpenid })
-      .count()
-      
-    // 如果 > 1 说明以前玩过
-    if (userScoresCount.total > 1) return
+    if (existsRows.length > 0) return
 
-    // 3. 检查分享人是否达到奖励上限
-    const sharerCouponsCount = await db.collection('ShareCoupons')
-      .where({ sharerOpenid: inviteFrom })
-      .count()
-      
-    if (sharerCouponsCount.total >= CONFIG.SHARE_COUPON.MAX_COUNT) return
+    const [scoreCntRows] = await connection.query(
+      'SELECT COUNT(*) AS cnt FROM game_score WHERE openid = ?',
+      [currentOpenid]
+    )
 
-    // 4. 发放奖励
-    // 创建分享记录
-    await db.collection('ShareRecords').add({
-      data: {
-        sharerOpenid: inviteFrom,
-        inviteeOpenid: currentOpenid,
-        createdAt: db.serverDate()
-      }
-    })
-    
-    // 创建代金券
-    await db.collection('ShareCoupons').add({
-      data: {
-        sharerOpenid: inviteFrom,
-        amount: CONFIG.SHARE_COUPON.AMOUNT,
-        status: 'pending',
-        inviteeOpenid: currentOpenid,
-        createdAt: db.serverDate()
-      }
-    })
-    
+    if ((scoreCntRows[0]?.cnt || 0) > 1) return
+
+    const [couponCntRows] = await connection.query(
+      'SELECT COUNT(*) AS cnt FROM share_coupons WHERE sharer_openid = ?',
+      [inviteFrom]
+    )
+
+    if ((couponCntRows[0]?.cnt || 0) >= CONFIG.SHARE_COUPON.MAX_COUNT) return
+
+    await connection.query(
+      'INSERT IGNORE INTO share_records (sharer_openid, invitee_openid, created_at) VALUES (?, ?, ?)',
+      [inviteFrom, currentOpenid, new Date()]
+    )
+
+    await connection.query(
+      'INSERT INTO share_coupons (sharer_openid, invitee_openid, amount, status, created_at) VALUES (?, ?, ?, ?, ?)',
+      [inviteFrom, currentOpenid, CONFIG.SHARE_COUPON.AMOUNT, 'pending', new Date()]
+    )
   } catch (e) {
     console.error('分享奖励处理失败:', e)
-    // 不阻断主流程
   }
 }
-
-
-
