@@ -166,40 +166,8 @@
       </view>
     </view>
 
-    <!-- 游戏奖品：过期列表 -->
-    <view class="list game-list expired-list" wx:if="{{visibleExpiredGamePrizes.length > 0}}">
-      <view class="card game-card {{item.status}}" wx:for="{{visibleExpiredGamePrizes}}" wx:key="_id">
-        <view class="card-left">
-          <view class="row-top">
-            <text class="prize-name">{{item.prizeName}}</text>
-          </view>
-          
-          <view class="row-detail">
-            <text class="tag">{{item.diffText}}</text>
-            <text class="divider">|</text>
-            <text class="tag">{{item.timeCost}}s</text>
-            <text class="divider">|</text>
-            <text class="tag">{{item.rankText}}</text>
-            <text class="divider">|</text>
-            <text class="score">{{item.score}}分</text>
-          </view>
 
-          <view class="row-time">
-            <text>过关时间：{{item.createTimeStr}}</text>
-          </view>
-        </view>
 
-        <view class="card-right">
-             <view class="status-info">
-               <text class="status-text">{{item.statusText}}</text>
-             </view>
-        </view>
-      </view>
-    </view>
 
-    <!-- 游戏奖品：更多过期记录按钮 -->
-    <view class="more-btn-container" wx:if="{{hasMoreGameExpired && !showAllGameExpired}}">
-      <button class="btn-show-more" bindtap="showAllGameExpired">查看更多过期记录 ▼</button>
-    </view>
   </view>
 </view>

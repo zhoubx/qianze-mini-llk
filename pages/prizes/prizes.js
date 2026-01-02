@@ -67,35 +67,17 @@ Page({
       const { gamePrizes, shareCoupons } = res.result;
 
       // === 处理游戏奖品 ===
-      let processedGamePrizes = this.processPrizes(gamePrizes, true);
+      let validGamePrizes = this.processPrizes(gamePrizes, true);
       
-      // 分离有效和过期奖品
-      let validGamePrizes = processedGamePrizes.filter(p => p.status !== 'expired');
-      let expiredGamePrizes = processedGamePrizes.filter(p => p.status === 'expired');
-
       // === 处理分享代金券 ===
-      let processedShareCoupons = this.processPrizes(shareCoupons, false);
-
-      // 分离有效和过期代金券
-      let validShareCoupons = processedShareCoupons.filter(p => p.status !== 'expired');
-      let expiredShareCoupons = processedShareCoupons.filter(p => p.status === 'expired');
+      let validShareCoupons = this.processPrizes(shareCoupons, false);
 
       this.setData({ 
         // 游戏奖品数据
         validGamePrizes,
-        allExpiredGamePrizes: expiredGamePrizes,
-        // 初始只显示前10条过期记录
-        visibleExpiredGamePrizes: expiredGamePrizes.slice(0, 10),
-        hasMoreGameExpired: expiredGamePrizes.length > 10,
-        showAllGameExpired: false,
 
         // 分享代金券数据
         validShareCoupons,
-        allExpiredShareCoupons: expiredShareCoupons,
-        // 初始只显示前10条过期记录
-        visibleExpiredShareCoupons: expiredShareCoupons.slice(0, 10),
-        hasMoreShareExpired: expiredShareCoupons.length > 10,
-        showAllShareExpired: false,
 
         loading: false 
       });
@@ -136,8 +118,13 @@ Page({
       return item;
     });
 
-    // 排序: 待使用 > 已使用 > 已失效，同状态按时间倒序
-    const statusWeight = { 'pending': 0, 'used': 1, 'expired': 2 };
+    // 过滤: 只保留待使用和已使用的奖品，过滤掉已失效的奖品
+    processedList = processedList.filter(item => {
+      return item.status === 'pending' || item.status === 'used';
+    });
+
+    // 排序: 待使用 > 已使用，同状态按时间倒序
+    const statusWeight = { 'pending': 0, 'used': 1 };
     processedList.sort((a, b) => {
       let wa = statusWeight[a.status] !== undefined ? statusWeight[a.status] : 3;
       let wb = statusWeight[b.status] !== undefined ? statusWeight[b.status] : 3;
