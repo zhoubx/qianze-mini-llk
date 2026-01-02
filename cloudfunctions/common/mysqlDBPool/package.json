@@ -1,0 +1,9 @@
+{
+  "name": "mysqlDBPool",
+  "version": "1.0.0",
+  "description": "公共模块 - 数据库工具层",
+  "main": "db.js",
+  "dependencies": {
+    "mysql2": "^3.16.0"
+  }
+}
