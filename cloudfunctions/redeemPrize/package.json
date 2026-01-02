@@ -1,9 +1,0 @@
-{
-  "name": "redeemPrize",
-  "version": "1.0.0",
-  "description": "奖品核销",
-  "main": "index.js",
-  "author": "",
-  "license": "ISC",
-  "dependencies": {}
-}

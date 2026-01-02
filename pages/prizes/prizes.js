@@ -2,12 +2,8 @@
 // 使用微信云开发替代 Bmob
 const dateFormat = require('../../utils/dateFormat.js'); // 引入日期格式化工具
 const config = require('../../config/index.js'); // 引入配置文件
-const { uploadAvatarIfNeeded } = require('../../utils/avatarUploader.js'); // 引入头像上传工具
+const { uploadAvatarIfNeeded, isTempAvatarUrl } = require('../../utils/avatarUploader.js'); // 引入头像上传工具
 const app = getApp();
-
-// 云数据库引用
-const db = wx.cloud.database();
-const _ = db.command;
 
 // 从配置文件获取配置项
 const DIFF_MAP = config.DIFFICULTY_CONFIG.TEXT_MAP;
@@ -60,7 +56,8 @@ Page({
 
     try {
       const res = await wx.cloud.callFunction({
-        name: 'getUserPrizes'
+        name: 'tradeFunctions',
+        data: { action: 'getUserPrizes' }
       });
 
       if (!res.result || !res.result.success) {
@@ -148,7 +145,8 @@ Page({
       if (wa !== wb) {
         return wa - wb;
       } else {
-        return new Date(b.createdAt) - new Date(a.createdAt);
+        // 使用公共日期解析函数，处理 iOS 兼容性问题
+        return dateFormat.parseDate(b.createdAt) - dateFormat.parseDate(a.createdAt);
       }
     });
 
@@ -176,27 +174,13 @@ Page({
     if (!timeVal) return '暂无时间记录';
     
     try {
-      let redeemedDate;
-      if (typeof timeVal === 'string') {
-        redeemedDate = new Date(timeVal);
-      } else if (timeVal instanceof Date) {
-        redeemedDate = timeVal;
-      } else if (timeVal && typeof timeVal === 'object') {
-        redeemedDate = new Date(timeVal);
-      } else {
-        redeemedDate = new Date(timeVal);
+      // 使用公共日期格式化函数
+      const formattedTime = dateFormat.formatDateShortWithSeconds(timeVal);
+      // 保持与原有函数一致的返回值
+      if (formattedTime === '未知时间') {
+        return '暂无时间记录';
       }
-
-      if (!isNaN(redeemedDate.getTime())) {
-        const month = (redeemedDate.getMonth() + 1).toString().padStart(2, '0');
-        const day = redeemedDate.getDate().toString().padStart(2, '0');
-        const hours = redeemedDate.getHours().toString().padStart(2, '0');
-        const minutes = redeemedDate.getMinutes().toString().padStart(2, '0');
-        const seconds = redeemedDate.getSeconds().toString().padStart(2, '0');
-        return `${month}-${day} ${hours}:${minutes}:${seconds}`;
-      } else {
-        return '时间格式错误';
-      }
+      return formattedTime;
     } catch (error) {
       console.warn('核销时间格式化失败:', error);
       return '时间格式错误';
@@ -230,7 +214,8 @@ Page({
       }
 
       const res = await wx.cloud.callFunction({
-        name: 'getUserInfo'
+        name: 'userFunctions',
+        data: { action: 'getUserInfo' }
       });
 
       if (res.result && res.result.success && res.result.data) {
@@ -303,23 +288,25 @@ Page({
       wx.showLoading({ title: '保存中' });
       
       let finalAvatarUrl = editingAvatarUrl;
-      try {
+      
+      // 确保头像上传成功，否则不保存
+      if (editingAvatarUrl) {
         finalAvatarUrl = await uploadAvatarIfNeeded(editingAvatarUrl);
-        if (finalAvatarUrl && finalAvatarUrl.startsWith('cloud://')) {
-          const tempRes = await wx.cloud.getTempFileURL({
-            fileList: [finalAvatarUrl]
+        // 如果上传后仍然是临时路径，说明上传失败，返回错误
+        if (isTempAvatarUrl(finalAvatarUrl)) {
+          wx.hideLoading();
+          wx.showToast({
+            title: '头像上传失败，请重试',
+            icon: 'none'
           });
-          if (tempRes.fileList && tempRes.fileList[0] && tempRes.fileList[0].tempFileURL) {
-            finalAvatarUrl = tempRes.fileList[0].tempFileURL;
-          }
+          return;
         }
-      } catch (uploadErr) {
-        console.error('头像上传失败:', uploadErr);
       }
 
       const res = await wx.cloud.callFunction({
-        name: 'saveUserInfo',
+        name: 'userFunctions',
         data: {
+          action: 'saveUserInfo',
           nickName: editingNickName,
           avatarUrl: finalAvatarUrl
         }
@@ -333,17 +320,22 @@ Page({
       wx.showToast({ title: '保存成功', icon: 'success' });
       app.globalData.needRefreshLeaderboard = true;
       
+      // 更新本地用户信息，包括 objectId（如果存在）
+      const updatedUserInfo = {
+        ...this.data.userInfo,
+        avatarUrl: finalAvatarUrl,
+        nickName: editingNickName
+      };
+      
+      // 调用 fetchUserInfo 获取最新的用户信息，包括 objectId
+      await this.fetchUserInfo();
+      
+      // 重新设置编辑状态
       this.setData({
-        'userInfo.avatarUrl': finalAvatarUrl,
-        'userInfo.nickName': editingNickName,
         isEditingProfile: false,
         editingAvatarUrl: '',
         editingNickName: ''
       });
-
-      if (!userInfo.objectId) {
-        this.fetchUserInfo();
-      }
 
     } catch (err) {
       console.error('保存用户信息失败:', err);
@@ -370,8 +362,9 @@ Page({
           wx.showLoading({ title: '核销中' });
           try {
             const cloudRes = await wx.cloud.callFunction({
-              name: 'redeemPrize',
+              name: 'tradeFunctions',
               data: {
+                action: 'redeemPrize',
                 id,
                 collection,
                 password

@@ -1,9 +1,0 @@
-{
-  "name": "redeemShareCoupon",
-  "version": "1.0.0",
-  "description": "核销分享代金券",
-  "main": "index.js",
-  "author": "",
-  "license": "ISC",
-  "dependencies": {}
-}

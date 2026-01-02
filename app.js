@@ -68,7 +68,10 @@ App({
 
   async getOpenId() {
     try {
-      const res = await wx.cloud.callFunction({ name: 'login' });
+      const res = await wx.cloud.callFunction({
+        name: 'userFunctions',
+        data: { action: 'login' }
+      });
       this.globalData.openid = res.result.openid;
     } catch (err) {
       console.error('登录失败', err);

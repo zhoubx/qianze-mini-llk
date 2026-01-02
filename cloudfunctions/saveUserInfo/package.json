@@ -1,9 +1,0 @@
-{
-  "name": "saveUserInfo",
-  "version": "1.0.0",
-  "description": "保存用户信息",
-  "main": "index.js",
-  "author": "",
-  "license": "ISC",
-  "dependencies": {}
-}

@@ -92,11 +92,12 @@ Page({
     try {
       // 1. 使用云函数获取排行榜（支持聚合去重，无 20 条限制）
       const res = await wx.cloud.callFunction({
-        name: 'getLeaderboard',
+        name: 'gameFunctions',
         data: {
-          limit: LEADERBOARD_CONFIG.QUERY_LIMIT, // 获取前 50 名
-          timeLimit: LEADERBOARD_CONFIG.DURATION_HOURS, // 72小时
-          isAllTime: false // false表示按时间过滤，取最近72小时的
+          action: 'getLeaderboard',
+          limit: LEADERBOARD_CONFIG.QUERY_LIMIT,
+          timeLimit: LEADERBOARD_CONFIG.DURATION_HOURS,
+          isAllTime: false
         }
       });
 
@@ -591,7 +592,7 @@ Page({
     }
   },
 
-  // 从 UserInfo 表读取用户信息 (云数据库版本)
+  // 从用户云函数读取用户信息 (MySQL 版本)
   async loadUserInfo() {
     try {
       const openid = app.globalData.openid;
@@ -599,17 +600,21 @@ Page({
         return { avatarUrl: '', nickName: '', bestScore: null };
       }
 
-      const res = await db.collection('UserInfo')
-        .where({ _openid: openid })
-        .get();
+      // 调用云函数获取用户信息，而不是直接访问云数据库
+      const res = await wx.cloud.callFunction({
+        name: 'userFunctions',
+        data: {
+          action: 'getUserInfo'
+        }
+      });
 
-      if (res.data.length > 0) {
-        const userInfo = res.data[0];
+      if (res.result && res.result.success && res.result.data) {
+        const userInfo = res.result.data;
         const bestScore = typeof userInfo.bestScore === 'number' ? userInfo.bestScore : null;
         return {
           avatarUrl: userInfo.avatarUrl || '',
           nickName: userInfo.nickName || '',
-          objectId: userInfo._id, // 云数据库使用 _id
+          objectId: userInfo._id,
           bestScore
         };
       }
@@ -626,8 +631,9 @@ Page({
       console.log('开始调用云函数保存用户信息...');
       
       const res = await wx.cloud.callFunction({
-        name: 'saveUserInfo',
+        name: 'userFunctions',
         data: {
+          action: 'saveUserInfo',
           nickName: nickName,
           avatarUrl: avatarUrl,
           bestScoreCandidate: bestScoreCandidate
@@ -755,8 +761,9 @@ Page({
       
       // 2. 调用云函数提交成绩并进行 PK
       const res = await wx.cloud.callFunction({
-        name: 'submitGameScore',
+        name: 'gameFunctions',
         data: {
+          action: 'submitGameScore',
           score: this.data.tempScore,
           timeCost: this.data.tempTime,
           difficulty: this.gameState.diff,
@@ -948,39 +955,5 @@ Page({
       imageUrl: config.SHARE_IMAGE
     };
   },
-
-
-  // 在 index.js 中添加（正式上线前删除）
-  // debugClearData() {
-  //   console.log("调用ClearData函数");
-  //   return; // 已禁用：正式上线前应删除此函数
-  //   wx.showModal({
-  //     title: '警告',
-  //     content: '确定要清空分享相关数据吗？',
-  //     success: async (res) => {
-  //       if (res.confirm) {
-  //         await wx.cloud.callFunction({
-  //           name: 'clearCollection',
-  //           data: { collection: 'GameScore' }
-  //         })
-  //         await wx.cloud.callFunction({
-  //           name: 'clearCollection',
-  //           data: { collection: 'UserInfo' }
-  //         })
-  //         await wx.cloud.callFunction({
-  //           name: 'clearCollection',
-  //           data: { collection: 'ShareCoupons' }
-  //         })
-  //         await wx.cloud.callFunction({
-  //           name: 'clearCollection',
-  //           data: { collection: 'ShareRecords' }
-  //         })
-  //         // 清除本地检查时间
-  //         wx.removeStorageSync('lastShareCouponCheckTime')
-  //         wx.showToast({ title: '已清空' })
-  //       }
-  //     }
-  //   })
-  // }
 
 });

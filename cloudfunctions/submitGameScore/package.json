@@ -1,9 +1,0 @@
-{
-  "name": "submitGameScore",
-  "version": "1.0.0",
-  "description": "提交游戏成绩",
-  "main": "index.js",
-  "author": "",
-  "license": "ISC",
-  "dependencies": {}
-}

@@ -1,9 +1,0 @@
-{
-  "name": "getUserPrizes",
-  "version": "1.0.0",
-  "description": "获取用户奖品列表",
-  "main": "index.js",
-  "author": "",
-  "license": "ISC",
-  "dependencies": {}
-}
